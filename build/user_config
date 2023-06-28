@@ -1,9 +1,16 @@
 # ODT User Configuration
 
-set(CHEMISTRY               "SIMPLEDLR"               CACHE STRING "user mechanism source to add")
-set(PARALLEL                "no"                    CACHE STRING "build with mpi")
-set(SILENT                  "yes"                   CACHE STRING "code output config")
+set(CHEMISTRY "SIMPLEDLR" CACHE STRING "user mechanism source to add")
+set(PARALLEL "no" CACHE STRING "build with mpi")
+set(SILENT "yes" CACHE STRING "code output config")
 
-#----- CANTERA LOCATIONS
-set(CANTERA_INCLUDE_DIR     "/usr/local/cantera24/include" CACHE PATH "cantera includes location")
-set(CANTERA_LIB_DIR         "/usr/local/cantera24/lib"     CACHE PATH "cantera library location")
+# --- Nuria (Begin): modify with your paths ---
+# Link cantera library
+set(CANTERA_INCLUDE_DIR "/usr/include/cantera/" CACHE PATH "Cantera includes location")
+set(CANTERA_LIB_DIR "/usr/lib" CACHE PATH "Cantera library location")
+# --- Nuria (End) ---
+
+# --- Nuria (Begin): added fmt library, if not added 'make' does not find 'fmt' library, and does not link it ---
+# Link fmt library
+set(FMT_LIB_DIR "/usr/lib/x86_64-linux-gnu/" CACHE PATH "fmt library location")
+# --- Nuria (End) ---
