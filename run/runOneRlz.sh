@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Single realization run
-# run as "./runOne.sh" or as "./runOne.sh -r"
+# run as "./runOneRlz.sh" or as "./runOneRlz.sh -r"
 # Change variables inputDir and caseName near the top.
 
 ###############################################################################
@@ -9,8 +9,8 @@ echo "the start time is"
 date
 ###############################################################################
 
-inputDir="../input/channelFlow"
-caseName="channel"
+inputDir="../input/channelFlow/channel_180"
+caseName="channel_180"
 
 ###############################################################################
 

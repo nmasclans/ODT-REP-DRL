@@ -112,8 +112,8 @@ class domain {
                   solver          *p_solv,
                   randomGenerator *p_rand,
                   bool             LisEddyDomain=false);
-        domain(domain *p_domn, param *p_pram);
-        virtual ~domain() {
+        domain(domain *p_domn, param *p_pram); /// constructor
+        virtual ~domain() {                    /// destructor
             for(int k=0; k<v.size(); k++)
                 delete v.at(k);
             delete domc;     
