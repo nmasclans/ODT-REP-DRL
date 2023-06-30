@@ -9,8 +9,8 @@ echo "the start time is"
 date
 ###############################################################################
 
-inputDir="../input/channelFlow/channel_180"
-caseName="channel_180"
+inputDir="../input/channelFlow/channel590"
+caseName="channel590"
 
 ###############################################################################
 
