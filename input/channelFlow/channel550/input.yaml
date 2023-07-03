@@ -1,5 +1,5 @@
 ################### Main ODT parameters
-# CHANNEL FLOW: Re_tau = 180. u_tau=1, delta_nu = kvisc0. So, plotting u vs x/kvisc0 is u+ vs y+.
+# CHANNEL FLOW: Re_tau = 550. u_tau=1, delta_nu = kvisc0. So, plotting u vs x/kvisc0 is u+ vs y+.
 
 params:
 
@@ -8,7 +8,7 @@ params:
     domainLength:  2.0            #  length of domain (m) (= 2*delta)
     ngrd0:         200            #  initial grid points
     rho0:          1.0            #  initial uniform density (kg/m^3)
-    kvisc0:        0.005556       #  initial uniform kinematic viscosity (m^2/s) 0.0016949 (= \nu = \mu / \rho = u_tau * delta / Re_tau)
+    kvisc0:        0.001818       #  initial uniform kinematic viscosity (m^2/s) 0.0016949 (= \nu = \mu / \rho = u_tau * delta / Re_tau = 1/Re_tau)
     dPdx:          -1.0           #  initial pressure gradient (Pa/m) ---- FORÇA!
     pres:          101325.0       #  pressure (Pa)
     chemMechFile:  not_used.xml   #  name of chemical mechanism file

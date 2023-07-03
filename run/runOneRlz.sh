@@ -1,16 +1,16 @@
 #!/bin/bash
 
 # Single realization run
-# run as "./runOneRlz.sh" or as "./runOneRlz.sh -r"
-# Change variables inputDir and caseName near the top.
+# run as "./runOneRlz.sh" <caseName>
+# note it requires a single input argument: caseName
 
 ###############################################################################
 echo "the start time is"
 date
 ###############################################################################
 
-inputDir="../input/channelFlow/channel590"
-caseName="channel590"
+inputDir="../input/channelFlow/$1"
+caseName="$1"
 
 ###############################################################################
 
