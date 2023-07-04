@@ -170,43 +170,7 @@ Ryz_odt   = odt[:,12] # R_yz+
 
 #------------ Get DNS statistics ---------------
 
-if reynoldsNumber == 590:
-    filename_dns = "DNS_statistics/Re590/dnsChannel_Re590_means.dat"
-    print(f"Getting DNS-means data from {filename_dns}")
-    dns_means = np.loadtxt(filename_dns)
-    y_dns = dns_means[:,1] # y+
-    u_dns = dns_means[:,2] # Umean normalized by U_tau (= u+_mean)
 
-    filename_dns = "DNS_statistics/Re590/dnsChannel_Re590_reynolds_stress.dat"
-    print(f"Getting DNS-reynolds data from {filename_dns}")
-    dns_reynolds_stress = np.loadtxt(filename_dns)
-    Rxx_dns = dns_reynolds_stress[:,2] # R_xx+, normalized by U_tau^2
-    Ryy_dns = dns_reynolds_stress[:,3]
-    Rzz_dns = dns_reynolds_stress[:,4]
-    Rxy_dns = dns_reynolds_stress[:,5] # R_xy+
-    Rxz_dns = dns_reynolds_stress[:,6] # R_xz+
-    Ryz_dns = dns_reynolds_stress[:,7] # R_yz+
-
-    urmsf_dns = np.sqrt(Rxx_dns) # = sqrt(mean(u'u')), normalized by U_tau^2
-    vrmsf_dns = np.sqrt(Ryy_dns)
-    wrmsf_dns = np.sqrt(Rzz_dns)
-
-else:
-    filename_dns = f"DNS_statistics/Re{reynoldsNumber}/profiles/Re{reynoldsNumber}.prof"
-    dns   = np.loadtxt(filename_dns,comments="%")
-    y_dns = dns[:,1] # y+
-    u_dns = dns[:,2] # u+_mean 
-
-    urmsf_dns = dns[:,3] # named as u'+, normalized by U_tau
-    vrmsf_dns = dns[:,4] # named as v'+, normalized by U_tau
-    wrmsf_dns = dns[:,5] # named as w'+, normalized by U_tau
-    
-    Rxx_dns   = urmsf_dns**2    
-    Ryy_dns   = vrmsf_dns**2
-    Rzz_dns   = wrmsf_dns**2
-    Rxy_dns   = dns[:,10]
-    Rxz_dns   = dns[:,11]
-    Ryz_dns   = dns[:,12]
 
 
 #--------------------------------------------------------------------------------------------

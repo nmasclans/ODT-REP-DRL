@@ -44,3 +44,27 @@ def get_dns_data(reynolds_number):
         Ryz_dns   = dns[:,12]
 
     return (y_dns, u_dns, urmsf_dns, vrmsf_dns, wrmsf_dns, Rxx_dns, Ryy_dns, Rzz_dns, Rxy_dns, Rxz_dns, Ryz_dns)
+
+
+def get_time(file):
+    """
+    Obtain time instant of a datafile (.dat) of instantaneous odt data.
+
+    Parameters:
+        file (str): filepath of the .dat of instantaneous data, from which it is obtained the time instant. 
+        
+    Returns:
+        time (float): time instant of the fluid data of the .dat file 
+
+    Comments: 
+        Time is stored as a comment in the first line of the .dat file, e.g.
+        # time = 50.0
+    """
+    with open(file,"r") as f:
+        first_line = f.readline().strip()
+    if first_line.startswith("# time = "):
+        time = float(first_line.split(" = ")[1])
+    else:
+        print(f"No valid format found in the first line of {ifile}.")
+        time = None
+    return time

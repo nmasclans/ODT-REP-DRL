@@ -8,8 +8,8 @@ params:
     domainLength:  2.0            #  length of domain (m) (= 2*delta)
     ngrd0:         200            #  initial grid points
     rho0:          1.0            #  initial uniform density (kg/m^3)
-    kvisc0:        0.005556       #  initial uniform kinematic viscosity (m^2/s) 0.0016949 (= \nu = \mu / \rho = u_tau * delta / Re_tau)
-    dPdx:          -1.0           #  initial pressure gradient (Pa/m) ---- FORÇA!
+    kvisc0:        0.005556       #  initial uniform kinematic viscosity (m^2/s) 0.0016949 (= nu = mu / rho = u_tau * delta / Re_tau = 1 / Re_tau with u_tau = 1, delta = 1)
+    dPdx:          -1.0           #  initial pressure gradient (Pa/m) ---- FORÇA!          (= -tau_w / delta, where tau_w = rho * u_tau^2)
     pres:          101325.0       #  pressure (Pa)
     chemMechFile:  not_used.xml   #  name of chemical mechanism file
     probType:      CHANNEL        #  CHANNEL, CHANNEL_SCALAR, JETMIXL_RXN
