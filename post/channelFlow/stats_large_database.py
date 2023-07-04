@@ -1,6 +1,19 @@
-# Compute ODT mean and rms velocity profiles. Plot results versus DNS results from DNS_statistics database.
-# Run as: python3 stats_large_database.py case_name reynolds_number
-# Values are in wall units (y+, u+).
+# Description: 
+# Compute ODT mean and rmsf velocity profiles and reynolds stresses
+# Plot results versus DNS results from DNS_statistics database.
+
+# Usage
+# python3 stats_large_database.py [case_name] [reynolds_number]
+
+# Arguments:
+# case_name (str): Name of the case
+# reynolds_number (int): reynolds number of the odt case, to get comparable dns result.
+
+# Example Usage:
+# python3 stats_large_database.py channel180 180
+
+# Comments:
+# Values are in wall units (y+, u+) for both ODT and DNS results,
 # Scaling is done in the input file (not explicitly here).
 
 import numpy as np
@@ -12,6 +25,7 @@ matplotlib.use('PDF')
 import matplotlib.pyplot as plt
 import os
 from scipy.interpolate import interp1d
+from ChannelVisualizer import ChannelVisualizer
 
 #--------------------------------------------------------------------------------------------
 
@@ -117,14 +131,12 @@ urmsf = np.sqrt(R_xx)
 vrmsf = np.sqrt(R_yy) 
 wrmsf = np.sqrt(R_zz) 
 
-
 yu += delta         # domain center is at 0; shift so left side is zero
 yu = yu[:nunif2]    # plotting to domain center
 
 dudy = (um[1]-um[0])/(yu[1]-yu[0])
 utau = np.sqrt(kvisc * np.abs(dudy))
 RetauOdt = utau * delta / kvisc
-
 yu *= utau/kvisc    # scale y --> y+ (note: utau should be unity)
 
 odt_data = np.vstack([yu,um,vm,wm,urmsf,vrmsf,wrmsf,R_xx,R_yy,R_zz,R_xy,R_xz,R_yz]).T
@@ -142,16 +154,16 @@ print("Actual  Retau: ", RetauOdt)
 filename_odt = "../../data/"+caseN+"/post/ODTstat.dat"
 print(f"Getting ODT data from {filename_odt}")
 odt = np.loadtxt(filename_odt)
-y_odt    = odt[:,0] # y+
-u_odt    = odt[:,1] # u+_mean
+y_odt    = odt[:,0]   # y+
+u_odt    = odt[:,1]   # u+_mean
 
-urmsf_odt = odt[:,4] # u+_rmsf
-vrmsf_odt = odt[:,5] # v+_rmsf
-wrmsf_odt = odt[:,6] # w+_rmsf
+urmsf_odt = odt[:,4]  # u+_rmsf
+vrmsf_odt = odt[:,5]  # v+_rmsf
+wrmsf_odt = odt[:,6]  # w+_rmsf
 
-Rxx_odt   = odt[:,7] # R_xy+
-Ryy_odt   = odt[:,8] # R_xz+
-Rzz_odt   = odt[:,9] # R_yz+
+Rxx_odt   = odt[:,7]  # R_xx+
+Ryy_odt   = odt[:,8]  # R_yy+
+Rzz_odt   = odt[:,9]  # R_zz+
 Rxy_odt   = odt[:,10] # R_xy+
 Rxz_odt   = odt[:,11] # R_xz+
 Ryz_odt   = odt[:,12] # R_yz+
@@ -199,109 +211,10 @@ else:
 
 #--------------------------------------------------------------------------------------------
 
-print(f"MAKING PLOT OF MEAN U PROFILE: ODT vs DNS in ../../data/{caseN}/post/u_mean.pdf" )
+# Build plots
 
-matplotlib.rcParams.update({'font.size':20, 'figure.autolayout': True}) #, 'font.weight':'bold'})
-
-fig, ax = plt.subplots()
-
-ax.semilogx(y_odt, u_odt, 'k-',  label=r'ODT')
-ax.semilogx(y_dns, u_dns, 'k--', label=r'DNS')
-
-ax.set_xlabel(r'$y^+$') #, fontsize=22)
-ax.set_ylabel(r'$u^+$') #, fontsize=22)
-ax.legend(loc='upper left', frameon=False, fontsize=16)
-ax.set_ylim([0, 30])
-ax.set_xlim([1, 1000])
-
-plt.savefig(f"../../data/{caseN}/post/u_mean")
-
-#--------------------------------------------------------------------------------------------
-
-print(f"MAKING PLOT OF RMS VEL PROFILES: ODT vs DNS in ../../data/{caseN}/post/u_rmsf.pdf" )
-
-matplotlib.rcParams.update({'font.size':20, 'figure.autolayout': True}) #, 'font.weight':'bold'})
-
-fig, ax = plt.subplots()
-
-ax.plot(y_odt,  urmsf_odt, 'k-',  label=r'$u_{rmsf}/u_\tau$')
-ax.plot(y_odt,  vrmsf_odt, 'b--', label=r'$v_{rmsf}/u_\tau$')
-ax.plot(y_odt,  wrmsf_odt, 'r:',  label=r'$w_{rmsf}/u_\tau$')
-
-ax.plot(-y_dns, urmsf_dns, 'k-',  label='')
-ax.plot(-y_dns, vrmsf_dns, 'b--', label='')
-ax.plot(-y_dns, wrmsf_dns, 'r:',  label='')
-
-ax.plot([0,0], [0,3], '-', linewidth=0.5, color='gray')
-ax.arrow( 30, 0.2,  50, 0, head_width=0.05, head_length=10, color='gray')
-ax.arrow(-30, 0.2, -50, 0, head_width=0.05, head_length=10, color='gray')
-ax.text(  30, 0.3, "ODT", fontsize=14, color='gray')
-ax.text( -80, 0.3, "DNS", fontsize=14, color='gray')
-
-ax.set_xlabel(r'$y^+$')
-ax.set_ylabel(r'$u_{i,rmsf}/u_\tau$')
-ax.legend(loc='upper right', frameon=False, fontsize=16)
-ax.set_xlim([-300, 300])
-ax.set_ylim([0, 3])
-
-plt.savefig(f"../../data/{caseN}/post/u_rmsf")
-
-#--------------------------------------------------------------------------------------------
-
-print(f"MAKING PLOT OF REYNOLDS STRESSES PROFILES (NOT-DIAGONAL): ODT vs DNS in ../../data/{caseN}/post/reynolds_stress.pdf" )
-
-matplotlib.rcParams.update({'font.size':20, 'figure.autolayout': True}) #, 'font.weight':'bold'})
-
-fig, ax = plt.subplots()
-
-ax.plot(y_odt,  Rxy_odt, 'k-',  label=r'$R_{xy}/u_\tau^2$')
-ax.plot(y_odt,  Rxz_odt, 'b--', label=r'$R_{xz}/u_\tau^2$')
-ax.plot(y_odt,  Ryz_odt, 'r:',  label=r'$R_{yz}/u_\tau^2$')
-
-ax.plot(-y_dns, Rxy_dns, 'k-',  label='')
-ax.plot(-y_dns, Rxz_dns, 'b--', label='')
-ax.plot(-y_dns, Ryz_dns, 'r:',  label='')
-
-ax.plot([0,0], [-1,3], '-', linewidth=0.5, color='gray')
-ax.arrow( 30, 0.2,  50, 0, head_width=0.05, head_length=10, color='gray')
-ax.arrow(-30, 0.2, -50, 0, head_width=0.05, head_length=10, color='gray')
-ax.text(  30, 0.3, "ODT", fontsize=14, color='gray')
-ax.text( -80, 0.3, "DNS", fontsize=14, color='gray')
-
-ax.set_xlabel(r'$y^+$')
-ax.set_ylabel(r'$R_{ij}/u_\tau^2$')
-ax.legend(loc='upper right', frameon=False, fontsize=16)
-ax.set_xlim([-300, 300])
-ax.set_ylim([-1, 3])
-
-plt.savefig(f"../../data/{caseN}/post/reynolds_stress")
-
-#--------------------------------------------------------------------------------------------
-
-print(f"MAKING PLOT OF REYNOLDS STRESSES PROFILES (DIAGONAL): ODT vs DNS in ../../data/{caseN}/post/reynolds_stress.pdf" )
-
-matplotlib.rcParams.update({'font.size':20, 'figure.autolayout': True}) #, 'font.weight':'bold'})
-
-fig, ax = plt.subplots()
-
-ax.plot(y_odt,  Rxx_odt, 'k-',  label=r'$R_{xx}/u_\tau^2$')
-ax.plot(y_odt,  Ryy_odt, 'b--', label=r'$R_{yy}/u_\tau^2$')
-ax.plot(y_odt,  Rzz_odt, 'r:',  label=r'$R_{zz}/u_\tau^2$')
-
-ax.plot(-y_dns, Rxx_dns, 'k-',  label='')
-ax.plot(-y_dns, Ryy_dns, 'b--', label='')
-ax.plot(-y_dns, Rzz_dns, 'r:',  label='')
-
-ax.plot([0,0], [-1,3], '-', linewidth=0.5, color='gray')
-ax.arrow( 30, 0.2,  50, 0, head_width=0.05, head_length=10, color='gray')
-ax.arrow(-30, 0.2, -50, 0, head_width=0.05, head_length=10, color='gray')
-ax.text(  30, 0.3, "ODT", fontsize=14, color='gray')
-ax.text( -80, 0.3, "DNS", fontsize=14, color='gray')
-
-ax.set_xlabel(r'$y^+$')
-ax.set_ylabel(r'$R_{ii}/u_\tau^2$')
-ax.legend(loc='upper right', frameon=False, fontsize=16)
-ax.set_xlim([-300, 300])
-ax.set_ylim([-1, 8])
-
-plt.savefig(f"../../data/{caseN}/post/reynolds_diagonal")
+visualizer = ChannelVisualizer(caseN)
+visualizer.build_u_mean_profile(y_odt, y_dns, u_odt, u_dns)
+visualizer.build_u_rmsf_profile(y_odt, y_dns, urmsf_odt, vrmsf_odt, wrmsf_odt, urmsf_dns, vrmsf_dns, wrmsf_dns)
+visualizer.build_reynolds_stress_not_diagonal_profile(y_odt, y_dns, Rxy_odt, Rxz_odt, Ryz_odt, Rxy_dns, Rxz_dns, Ryz_dns)
+visualizer.build_reynolds_stress_diagonal_profile(y_odt, y_dns, Rxx_odt, Ryy_odt, Rzz_odt, Rxx_dns, Ryy_dns, Rzz_dns)

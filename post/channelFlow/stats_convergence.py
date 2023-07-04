@@ -1,6 +1,20 @@
-# Compute ODT mean and rms velocity profiles. Plot results versus DNS results from DNS_statistics database.
-# Run as: python3 stats_large_database.py case_name reynolds_number
-# Values are in wall units (y+, u+).
+# Description: 
+# Compute ODT mean and rmsf velocity profiles and reynolds stresses
+# Plot results for increasing averaging time, to observe profiles convergence
+
+# Usage
+# python3 stats_large_database.py [case_name] [reynolds_number] [delta_time_stats]
+
+# Arguments:
+# case_name (str): Name of the case
+# reynolds_number (int): reynolds number of the odt case, to get comparable dns result.
+# delta_time_stats (int): delta time (seconds) between averaged profiles
+
+# Example Usage:
+# python3 stats_large_database.py channel180 180 25
+
+# Comments:
+# Values are in wall units (y+, u+) for both ODT and DNS results,
 # Scaling is done in the input file (not explicitly here).
 
 import numpy as np
@@ -13,21 +27,25 @@ import matplotlib.pyplot as plt
 import os
 from scipy.interpolate import interp1d
 
+from ChannelVisualizer import ChannelVisualizer
+from utils import get_dns_data
+
+
 #--------------------------------------------------------------------------------------------
 
 try :
     caseN          = sys.argv[1]
-    reynoldsNumber = int(sys.argv[2])
+    reynolds_number = int(sys.argv[2])
+    delta_aver_time = int(sys.argv[3])
 except :
     raise ValueError("Include the case name in the call")
 
 if not os.path.exists("../../data/"+caseN+"/post") :
     os.mkdir("../../data/"+caseN+"/post")
 
-deltaTimeStats = 10 # seconds
-tStart         = 50.0
-
 #------------ ODT data ---------------
+
+### Data is already normalized to viscous units, because utau = 1, imposed by the problem setup
 
 # --- Get ODT input parameters ---
 
@@ -38,6 +56,7 @@ dxmin = yml["params"]["dxmin"]
 delta = yml["params"]["domainLength"] * 0.5
 Retau = 1.0/kvisc
 tEnd  = yml["params"]["tEnd"]
+tStart         = 50.0
 
 # --- Get ODT computational data ---
 
@@ -48,8 +67,8 @@ nunif  = int(1/dxmin)        # num. points uniform grid (using smallest grid siz
 nunif2 = int(nunif/2)        # half of num. points (for ploting to domain center, symmetry in y-axis)
 
 # Averaging times
-timeStats = np.arange(tStart, tEnd+0.1, deltaTimeStats)
-numTimeStats = len(timeStats)
+averaging_times = np.arange(tStart, tEnd+0.1, delta_aver_time)
+num_aver_times  = len(averaging_times)
 
 yu  = np.linspace(-delta,delta,nunif) # uniform grid in y-axis
 # empty vectors of time-averaged quantities
@@ -62,15 +81,15 @@ w2m_aux = np.zeros(nunif)
 uvm_aux = np.zeros(nunif)   
 uwm_aux = np.zeros(nunif)   
 vwm_aux = np.zeros(nunif)   
-um      = np.zeros(nunif, numTimeStats)   # mean velocity
-vm      = np.zeros(nunif, numTimeStats)
-wm      = np.zeros(nunif, numTimeStats)
-u2m     = np.zeros(nunif, numTimeStats)   # mean square velocity (for rmsf and reynolds stresses)
-v2m     = np.zeros(nunif, numTimeStats)
-w2m     = np.zeros(nunif, numTimeStats)
-uvm     = np.zeros(nunif, numTimeStats)   # mean velocity correlations (for reynolds stresses)
-uwm     = np.zeros(nunif, numTimeStats)
-vwm     = np.zeros(nunif, numTimeStats)
+um      = np.zeros([nunif, num_aver_times])   # mean velocity
+vm      = np.zeros([nunif, num_aver_times])
+wm      = np.zeros([nunif, num_aver_times])
+u2m     = np.zeros([nunif, num_aver_times])   # mean square velocity (for rmsf and reynolds stresses)
+v2m     = np.zeros([nunif, num_aver_times])
+w2m     = np.zeros([nunif, num_aver_times])
+uvm     = np.zeros([nunif, num_aver_times])   # mean velocity correlations (for reynolds stresses)
+uwm     = np.zeros([nunif, num_aver_times])
+vwm     = np.zeros([nunif, num_aver_times])
 
 nfiles = 0
 for ifile in flist :
@@ -102,38 +121,36 @@ for ifile in flist :
     # -> averaging time is stored as a comment in the first line of the .dat file, e.g.
     # "# time = 50.0"
     with open(ifile,"r") as file:
-        firstLine = file.readline().strip()
-    if firstLine.startswith("# time = "):
-        averagingTime = float(firstLine.split(" = ")[1])
+        first_line = file.readline().strip()
+    if first_line.startswith("# time = "):
+        averaging_time = float(first_line.split(" = ")[1])
     else:
         print(f"No valid format found in the first line of {ifile}.")
 
-    indexAveragingTime = np.where()
+    idx_averaging_time = np.where(averaging_time == averaging_times)[0]
+    if len(idx_averaging_time)>0:
+        idx = idx_averaging_time[0]
+        um[:,idx]  = um_aux/nfiles   
+        vm[:,idx]  = vm_aux/nfiles   
+        wm[:,idx]  = wm_aux/nfiles   
+        u2m[:,idx] = u2m_aux/nfiles    
+        v2m[:,idx] = v2m_aux/nfiles    
+        w2m[:,idx] = w2m_aux/nfiles    
+        uvm[:,idx] = uvm_aux/nfiles    
+        uwm[:,idx] = uwm_aux/nfiles    
+        vwm[:,idx] = vwm_aux/nfiles    
+        
 
-
-# means
-um /= nfiles
-vm /= nfiles
-wm /= nfiles
-um = 0.5*(um[:nunif2] + np.flipud(um[nunif2:]))  # mirror data (symmetric)
-vm = 0.5*(vm[:nunif2] + np.flipud(vm[nunif2:]))
-wm = 0.5*(wm[:nunif2] + np.flipud(wm[nunif2:]))
-
-# squared means
-u2m /= nfiles
-v2m /= nfiles
-w2m /= nfiles
-u2m = 0.5*(u2m[:nunif2] + np.flipud(u2m[nunif2:]))
-v2m = 0.5*(v2m[:nunif2] + np.flipud(v2m[nunif2:]))
-w2m = 0.5*(w2m[:nunif2] + np.flipud(w2m[nunif2:]))
-
-# velocity correlations
-uvm /= nfiles
-uwm /= nfiles
-vwm /= nfiles
-uvm = 0.5*(uvm[:nunif2] + np.flipud(uvm[nunif2:]))
-uwm = 0.5*(uwm[:nunif2] + np.flipud(uwm[nunif2:]))
-vwm = 0.5*(vwm[:nunif2] + np.flipud(vwm[nunif2:]))
+# mirror data (symmetric channel in y-axis)
+um  = 0.5 * (um[:nunif2,:]  + np.flipud(um[nunif2:,:]))  # mirror data (symmetric)
+vm  = 0.5 * (vm[:nunif2,:]  + np.flipud(vm[nunif2:,:]))
+wm  = 0.5 * (wm[:nunif2,:]  + np.flipud(wm[nunif2:,:]))
+u2m = 0.5 * (u2m[:nunif2,:] + np.flipud(u2m[nunif2:,:]))
+v2m = 0.5 * (v2m[:nunif2,:] + np.flipud(v2m[nunif2:,:]))
+w2m = 0.5 * (w2m[:nunif2,:] + np.flipud(w2m[nunif2:,:]))
+uvm = 0.5 * (uvm[:nunif2,:] + np.flipud(uvm[nunif2:,:]))
+uwm = 0.5 * (uwm[:nunif2,:] + np.flipud(uwm[nunif2:,:]))
+vwm = 0.5 * (vwm[:nunif2,:] + np.flipud(vwm[nunif2:,:]))
 
 # Reynolds stresses
 R_xx  = u2m - um*um
@@ -148,23 +165,30 @@ urmsf = np.sqrt(R_xx)
 vrmsf = np.sqrt(R_yy) 
 wrmsf = np.sqrt(R_zz) 
 
-
+# y-coordinates
 yu += delta         # domain center is at 0; shift so left side is zero
 yu = yu[:nunif2]    # plotting to domain center
 
-dudy = (um[1]-um[0])/(yu[1]-yu[0])
+# Re_tau of ODT data
+dudy = (um[1,-1]-um[0,-1])/(yu[1]-yu[0])
 utau = np.sqrt(kvisc * np.abs(dudy))
 RetauOdt = utau * delta / kvisc
 
 yu *= utau/kvisc    # scale y --> y+ (note: utau should be unity)
 
-odt_data = np.vstack([yu,um,vm,wm,urmsf,vrmsf,wrmsf,R_xx,R_yy,R_zz,R_xy,R_xz,R_yz]).T
-fname = "../../data/"+caseN+"/post/ODTstat.dat"
-##np.savetxt(fname, odt_data, 
-##           header="y+,         u+_mean,     v+_mean,     w+_mean,     u+_rmsf,     v+_rmsf,     w+_rmsf      "\
-##                  "R_xx+,       R_yy+,       R_zz+,       R_xy+,       R_xz+,       R_yz+",
-##           fmt='%12.5E')
-##
-##print("Nominal Retau: ", Retau)
-##print("Actual  Retau: ", RetauOdt)
+print("Nominal Retau: ", Retau)
+print("Actual  Retau (at simulation end):", RetauOdt)
 
+#------------ DNS data ---------------
+
+(y_dns, u_dns, urmsf_dns, vrmsf_dns, wrmsf_dns, Rxx_dns, Ryy_dns, Rzz_dns, Rxy_dns, Rxz_dns, Ryz_dns) \
+    = get_dns_data(reynolds_number)
+#--------------------------------------------------------------------------------------------
+
+# Build plots
+
+visualizer = ChannelVisualizer(caseN)
+visualizer.build_u_mean_profile_odt_convergence(yu, y_dns, um, u_dns, averaging_times)
+visualizer.build_u_rmsf_profile_odt_convergence(yu, y_dns, urmsf, vrmsf, wrmsf, urmsf_dns, vrmsf_dns, wrmsf_dns, averaging_times)
+visualizer.build_reynolds_stress_diagonal_profile_odt_convergence(    yu, y_dns, R_xx, R_yy, R_zz, Rxx_dns, Ryy_dns, Rzz_dns, averaging_times)
+visualizer.build_reynolds_stress_not_diagonal_profile_odt_convergence(yu, y_dns, R_xy, R_xz, R_yz, Rxy_dns, Rxz_dns, Ryz_dns, averaging_times)
