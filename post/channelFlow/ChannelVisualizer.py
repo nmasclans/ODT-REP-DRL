@@ -78,9 +78,9 @@ class ChannelVisualizer():
 
         fig, ax = plt.subplots()
 
-        ax.plot(y_odt,  Rxx_odt, 'k-',  label=r'$R_{xx}/u_\tau^2$')
-        ax.plot(y_odt,  Ryy_odt, 'b--', label=r'$R_{yy}/u_\tau^2$')
-        ax.plot(y_odt,  Rzz_odt, 'r:',  label=r'$R_{zz}/u_\tau^2$')
+        ax.plot(y_odt,  Rxx_odt, 'k-',  label=r"$<u'u'>/u_\tau^2$")
+        ax.plot(y_odt,  Ryy_odt, 'b--', label=r"$<v'v'>/u_\tau^2$")
+        ax.plot(y_odt,  Rzz_odt, 'r:',  label=r"$<w'w'>/u_\tau^2$")
 
         ax.plot(-y_dns, Rxx_dns, 'k-',  label='')
         ax.plot(-y_dns, Ryy_dns, 'b--', label='')
@@ -93,7 +93,7 @@ class ChannelVisualizer():
         ax.text( -80, -0.4, "DNS", fontsize=14, color='gray')
 
         ax.set_xlabel(r'$y^+$')
-        ax.set_ylabel(r'$R_{ii}/u_\tau^2$')
+        ax.set_ylabel(r"$<u_i'u_i'>/u_\tau^2$")
         ax.legend(loc='upper right', frameon=False, fontsize=16)
         #ax.set_xlim([-300, 300])
         ax.set_ylim([-1, 8])
@@ -109,9 +109,9 @@ class ChannelVisualizer():
 
         fig, ax = plt.subplots()
 
-        ax.plot(y_odt,  Rxy_odt, 'k-',  label=r'$R_{xy}/u_\tau^2$')
-        ax.plot(y_odt,  Rxz_odt, 'b--', label=r'$R_{xz}/u_\tau^2$')
-        ax.plot(y_odt,  Ryz_odt, 'r:',  label=r'$R_{yz}/u_\tau^2$')
+        ax.plot(y_odt,  Rxy_odt, 'k-',  label=r"$<u'v'>/u_\tau^2$")
+        ax.plot(y_odt,  Rxz_odt, 'b--', label=r"$<u'w'>/u_\tau^2$")
+        ax.plot(y_odt,  Ryz_odt, 'r:',  label=r"$<v'w'>/u_\tau^2$")
 
         ax.plot(-y_dns, Rxy_dns, 'k-',  label='')
         ax.plot(-y_dns, Rxz_dns, 'b--', label='')
@@ -124,7 +124,7 @@ class ChannelVisualizer():
         ax.text( -80, 0.3, "DNS", fontsize=14, color='gray')
 
         ax.set_xlabel(r'$y^+$')
-        ax.set_ylabel(r'$R_{ij}/u_\tau^2$')
+        ax.set_ylabel(r"$<u_i'u_j'>/u_\tau^2$")
         ax.legend(loc='upper right', frameon=False, fontsize=16)
         #ax.set_xlim([-300, 300])
         ax.set_ylim([-1, 3])
@@ -228,7 +228,7 @@ class ChannelVisualizer():
         ax[2].plot(y_dns, Rzz_dns, 'k--')
 
         # Axis: labels and limits
-        ylabel_str = [r'$R_{xx}/u_\tau^2$', r'$R_{yy}/u_\tau^2$', r'$R_{zz}/u_\tau^2$']
+        ylabel_str = [r"$<u'u'>/u_\tau^2$", r"$<v'v'>/u_\tau^2$", r"$<w'w'>/u_\tau^2$"]
         for axis in range(3):
             ax[axis].set_xlabel(r'$y^+$')
             ax[axis].set_ylabel(ylabel_str[axis])
@@ -263,7 +263,7 @@ class ChannelVisualizer():
         ax[2].plot(y_dns, Ryz_dns, 'k--')
 
         # Axis: labels and limits
-        ylabel_str = [r'$R_{xy}/u_\tau^2$', r'$R_{xz}/u_\tau^2$', r'$R_{yz}/u_\tau^2$']
+        ylabel_str = [r"$<u'v'>/u_\tau^2$", r"$<u'w'>/u_\tau^2$", r"$<v'w'>/u_\tau^2$"]
         for axis in range(3):
             ax[axis].set_xlabel(r'$y^+$')
             ax[axis].set_ylabel(ylabel_str[axis])
@@ -279,4 +279,26 @@ class ChannelVisualizer():
 
         plt.savefig(filename, dpi=600)
 
-    
+
+    def build_stress_decomposition(self, ydelta_odt, ydelta_dns, \
+                                   tau_viscous_odt, tau_reynolds_odt, tau_total_odt, \
+                                   tau_viscous_dns, tau_reynolds_dns, tau_total_dns):
+        
+        filename = f"../../data/{self.caseN}/post/stress_decomposition.jpg"
+        print(f"MAKING PLOT OF STRESS DECOMPOSITION ODT vs DNS in {filename}")
+
+        fig, ax = plt.subplots(2,figsize=(9,9))
+        ax[0].set_title("ODT")
+        ax[0].plot(ydelta_odt[:-1], tau_viscous_odt,  'k-',  label=r"$\tau_{viscous}=\rho\nu\,d<U>/dy$"  )
+        ax[0].plot(ydelta_odt[:-1], tau_reynolds_odt, 'b--', label=r"$\tau_{reynolds,uv}=-\rho<u'v'>$"  )
+        ax[0].plot(ydelta_odt[:-1], tau_total_odt,    'r:',  label=r"$\tau_{total}$"  )
+        ax[1].set_title("DNS")
+        ax[1].plot(ydelta_dns[:-1], tau_viscous_dns,  'k-',  label=r"$\tau_{viscous}=\rho\nu\,d<U>/dy$"  )
+        ax[1].plot(ydelta_dns[:-1], tau_reynolds_dns, 'b--', label=r"$\tau_{reynolds,uv}=-\rho<u'v'>$"  )
+        ax[1].plot(ydelta_dns[:-1], tau_total_dns,    'r:',  label=r"$\tau_{total}$"  )
+        for i in range(2):
+            ax[i].set_xlabel(r"$y/\delta$")
+            ax[i].set_ylabel(r"$\tau(y)$")
+            ax[i].legend(loc='upper right', ncol = 1)
+        fig.tight_layout()
+        plt.savefig(filename, dpi=600)

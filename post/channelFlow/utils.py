@@ -8,12 +8,19 @@ def get_dns_data(reynolds_number):
     if reynolds_number == 590:
         filename_dns = "DNS_statistics/Re590/dnsChannel_Re590_means.dat"
         print(f"Getting DNS-means data from {filename_dns}")
+        # Dataset columns
+        # 0    | 1    | 2     | 3         | 4     | 5         | 6
+        # y    | y+   | Umean | dUmean/dy | Wmean | dWmean/dy | Pmean
+
         dns_means = np.loadtxt(filename_dns)
         y_dns = dns_means[:,1] # y+
         u_dns = dns_means[:,2] # Umean normalized by U_tau (= u+_mean)
 
         filename_dns = "DNS_statistics/Re590/dnsChannel_Re590_reynolds_stress.dat"
         print(f"Getting DNS-reynolds data from {filename_dns}")
+        # Dataset columns
+        # 0    | 1    | 2    | 3    | 4    | 5    | 6    | 7
+        # y    | y+   | R_uu | R_vv | R_ww | R_uv | R_uw | R_vw
         dns_reynolds_stress = np.loadtxt(filename_dns)
         Rxx_dns = dns_reynolds_stress[:,2] # R_xx+, normalized by U_tau^2
         Ryy_dns = dns_reynolds_stress[:,3]
@@ -28,22 +35,27 @@ def get_dns_data(reynolds_number):
 
     else:
         filename_dns = f"DNS_statistics/Re{reynolds_number}/profiles/Re{reynolds_number}.prof"
+        print(f"Getting DNS-reynolds data from {filename_dns}")
+        # Dataset columns:
+        # 0    | 1    | 2    | 3    | 4    | 5    | 6      | 7      | 8      | 9      | 10   | 11   | 12   | 13   | 14   | 15     | 16   
+        # y/h  | y+   | U+   | u'+  | v'+  | w'+  | -Om_z+ | om_x'+ | om_y'+ | om_z'+ | uv'+ | uw'+ | vw'+ | pr'+ | ps'+ | psto'+ | p'    
         dns   = np.loadtxt(filename_dns,comments="%")
-        y_dns = dns[:,1] # y+
-        u_dns = dns[:,2] # u+_mean 
+        ydelta_dns = dns[:,0] # y/delta
+        yplus_dns  = dns[:,1] # y+
+        um_dns     = dns[:,2] # u+_mean 
 
-        urmsf_dns = dns[:,3] # named as u'+, normalized by U_tau
-        vrmsf_dns = dns[:,4] # named as v'+, normalized by U_tau
-        wrmsf_dns = dns[:,5] # named as w'+, normalized by U_tau
+        urmsf_dns  = dns[:,3] # named as u'+, normalized by U_tau
+        vrmsf_dns  = dns[:,4] # named as v'+, normalized by U_tau
+        wrmsf_dns  = dns[:,5] # named as w'+, normalized by U_tau
         
-        Rxx_dns   = urmsf_dns**2    
-        Ryy_dns   = vrmsf_dns**2
-        Rzz_dns   = wrmsf_dns**2
-        Rxy_dns   = dns[:,10]
-        Rxz_dns   = dns[:,11]
-        Ryz_dns   = dns[:,12]
+        ufufm_dns  = urmsf_dns**2    
+        vfvfm_dns  = vrmsf_dns**2
+        wfwfm_dns  = wrmsf_dns**2
+        ufvfm_dns  = dns[:,10]
+        ufwfm_dns  = dns[:,11]
+        vfwfm_dns  = dns[:,12]
 
-    return (y_dns, u_dns, urmsf_dns, vrmsf_dns, wrmsf_dns, Rxx_dns, Ryy_dns, Rzz_dns, Rxy_dns, Rxz_dns, Ryz_dns)
+    return (ydelta_dns, yplus_dns, um_dns, urmsf_dns, vrmsf_dns, wrmsf_dns, ufufm_dns, vfvfm_dns, wfwfm_dns, ufvfm_dns, ufwfm_dns, vfwfm_dns)
 
 
 def get_time(file):

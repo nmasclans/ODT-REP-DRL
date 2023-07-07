@@ -1,15 +1,15 @@
 ################### Main ODT parameters
-# CHANNEL FLOW: Re_tau = 550. u_tau=1, delta_nu = kvisc0. So, plotting u vs x/kvisc0 is u+ vs y+.
+# CHANNEL FLOW: Re_tau = 180. u_tau=1, delta_nu = kvisc0. So, plotting u vs x/kvisc0 is u+ vs y+.
 
 params:
 
-    seed:          22             #  random number generator seed (negative to randomize it)
-    tEnd:          55.            #  ending time of realization (s)
+    seed:          -1             #  random number generator seed (negative to randomize it)
+    tEnd:          1000.          #  ending time of realization (s)
     domainLength:  2.0            #  length of domain (m) (= 2*delta)
     ngrd0:         200            #  initial grid points
     rho0:          1.0            #  initial uniform density (kg/m^3)
-    kvisc0:        0.001818       #  initial uniform kinematic viscosity (m^2/s) 0.0016949 (= \nu = \mu / \rho = u_tau * delta / Re_tau = 1/Re_tau)
-    dPdx:          -1.0           #  initial pressure gradient (Pa/m) ---- FORÇA!
+    kvisc0:        0.005556       #  initial uniform kinematic viscosity (m^2/s) 0.0016949 (= nu = mu / rho = u_tau * delta / Re_tau = 1 / Re_tau with u_tau = 1, delta = 1)
+    dPdx:          -1.0           #  initial pressure gradient (Pa/m) ---- FORÇA!          (= -tau_w / delta, where tau_w = rho * u_tau^2)
     pres:          101325.0       #  pressure (Pa)
     chemMechFile:  not_used.xml   #  name of chemical mechanism file
     probType:      CHANNEL        #  CHANNEL, CHANNEL_SCALAR, JETMIXL_RXN
@@ -61,34 +61,5 @@ bcCond:
 
 dumpTimesGen:
     dTimeStart: 50.0     # make < 0 to ignore dumpTimesGen and use dumpTimes (if present)
-    dTimeEnd:   150.0
+    dTimeEnd:   1000.0
     dTimeStep:  0.2
-
-dumpTimes:               # ignored if dumpTimesGen["dTimesStart"] >= 0.0
-
-    - 50.0               # start output here to skip the initial transient
-    - 50.2
-    - 50.4
-    - 50.6
-    - 50.8
-    - 51.0
-    - 51.2
-    - 51.4
-    - 51.6
-    - 51.8
-    - 52.0
-    - 52.2
-    - 52.4
-    - 52.6
-    - 52.8
-    - 53.0
-    - 53.2
-    - 53.4
-    - 53.6
-    - 53.8
-    - 54.0
-    - 54.2
-    - 54.4
-    - 54.6
-    - 54.8
-    - 55.0

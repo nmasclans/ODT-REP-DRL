@@ -3,14 +3,14 @@
 # Plot results versus DNS results from DNS_statistics database.
 
 # Usage
-# python3 stats_large_database.py [case_name] [reynolds_number]
+# python3 stats_odt_vs_dns.py [case_name] [reynolds_number]
 
 # Arguments:
 # case_name (str): Name of the case
 # reynolds_number (int): reynolds number of the odt case, to get comparable dns result.
 
 # Example Usage:
-# python3 stats_large_database.py channel180 180
+# python3 stats_odt_vs_dns.py channel180 180
 
 # Comments:
 # Values are in wall units (y+, u+) for both ODT and DNS results,
@@ -27,11 +27,13 @@ import os
 from scipy.interpolate import interp1d
 from ChannelVisualizer import ChannelVisualizer
 
+from utils import get_dns_data
+
 #--------------------------------------------------------------------------------------------
 
 try :
-    caseN          = sys.argv[1]
-    reynoldsNumber = int(sys.argv[2])
+    caseN           = sys.argv[1]
+    reynolds_number = int(sys.argv[2])
 except :
     raise ValueError("Include the case name in the call")
 
@@ -47,6 +49,7 @@ with open("../../data/"+caseN+"/input/input.yaml") as ifile :
 kvisc = yml["params"]["kvisc0"]
 dxmin = yml["params"]["dxmin"]
 delta = yml["params"]["domainLength"] * 0.5
+rho   = yml["params"]["rho0"]
 Retau = 1.0/kvisc
 
 # --- Get ODT computational data ---
@@ -93,7 +96,6 @@ for ifile in flist :
     uwm += uu*ww
     vwm += vv*ww
 
-
 # means
 um /= nfiles
 vm /= nfiles
@@ -119,31 +121,31 @@ uwm = 0.5*(uwm[:nunif2] + np.flipud(uwm[nunif2:]))
 vwm = 0.5*(vwm[:nunif2] + np.flipud(vwm[nunif2:]))
 
 # Reynolds stresses
-R_xx  = u2m - um*um
-R_yy  = v2m - vm*vm
-R_zz  = w2m - wm*wm
-R_xy  = uvm - um*vm
-R_xz  = uwm - um*wm
-R_yz  = vwm - vm*wm
+ufufm = u2m - um*um # = <uf·uf>
+vfvfm = v2m - vm*vm # = <vf·vf>
+wfwfm = w2m - wm*wm # = <wf·wf>
+ufvfm = uvm - um*vm # = <uf·vf>
+ufwfm = uwm - um*wm # = <uf·wf>
+vfwfm = vwm - vm*wm # = <vf·wf>
 
 # root-mean-squared fluctuations (rmsf)
-urmsf = np.sqrt(R_xx) 
-vrmsf = np.sqrt(R_yy) 
-wrmsf = np.sqrt(R_zz) 
+urmsf = np.sqrt(ufufm) 
+vrmsf = np.sqrt(vfvfm) 
+wrmsf = np.sqrt(wfwfm) 
 
+# y-coordinate, y+
 yu += delta         # domain center is at 0; shift so left side is zero
 yu = yu[:nunif2]    # plotting to domain center
-
 dudy = (um[1]-um[0])/(yu[1]-yu[0])
 utau = np.sqrt(kvisc * np.abs(dudy))
 RetauOdt = utau * delta / kvisc
-yu *= utau/kvisc    # scale y --> y+ (note: utau should be unity)
+yuplus = yu * utau/kvisc    # scale y --> y+ (note: utau should be unity)
 
-odt_data = np.vstack([yu,um,vm,wm,urmsf,vrmsf,wrmsf,R_xx,R_yy,R_zz,R_xy,R_xz,R_yz]).T
+odt_data = np.vstack([yu/delta,yuplus,um,vm,wm,urmsf,vrmsf,wrmsf,ufufm,vfvfm,wfwfm,ufvfm,ufwfm,vfwfm]).T
 fname = "../../data/"+caseN+"/post/ODTstat.dat"
 np.savetxt(fname, odt_data, 
-           header="y+,         u+_mean,     v+_mean,     w+_mean,     u+_rmsf,     v+_rmsf,     w+_rmsf      "\
-                  "R_xx+,       R_yy+,       R_zz+,       R_xy+,       R_xz+,       R_yz+",
+           header="y/delta,   y+,         u+_mean,     v+_mean,     w+_mean,     u+_rmsf,     v+_rmsf,     w+_rmsf      "\
+                  "<u'u'>+,   <v'v'>+,    <w'w'>+,     <u'v'>+,     <u'w'>+,     <v'w'>+ ",
            fmt='%12.5E')
 
 print("Nominal Retau: ", Retau)
@@ -154,31 +156,45 @@ print("Actual  Retau: ", RetauOdt)
 filename_odt = "../../data/"+caseN+"/post/ODTstat.dat"
 print(f"Getting ODT data from {filename_odt}")
 odt = np.loadtxt(filename_odt)
-y_odt    = odt[:,0]   # y+
-u_odt    = odt[:,1]   # u+_mean
+ydelta_odt = odt[:,0]   # y/delta
+yplus_odt  = odt[:,1]   # y+
+um_odt     = odt[:,2]  # u+_mean
 
-urmsf_odt = odt[:,4]  # u+_rmsf
-vrmsf_odt = odt[:,5]  # v+_rmsf
-wrmsf_odt = odt[:,6]  # w+_rmsf
+urmsf_odt  = odt[:,5]  # u+_rmsf
+vrmsf_odt  = odt[:,6]  # v+_rmsf
+wrmsf_odt  = odt[:,7]  # w+_rmsf
 
-Rxx_odt   = odt[:,7]  # R_xx+
-Ryy_odt   = odt[:,8]  # R_yy+
-Rzz_odt   = odt[:,9]  # R_zz+
-Rxy_odt   = odt[:,10] # R_xy+
-Rxz_odt   = odt[:,11] # R_xz+
-Ryz_odt   = odt[:,12] # R_yz+
+ufufm_odt  = odt[:,8]  # R_xx+
+vfvfm_odt  = odt[:,9]  # R_yy+
+wfwfm_odt  = odt[:,10] # R_zz+
+ufvfm_odt  = odt[:,11] # R_xy+
+ufwfm_odt  = odt[:,12] # R_xz+
+vfwfm_odt  = odt[:,13] # R_yz+
+
+# Stress decomposition: Viscous, Reynolds and Total stress
+dumdy_odt = (um_odt[1:] - um_odt[:-1])/(ydelta_odt[1:] - ydelta_odt[:-1])
+viscous_stress_odt  = kvisc * rho * dumdy_odt
+reynolds_stress_odt = - rho * ufvfm_odt[:-1]
+total_stress_odt    = viscous_stress_odt + reynolds_stress_odt
 
 #------------ Get DNS statistics ---------------
 
+(ydelta_dns, yplus_dns, um_dns, urmsf_dns, vrmsf_dns, wrmsf_dns, ufufm_dns, vfvfm_dns, wfwfm_dns, ufvfm_dns, ufwfm_dns, vfwfm_dns) \
+    = get_dns_data(reynolds_number)
 
-
+# Stress decomposition: Viscous, Reynolds and Total stress
+dumdy_dns = (um_dns[1:] - um_dns[:-1])/(ydelta_dns[1:] - ydelta_dns[:-1])
+viscous_stress_dns  = kvisc * rho * dumdy_dns
+reynolds_stress_dns = - rho * ufvfm_dns[:-1]
+total_stress_dns    = viscous_stress_dns + reynolds_stress_dns
 
 #--------------------------------------------------------------------------------------------
 
 # Build plots
 
 visualizer = ChannelVisualizer(caseN)
-visualizer.build_u_mean_profile(y_odt, y_dns, u_odt, u_dns)
-visualizer.build_u_rmsf_profile(y_odt, y_dns, urmsf_odt, vrmsf_odt, wrmsf_odt, urmsf_dns, vrmsf_dns, wrmsf_dns)
-visualizer.build_reynolds_stress_not_diagonal_profile(y_odt, y_dns, Rxy_odt, Rxz_odt, Ryz_odt, Rxy_dns, Rxz_dns, Ryz_dns)
-visualizer.build_reynolds_stress_diagonal_profile(y_odt, y_dns, Rxx_odt, Ryy_odt, Rzz_odt, Rxx_dns, Ryy_dns, Rzz_dns)
+visualizer.build_u_mean_profile(yplus_odt, yplus_dns, um_odt, um_dns)
+visualizer.build_u_rmsf_profile(yplus_odt, yplus_dns, urmsf_odt, vrmsf_odt, wrmsf_odt, urmsf_dns, vrmsf_dns, wrmsf_dns)
+visualizer.build_reynolds_stress_not_diagonal_profile(yplus_odt, yplus_dns, ufvfm_odt, ufwfm_odt, vfwfm_odt, ufvfm_dns, ufwfm_dns, vfwfm_dns)
+visualizer.build_reynolds_stress_diagonal_profile(yplus_odt, yplus_dns, ufufm_odt, vfvfm_odt, wfwfm_odt, ufufm_dns, vfvfm_dns, wfwfm_dns)
+visualizer.build_stress_decomposition(ydelta_odt, ydelta_dns, viscous_stress_odt, reynolds_stress_odt, total_stress_odt, viscous_stress_dns, reynolds_stress_dns, total_stress_dns)
