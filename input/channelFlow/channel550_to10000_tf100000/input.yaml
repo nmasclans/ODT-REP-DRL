@@ -1,14 +1,14 @@
 ################### Main ODT parameters
-# CHANNEL FLOW: Re_tau = 590. u_tau=1, delta_nu = kvisc0. So, plotting u vs x/kvisc0 is u+ vs y+.
+# CHANNEL FLOW: Re_tau = 550. u_tau=1, delta_nu = kvisc0. So, plotting u vs x/kvisc0 is u+ vs y+.
 
 params:
 
     seed:          22             #  random number generator seed (negative to randomize it)
-    tEnd:          150.           #  ending time of realization (s)
-    domainLength:  2.0            #  length of domain (m)
+    tEnd:          100000.0       #  ending time of realization (s)
+    domainLength:  2.0            #  length of domain (m) (= 2*delta)
     ngrd0:         200            #  initial grid points
     rho0:          1.0            #  initial uniform density (kg/m^3)
-    kvisc0:        0.001695       #  initial uniform kinematic viscosity (m^2/s) 0.0016949 (= \nu = \mu / \rho = u_tau * delta / Re_tau)
+    kvisc0:        0.001818       #  initial uniform kinematic viscosity (m^2/s) 0.0016949 (= \nu = \mu / \rho = u_tau * delta / Re_tau = 1/Re_tau)
     dPdx:          -1.0           #  initial pressure gradient (Pa/m) ---- FORÇA!
     pres:          101325.0       #  pressure (Pa)
     chemMechFile:  not_used.xml   #  name of chemical mechanism file
@@ -42,7 +42,7 @@ params:
     Lp:            0.015          #  Most probable eddy size frac of domainLength
     Lmax:          0.333333333    #  Max eddy size frac of domainLength
     #----------------------------------------------------------------------------------
-    modDump:       1000000        #  accepted eddies before output file
+    modDump:       100000000      #  accepted eddies before output file
 
 ################### Boundary conditions
 
@@ -60,6 +60,6 @@ bcCond:
 ################### Dump times
 
 dumpTimesGen:
-    dTimeStart: 50.0     # make < 0 to ignore dumpTimesGen and use dumpTimes (if present)
-    dTimeEnd:   150.0
-    dTimeStep:  0.2
+    dTimeStart: 10000.0     # make < 0 to ignore dumpTimesGen and use dumpTimes (if present)
+    dTimeEnd:   100000.0
+    dTimeStep:  1.0

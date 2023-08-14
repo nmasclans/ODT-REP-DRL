@@ -4,7 +4,7 @@
 params:
 
     seed:          22             #  random number generator seed (negative to randomize it)
-    tEnd:          150.           #  ending time of realization (s)
+    tEnd:          100000.0       #  ending time of realization (s)
     domainLength:  2.0            #  length of domain (m)
     ngrd0:         200            #  initial grid points
     rho0:          1.0            #  initial uniform density (kg/m^3)
@@ -42,7 +42,7 @@ params:
     Lp:            0.015          #  Most probable eddy size frac of domainLength
     Lmax:          0.333333333    #  Max eddy size frac of domainLength
     #----------------------------------------------------------------------------------
-    modDump:       1000000        #  accepted eddies before output file
+    modDump:       100000000      #  accepted eddies before output file
 
 ################### Boundary conditions
 
@@ -60,6 +60,6 @@ bcCond:
 ################### Dump times
 
 dumpTimesGen:
-    dTimeStart: 50.0     # make < 0 to ignore dumpTimesGen and use dumpTimes (if present)
-    dTimeEnd:   150.0
-    dTimeStep:  0.2
+    dTimeStart: 10000.0     # make < 0 to ignore dumpTimesGen and use dumpTimes (if present)
+    dTimeEnd:   100000.0
+    dTimeStep:  1.0
