@@ -289,16 +289,48 @@ class ChannelVisualizer():
 
         fig, ax = plt.subplots(2,figsize=(9,9))
         ax[0].set_title("ODT")
-        ax[0].plot(ydelta_odt[:-1], tau_viscous_odt,  'k-',  label=r"$\tau_{viscous}=\rho\nu\,d<U>/dy$"  )
-        ax[0].plot(ydelta_odt[:-1], tau_reynolds_odt, 'b--', label=r"$\tau_{reynolds,uv}=-\rho<u'v'>$"  )
-        ax[0].plot(ydelta_odt[:-1], tau_total_odt,    'r:',  label=r"$\tau_{total}$"  )
+        ax[0].plot(ydelta_odt[:-1], tau_viscous_odt[:-1],  'k-',  label=r"$\tau_{viscous}=\rho\nu\,d<U>/dy$"  )
+        ax[0].plot(ydelta_odt[:-1], tau_reynolds_odt[:-1], 'b--', label=r"$\tau_{reynolds,uv}=-\rho<u'v'>$"  )
+        ax[0].plot(ydelta_odt[:-1], tau_total_odt[:-1],    'r:',  label=r"$\tau_{total}$"  )
         ax[1].set_title("DNS")
-        ax[1].plot(ydelta_dns[:-1], tau_viscous_dns,  'k-',  label=r"$\tau_{viscous}=\rho\nu\,d<U>/dy$"  )
-        ax[1].plot(ydelta_dns[:-1], tau_reynolds_dns, 'b--', label=r"$\tau_{reynolds,uv}=-\rho<u'v'>$"  )
-        ax[1].plot(ydelta_dns[:-1], tau_total_dns,    'r:',  label=r"$\tau_{total}$"  )
+        ax[1].plot(ydelta_dns[:-1], tau_viscous_dns[:-1],  'k-',  label=r"$\tau_{viscous}=\rho\nu\,d<U>/dy$"  )
+        ax[1].plot(ydelta_dns[:-1], tau_reynolds_dns[:-1], 'b--', label=r"$\tau_{reynolds,uv}=-\rho<u'v'>$"  )
+        ax[1].plot(ydelta_dns[:-1], tau_total_dns[:-1],    'r:',  label=r"$\tau_{total}$"  )
         for i in range(2):
             ax[i].set_xlabel(r"$y/\delta$")
             ax[i].set_ylabel(r"$\tau(y)$")
             ax[i].legend(loc='upper right', ncol = 1)
         fig.tight_layout()
         plt.savefig(filename, dpi=600)
+
+
+    def build_TKE_budgets(self, yplus_odt, vt_u_plus_odt, vt_v_plus_odt, vt_w_plus_odt):
+
+        filename = f"../../data/{self.caseN}/post/TKE_budgets.jpg"
+        print(f"MAKING PLOT OF TKE BUDGETS ODT vs DNS in {filename}")
+       
+        fig, ax = plt.subplots()
+
+        ax.plot(yplus_odt, vt_u_odt, 'k-',  label=r'$vt_{u}+$')
+        ax.plot(yplus_odt, vt_v_odt, 'b--', label=r'$vt_{v}+$')
+        ax.plot(yplus_odt, vt_w_odt, 'r:',  label=r'$vt_{w}+$')
+
+        ax.plot([0,0], [0,3], '-', linewidth=1, color='gray')
+        ax.arrow( 30, 0.2,  50, 0, head_width=0.05, head_length=10, color='gray')
+        ax.arrow(-30, 0.2, -50, 0, head_width=0.05, head_length=10, color='gray')
+        ax.text(  30, 0.3, "ODT", fontsize=14, color='gray')
+        ax.text( -80, 0.3, "DNS", fontsize=14, color='gray')
+
+        ax.set_xlabel(r'$y^+$')
+        ax.set_ylabel("TKE budgets")
+        ax.legend(loc='upper right', frameon=False, fontsize=16)
+        #ax.set_xlim([-300, 300])
+
+        plt.tight_layout()
+        plt.savefig(filename, dpi=600)
+
+        plt.figure()
+        plt.plot(vt_u_odt,'.b')
+        plt.plot(vt_v_odt,'.k')
+        plt.plot(vt_w_odt,'.r')
+        plt.savefig(f"../../data/{self.caseN}/post/auxiliar.jpg")

@@ -1,11 +1,13 @@
+"""
+Utils functions for post/channelFlow post-processing scripts
+"""
+
 import yaml
 
 import glob as gb
 import numpy as np
 from scipy.interpolate import interp1d
 
-
-# Utils functions for post/channelFlow post-processing scripts
 
 def compute_odt_statistics(odt_statistics_filepath, input_params):
     """
@@ -22,7 +24,8 @@ def compute_odt_statistics(odt_statistics_filepath, input_params):
     """
 
     # --- Get ODT input parameters ---
-
+    
+    rho   = input_params["rho"]
     kvisc = input_params["kvisc"]
     dxmin = input_params["dxmin"]
     delta = input_params["delta"]
@@ -124,19 +127,58 @@ def compute_odt_statistics(odt_statistics_filepath, input_params):
     dudy = (um[1]-um[0])/(yu[1]-yu[0])
     utau = np.sqrt(kvisc * np.abs(dudy))
     RetauOdt = utau * delta / kvisc
-    yuplus = yu * utau/kvisc    # scale y --> y+ (note: utau should be unity)
+    yuplus = yu * utau/kvisc    # scale y --> y+ (note: utau is close to unity)
+
+    # --- Compute Stress Decomposition ---
+    # Stress decomposition: Viscous, Reynolds and Total stress
+    dumdy = (um[1:] - um[:-1])/(yu[1:] - yu[:-1])
+    viscous_stress_  = kvisc * rho * dumdy
+    reynolds_stress_ = - rho * ufvfm[:-1]
+    total_stress_    = viscous_stress_ + reynolds_stress_
+
+    # --- Viscous Transport budget ---
+    # vt_i = d^2(avg(u_{i,rmsf}^2))/dy^2
+    f_uk  = urmsf**2 - um**2 
+    f_vk  = vrmsf**2 - vm**2 
+    f_wk  = wrmsf**2 - wm**2 
+    Deltay_k = (yu[2:]-yu[:-2])/2 # length in y-coordinate of cell k from ODT grid 
+    vt_u_ = (kvisc) * ( (f_uk[2:] - 2*f_uk[1:-1] + f_uk[:-2])/(Deltay_k**2) )
+    vt_v_ = (kvisc) * ( (f_vk[2:] - 2*f_vk[1:-1] + f_vk[:-2])/(Deltay_k**2) )
+    vt_w_ = (kvisc) * ( (f_wk[2:] - 2*f_wk[1:-1] + f_wk[:-2])/(Deltay_k**2) )
+    vt_u_plus_ = vt_u_ * ( delta / utau**3 )
+    vt_v_plus_ = vt_v_ * ( delta / utau**3 )
+    vt_w_plus_ = vt_w_ * ( delta / utau**3 )
+
+    # --- Dissipation budget ---
+    # d_i = avg( ( d(u_{i,rmsf})/dy )^2 )
+
+    # Add "0" at grid boundaries to quantities computed from 1st- and 2nd-order derivatives to vstack vectors of the same size
+    # -> involve 1st-order forward finite differences
+    viscous_stress  = np.zeros(nunif2); viscous_stress[:-1]  = viscous_stress_  
+    reynolds_stress = np.zeros(nunif2); reynolds_stress[:-1] = reynolds_stress_  
+    total_stress    = np.zeros(nunif2); total_stress[:-1]    = total_stress_  
+    # -> involve 2nd-order centered finite differences
+    vt_u_plus = np.zeros(nunif2); vt_u_plus[1:-1] = vt_u_plus_
+    vt_v_plus = np.zeros(nunif2); vt_v_plus[1:-1] = vt_v_plus_
+    vt_w_plus = np.zeros(nunif2); vt_w_plus[1:-1] = vt_w_plus_
 
     # --- Save ODT computational data ---
 
-    odt_data = np.vstack([yu/delta,yuplus,um,vm,wm,urmsf,vrmsf,wrmsf,ufufm,vfvfm,wfwfm,ufvfm,ufwfm,vfwfm]).T
+    odt_data = np.vstack([yu/delta,yuplus,um,vm,wm,urmsf,vrmsf,wrmsf,
+                          ufufm,vfvfm,wfwfm,ufvfm,ufwfm,vfwfm,
+                          viscous_stress,reynolds_stress,total_stress,
+                          vt_u_plus, vt_v_plus, vt_w_plus]).T
     np.savetxt(odt_statistics_filepath, odt_data, 
             header="y/delta,    y+,          u+_mean,     v+_mean,     w+_mean,     u+_rmsf,     v+_rmsf,     w+_rmsf,     "\
-                    "<u'u'>+,     <v'v'>+,     <w'w'>+,     <u'v'>+,     <u'w'>+,     <v'w'>+ ",
+                    "<u'u'>+,     <v'v'>+,     <w'w'>+,     <u'v'>+,     <u'w'>+,     <v'w'>+,     " \
+                    "tau_viscous, tau_reynolds,tau_total,       " \
+                    "vt_u+,       vt_v+,       vt_w+",
             fmt='%12.5E')
 
     print("Nominal Retau: ", Retau)
     print("Actual  Retau: ", RetauOdt)
-    print("")
+    print("Nominal utau:  1")
+    print("Actual  utau: ", utau)
 
 
 def get_odt_statistics(odt_statistics_filepath, input_params):
@@ -151,12 +193,6 @@ def get_odt_statistics(odt_statistics_filepath, input_params):
         ODT statistics calculated over statistic time by 'compute_odt_statistics'
         ydelta, yplus, um, urmsf, vrmsf, wrmsf, ufufm, vfvfm, wfwfm, ufvfm, ufwfm, vfwfm, viscous_stress, reynolds_stress, total_stress (np.ndarrays)
     """
-
-    # --- Get ODT input parameters ---
-
-    kvisc = input_params["kvisc"]
-    rho   = input_params["rho"]
-
     # --- Get ODT statistics ---
 
     print(f"Getting ODT data from {odt_statistics_filepath}")
@@ -177,13 +213,18 @@ def get_odt_statistics(odt_statistics_filepath, input_params):
     ufwfm  = odt[:,12] # R_xz+
     vfwfm  = odt[:,13] # R_yz+
 
-    # Stress decomposition: Viscous, Reynolds and Total stress
-    dumdy = (um[1:] - um[:-1])/(ydelta[1:] - ydelta[:-1])
-    viscous_stress  = kvisc * rho * dumdy
-    reynolds_stress = - rho * ufvfm[:-1]
-    total_stress    = viscous_stress + reynolds_stress
+    viscous_stress  = odt[:,14]
+    reynolds_stress = odt[:,15]
+    total_stress    = odt[:,16]
 
-    return (ydelta, yplus, um, urmsf, vrmsf, wrmsf, ufufm, vfvfm, wfwfm, ufvfm, ufwfm, vfwfm, viscous_stress, reynolds_stress, total_stress)
+    vt_u = odt[:,17] 
+    vt_v = odt[:,18]
+    vt_w = odt[:,19]
+
+    return (ydelta, yplus, um, urmsf, vrmsf, wrmsf, 
+            ufufm, vfvfm, wfwfm, ufvfm, ufwfm, vfwfm, 
+            viscous_stress, reynolds_stress, total_stress, 
+            vt_u, vt_v, vt_w)
 
 
 def get_dns_statistics(reynolds_number, input_params):
@@ -248,9 +289,16 @@ def get_dns_statistics(reynolds_number, input_params):
 
     # --- Stress decomposition: Viscous, Reynolds and Total stress ---
     dumdy = (um[1:] - um[:-1])/(ydelta[1:] - ydelta[:-1])
-    viscous_stress  = kvisc * rho * dumdy
-    reynolds_stress = - rho * ufvfm[:-1]
-    total_stress    = viscous_stress + reynolds_stress
+    viscous_stress_  = kvisc * rho * dumdy
+    reynolds_stress_ = - rho * ufvfm[:-1]
+    total_stress_    = viscous_stress_ + reynolds_stress_
+
+    # Add "0" at grid boundaries to quantities computed from 1st- and 2nd-order derivatives to vstack vectors of the same size
+    # -> involve 1st-order forward finite differences
+    nunif2 = um.size
+    viscous_stress  = np.zeros(nunif2); viscous_stress[:-1]  = viscous_stress_  
+    reynolds_stress = np.zeros(nunif2); reynolds_stress[:-1] = reynolds_stress_  
+    total_stress    = np.zeros(nunif2); total_stress[:-1]    = total_stress_  
 
     return (ydelta, yplus, um, urmsf, vrmsf, wrmsf, ufufm, vfvfm, wfwfm, ufvfm, ufwfm, vfwfm,
             viscous_stress, reynolds_stress, total_stress)
@@ -278,3 +326,11 @@ def get_time(file):
         print(f"No valid format found in the first line of {ifile}.")
         time = None
     return time
+
+
+
+
+
+
+
+

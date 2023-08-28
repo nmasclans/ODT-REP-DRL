@@ -44,20 +44,21 @@ if not os.path.exists("../../data/"+caseN+"/post") :
 odtInputDataFilepath  = "../../data/" + caseN + "/input/input.yaml"
 with open(odtInputDataFilepath) as ifile :
     yml = yaml.load(ifile, Loader=yaml.FullLoader)
-kvisc = yml["params"]["kvisc0"]
+kvisc = yml["params"]["kvisc0"] # kvisc = nu = mu / rho
 rho   = yml["params"]["rho0"]
 dxmin = yml["params"]["dxmin"]
 delta = yml["params"]["domainLength"] * 0.5
 Retau = 1.0/kvisc
-inputParams = {"kvisc":kvisc, "rho":rho, "dxmin": dxmin, "delta": delta, "Retau": Retau, "caseN": caseN} 
+utau  = 1.0
+inputParams = {"kvisc":kvisc, "rho":rho, "dxmin": dxmin, "delta": delta, "Retau": Retau, "caseN": caseN, "utau": utau} 
 
 #------------ Get ODT data ---------------
 
 odtStatisticsFilepath = "../../data/" + caseN + "/post/ODTstat.dat"
 if not os.path.isfile(odtStatisticsFilepath):
     compute_odt_statistics(odtStatisticsFilepath, inputParams)
-(ydelta_odt, yplus_odt, um_odt, urmsf_odt, vrmsf_odt, wrmsf_odt, ufufm_odt, vfvfm_odt, wfwfm_odt, ufvfm_odt, ufwfm_odt, vfwfm_odt, viscous_stress_odt, reynolds_stress_odt, total_stress_odt) = \
-    get_odt_statistics(odtStatisticsFilepath, inputParams)
+(ydelta_odt, yplus_odt, um_odt, urmsf_odt, vrmsf_odt, wrmsf_odt, ufufm_odt, vfvfm_odt, wfwfm_odt, ufvfm_odt, ufwfm_odt, vfwfm_odt, viscous_stress_odt, reynolds_stress_odt, total_stress_odt, vt_u_plus_odt, vt_v_plus_odt, vt_w_plus_odt) \
+    = get_odt_statistics(odtStatisticsFilepath, inputParams)
 
 #------------ Get DNS statistics ---------------
 
@@ -74,3 +75,4 @@ visualizer.build_u_rmsf_profile(yplus_odt, yplus_dns, urmsf_odt, vrmsf_odt, wrms
 visualizer.build_reynolds_stress_not_diagonal_profile(yplus_odt, yplus_dns, ufvfm_odt, ufwfm_odt, vfwfm_odt, ufvfm_dns, ufwfm_dns, vfwfm_dns)
 visualizer.build_reynolds_stress_diagonal_profile(yplus_odt, yplus_dns, ufufm_odt, vfvfm_odt, wfwfm_odt, ufufm_dns, vfvfm_dns, wfwfm_dns)
 visualizer.build_stress_decomposition(ydelta_odt, ydelta_dns, viscous_stress_odt, reynolds_stress_odt, total_stress_odt, viscous_stress_dns, reynolds_stress_dns, total_stress_dns)
+visualizer.build_TKE_budgets(yplus_odt, vt_u_plus_odt, vt_v_plus_odt, vt_w_plus_odt)
