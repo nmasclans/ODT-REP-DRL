@@ -30,8 +30,8 @@ from utils import *
 #--------------------------------------------------------------------------------------------
 
 try :
-    caseN           = sys.argv[1]
-    reynolds_number = int(sys.argv[2])
+    caseN = sys.argv[1]
+    Retau = int(sys.argv[2])
 except :
     raise ValueError("Include the case name in the call")
 
@@ -48,7 +48,6 @@ kvisc = yml["params"]["kvisc0"] # kvisc = nu = mu / rho
 rho   = yml["params"]["rho0"]
 dxmin = yml["params"]["dxmin"]
 delta = yml["params"]["domainLength"] * 0.5
-Retau = 1.0/kvisc
 utau  = 1.0
 inputParams = {"kvisc":kvisc, "rho":rho, "dxmin": dxmin, "delta": delta, "Retau": Retau, "caseN": caseN, "utau": utau} 
 
@@ -57,13 +56,12 @@ inputParams = {"kvisc":kvisc, "rho":rho, "dxmin": dxmin, "delta": delta, "Retau"
 odtStatisticsFilepath = "../../data/" + caseN + "/post/ODTstat.dat"
 if not os.path.isfile(odtStatisticsFilepath):
     compute_odt_statistics(odtStatisticsFilepath, inputParams)
-(ydelta_odt, yplus_odt, um_odt, urmsf_odt, vrmsf_odt, wrmsf_odt, ufufm_odt, vfvfm_odt, wfwfm_odt, ufvfm_odt, ufwfm_odt, vfwfm_odt, viscous_stress_odt, reynolds_stress_odt, total_stress_odt, vt_u_plus_odt, vt_v_plus_odt, vt_w_plus_odt) \
+(ydelta_odt, yplus_odt, um_odt, urmsf_odt, vrmsf_odt, wrmsf_odt, ufufm_odt, vfvfm_odt, wfwfm_odt, ufvfm_odt, ufwfm_odt, vfwfm_odt, viscous_stress_odt, reynolds_stress_odt, total_stress_odt, vt_u_plus_odt, d_u_plus_odt) \
     = get_odt_statistics(odtStatisticsFilepath, inputParams)
 
 #------------ Get DNS statistics ---------------
-
-(ydelta_dns, yplus_dns, um_dns, urmsf_dns, vrmsf_dns, wrmsf_dns, ufufm_dns, vfvfm_dns, wfwfm_dns, ufvfm_dns, ufwfm_dns, vfwfm_dns, viscous_stress_dns, reynolds_stress_dns, total_stress_dns) \
-    = get_dns_statistics(reynolds_number, inputParams)
+(ydelta_dns, yplus_dns, um_dns, urmsf_dns, vrmsf_dns, wrmsf_dns, ufufm_dns, vfvfm_dns, wfwfm_dns, ufvfm_dns, ufwfm_dns, vfwfm_dns, viscous_stress_dns, reynolds_stress_dns, total_stress_dns, vt_u_plus_dns,               p_u_plus_dns) \
+    = get_dns_statistics(Retau, inputParams)
 
 #--------------------------------------------------------------------------------------------
 
@@ -75,4 +73,4 @@ visualizer.build_u_rmsf_profile(yplus_odt, yplus_dns, urmsf_odt, vrmsf_odt, wrms
 visualizer.build_reynolds_stress_not_diagonal_profile(yplus_odt, yplus_dns, ufvfm_odt, ufwfm_odt, vfwfm_odt, ufvfm_dns, ufwfm_dns, vfwfm_dns)
 visualizer.build_reynolds_stress_diagonal_profile(yplus_odt, yplus_dns, ufufm_odt, vfvfm_odt, wfwfm_odt, ufufm_dns, vfvfm_dns, wfwfm_dns)
 visualizer.build_stress_decomposition(ydelta_odt, ydelta_dns, viscous_stress_odt, reynolds_stress_odt, total_stress_odt, viscous_stress_dns, reynolds_stress_dns, total_stress_dns)
-visualizer.build_TKE_budgets(yplus_odt, vt_u_plus_odt, vt_v_plus_odt, vt_w_plus_odt)
+visualizer.build_TKE_budgets(yplus_odt, yplus_dns, vt_u_plus_odt, d_u_plus_odt, vt_u_plus_dns, p_u_plus_dns)

@@ -26,7 +26,7 @@ def compute_odt_statistics(odt_statistics_filepath, input_params):
     # --- Get ODT input parameters ---
     
     rho   = input_params["rho"]
-    kvisc = input_params["kvisc"]
+    kvisc = input_params["kvisc"] # = nu = mu / rho 
     dxmin = input_params["dxmin"]
     delta = input_params["delta"]
     Retau = input_params["Retau"]
@@ -38,7 +38,7 @@ def compute_odt_statistics(odt_statistics_filepath, input_params):
 
     nunif  = int(1/dxmin)        # num. points uniform grid (using smallest grid size)   
     nunif2 = int(nunif/2)        # half of num. points (for ploting to domain center, symmetry in y-axis)
-
+    print(nunif, nunif2)
     nfiles = len(flist)          # num. files of instantaneous data, i.e. num. discrete time instants
     yu  = np.linspace(-delta,delta,nunif) # uniform grid in y-axis
     # empty vectors of time-averaged quantities
@@ -51,14 +51,16 @@ def compute_odt_statistics(odt_statistics_filepath, input_params):
     uvm = np.zeros(nunif)        # mean velocity correlations (for reynolds stresses)
     uwm = np.zeros(nunif)
     vwm = np.zeros(nunif)
+    dudy2m = np.zeros(nunif2-2)
 
-    logging_files_period = 1000
+
+    logging_files_period = 10000
     ifile_counter = 0
     ifile_total   = len(flist)
     for ifile in flist :
 
         data = np.loadtxt(ifile)
-        y = data[:,0] # not normalized
+        y = data[:,0] # = y/delta, as delta = 1
         u = data[:,2] # normalized by u_tau, u is in fact u+
         v = data[:,3] # normalized by u_tau, v is in fact v+
         w = data[:,4] # normalized by u_tau, w is in fact w+
@@ -78,6 +80,17 @@ def compute_odt_statistics(odt_statistics_filepath, input_params):
         uvm += uu*vv
         uwm += uu*ww
         vwm += vv*ww
+        
+        # update mean profile dudy2m = avg((du/dy)**2)
+        # top half of channel
+        uut    = uu[nunif2:]
+        yut    = yu[nunif2:]
+        dudy2t = ( (uut[2:]-uut[:-2])/(yut[2:]-yut[:-2]) )**2
+        # bottom half of channel
+        uub     = np.flip(uu[:nunif2])
+        yub     = - np.flip(yu[:nunif2])
+        dudy2b  = ( (uub[2:]-uub[:-2])/(yub[2:]-yub[:-2]) )**2
+        dudy2m += 0.5*(dudy2b + dudy2t)  # mirror data (symmetric)
 
         # Logging info
         ifile_counter += 1
@@ -121,11 +134,14 @@ def compute_odt_statistics(odt_statistics_filepath, input_params):
     vrmsf = np.sqrt(vfvfm) 
     wrmsf = np.sqrt(wfwfm) 
 
+    # averaged terms for calculating TKE budgets
+    dudy2m /= nfiles 
+
     # y-coordinate, y+
     yu += delta         # domain center is at 0; shift so left side is zero
     yu = yu[:nunif2]    # plotting to domain center
     dudy = (um[1]-um[0])/(yu[1]-yu[0])
-    utau = np.sqrt(kvisc * np.abs(dudy))
+    utau = np.sqrt(kvisc * np.abs(dudy) / rho)
     RetauOdt = utau * delta / kvisc
     yuplus = yu * utau/kvisc    # scale y --> y+ (note: utau is close to unity)
 
@@ -137,20 +153,21 @@ def compute_odt_statistics(odt_statistics_filepath, input_params):
     total_stress_    = viscous_stress_ + reynolds_stress_
 
     # --- Viscous Transport budget ---
-    # vt_i = d^2(avg(u_{i,rmsf}^2))/dy^2
     f_uk  = urmsf**2 - um**2 
-    f_vk  = vrmsf**2 - vm**2 
-    f_wk  = wrmsf**2 - wm**2 
+    ###f_vk  = vrmsf**2 - vm**2 
+    ###f_wk  = wrmsf**2 - wm**2 
     Deltay_k = (yu[2:]-yu[:-2])/2 # length in y-coordinate of cell k from ODT grid 
-    vt_u_ = (kvisc) * ( (f_uk[2:] - 2*f_uk[1:-1] + f_uk[:-2])/(Deltay_k**2) )
-    vt_v_ = (kvisc) * ( (f_vk[2:] - 2*f_vk[1:-1] + f_vk[:-2])/(Deltay_k**2) )
-    vt_w_ = (kvisc) * ( (f_wk[2:] - 2*f_wk[1:-1] + f_wk[:-2])/(Deltay_k**2) )
-    vt_u_plus_ = vt_u_ * ( delta / utau**3 )
-    vt_v_plus_ = vt_v_ * ( delta / utau**3 )
-    vt_w_plus_ = vt_w_ * ( delta / utau**3 )
+    vt_u_ = kvisc * ( (f_uk[2:] - 2*f_uk[1:-1] + f_uk[:-2])/(Deltay_k**2) )
+    ###vt_v_ = kvisc * ( (f_vk[2:] - 2*f_vk[1:-1] + f_vk[:-2])/(Deltay_k**2) )
+    ###vt_w_ = kvisc * ( (f_wk[2:] - 2*f_wk[1:-1] + f_wk[:-2])/(Deltay_k**2) )
+    vt_u_plus_ = vt_u_ * ( delta / utau**3 ) # not necessary, as um, urmsf, y is already um+, urmsf+, y+, and utau = 1, delta = 1
+    ###vt_v_plus_ = vt_v_ * ( delta / utau**3 )
+    ###vt_w_plus_ = vt_w_ * ( delta / utau**3 )
 
     # --- Dissipation budget ---
-    # d_i = avg( ( d(u_{i,rmsf})/dy )^2 )
+    dumdy = (um[2:] - um[:-2])/(yu[2:] - yu[:-2]) # 1st-order central finite difference
+    d_u_ = 2 * kvisc * (dudy2m - dumdy**2)
+    d_u_plus_ = d_u_ * delta / utau
 
     # Add "0" at grid boundaries to quantities computed from 1st- and 2nd-order derivatives to vstack vectors of the same size
     # -> involve 1st-order forward finite differences
@@ -159,26 +176,27 @@ def compute_odt_statistics(odt_statistics_filepath, input_params):
     total_stress    = np.zeros(nunif2); total_stress[:-1]    = total_stress_  
     # -> involve 2nd-order centered finite differences
     vt_u_plus = np.zeros(nunif2); vt_u_plus[1:-1] = vt_u_plus_
-    vt_v_plus = np.zeros(nunif2); vt_v_plus[1:-1] = vt_v_plus_
-    vt_w_plus = np.zeros(nunif2); vt_w_plus[1:-1] = vt_w_plus_
+    d_u_plus  = np.zeros(nunif2); d_u_plus[1:-1]  = d_u_plus_
 
     # --- Save ODT computational data ---
 
     odt_data = np.vstack([yu/delta,yuplus,um,vm,wm,urmsf,vrmsf,wrmsf,
                           ufufm,vfvfm,wfwfm,ufvfm,ufwfm,vfwfm,
-                          viscous_stress,reynolds_stress,total_stress,
-                          vt_u_plus, vt_v_plus, vt_w_plus]).T
+                          viscous_stress,reynolds_stress,total_stress, # -> stress decomposition
+                          vt_u_plus, d_u_plus]).T            # -> TKE budgets for u-component
     np.savetxt(odt_statistics_filepath, odt_data, 
             header="y/delta,    y+,          u+_mean,     v+_mean,     w+_mean,     u+_rmsf,     v+_rmsf,     w+_rmsf,     "\
                     "<u'u'>+,     <v'v'>+,     <w'w'>+,     <u'v'>+,     <u'w'>+,     <v'w'>+,     " \
-                    "tau_viscous, tau_reynolds,tau_total,       " \
-                    "vt_u+,       vt_v+,       vt_w+",
+                    "tau_viscous, tau_reynolds,tau_total,   " \
+                    "vt_u+,       d_u+",
             fmt='%12.5E')
 
-    print("Nominal Retau: ", Retau)
-    print("Actual  Retau: ", RetauOdt)
-    print("Nominal utau:  1")
-    print("Actual  utau: ", utau)
+    print("(ODT) Nominal Retau: ", Retau)
+    print("(ODT) Actual  Retau: ", RetauOdt)
+    print("(ODT) Nominal utau:  1")
+    print("(ODT) Actual  utau: ", utau)
+    print("(ODT) kvisc :", kvisc)
+    print("(ODT) dumdy|y0 :", dudy, "    du: ", um[1]-um[0], "    dy: ", yu[1]-yu[0], "\n")
 
 
 def get_odt_statistics(odt_statistics_filepath, input_params):
@@ -217,26 +235,27 @@ def get_odt_statistics(odt_statistics_filepath, input_params):
     reynolds_stress = odt[:,15]
     total_stress    = odt[:,16]
 
-    vt_u = odt[:,17] 
-    vt_v = odt[:,18]
-    vt_w = odt[:,19]
+    # TKE budgets
+    vt_u = odt[:,17]  # Viscous transport 
+    d_u  = odt[:,18]  # Dissipation
 
     return (ydelta, yplus, um, urmsf, vrmsf, wrmsf, 
             ufufm, vfvfm, wfwfm, ufvfm, ufwfm, vfwfm, 
             viscous_stress, reynolds_stress, total_stress, 
-            vt_u, vt_v, vt_w)
+            vt_u, d_u)
 
 
-def get_dns_statistics(reynolds_number, input_params):
+def get_dns_statistics(Re_tau, input_params):
 
-    # --- Get ODT input parameters ---
+    # --- Get DNS input parameters (prescribed) ---
+    rho    = 1.0
+    delta  = 1.0
+    u_tau  = 1.0
+    nu     = u_tau * delta / Re_tau
+    mu     = rho * nu
+    kvisc  = mu / rho # = nu 
 
-    kvisc = input_params["kvisc"]
-    rho   = input_params["rho"]
-
-    # --- Get DNS input parameters ---
-
-    if reynolds_number == 590:
+    if Re_tau == 590:
         filename_dns = "DNS_statistics/Re590/dnsChannel_Re590_means.dat"
         print(f"Getting DNS-means data from {filename_dns}")
         # Dataset columns
@@ -244,9 +263,9 @@ def get_dns_statistics(reynolds_number, input_params):
         # y/h  | y+   | Umean | dUmean/dy | Wmean | dWmean/dy | Pmean
 
         dns_means = np.loadtxt(filename_dns)
-        ydelta = dns_means[:,0] * 2 # y/delta = (y/h)*2
+        ydelta = dns_means[:,0] # y/delta = y, as delta = 1
         yplus  = dns_means[:,1]
-        um = dns_means[:,2] # Umean normalized by U_tau (= u+_mean)
+        um = dns_means[:,2]     # Umean normalized by U_tau (= u+_mean)
 
         filename_dns = "DNS_statistics/Re590/dnsChannel_Re590_reynolds_stress.dat"
         print(f"Getting DNS-reynolds data from {filename_dns}")
@@ -254,25 +273,25 @@ def get_dns_statistics(reynolds_number, input_params):
         # 0    | 1    | 2    | 3    | 4    | 5    | 6    | 7
         # y    | y+   | R_uu | R_vv | R_ww | R_uv | R_uw | R_vw
         dns_reynolds_stress = np.loadtxt(filename_dns)
-        Rxx = dns_reynolds_stress[:,2] # R_xx+, normalized by U_tau^2
-        Ryy = dns_reynolds_stress[:,3]
-        Rzz = dns_reynolds_stress[:,4]
-        Rxy = dns_reynolds_stress[:,5] # R_xy+
-        Rxz = dns_reynolds_stress[:,6] # R_xz+
-        Ryz = dns_reynolds_stress[:,7] # R_yz+
+        ufufm = dns_reynolds_stress[:,2] # = Rxx+, component of the reynolds stress tensor component, normalized by U_tau^2 = 1
+        vfvfm = dns_reynolds_stress[:,3] # = Ryy+
+        wfwfm = dns_reynolds_stress[:,4] # = Rzz+
+        ufvfm = dns_reynolds_stress[:,5] # = Rxy+
+        ufwfm = dns_reynolds_stress[:,6] # = Rxz+
+        vfwfm = dns_reynolds_stress[:,7] # = Ryz+
 
-        urmsf = np.sqrt(Rxx_dns) # = sqrt(mean(u'u')), normalized by U_tau^2
-        vrmsf = np.sqrt(Ryy_dns)
-        wrmsf = np.sqrt(Rzz_dns)
-
+        urmsf = np.sqrt(ufufm) # = sqrt(mean(u'u')), normalized by U_tau^2 = 1 prescribed
+        vrmsf = np.sqrt(vfvfm)
+        wrmsf = np.sqrt(wfwfm)
+    
     else:
-        filename_dns = f"DNS_statistics/Re{reynolds_number}/profiles/Re{reynolds_number}.prof"
+        filename_dns = f"DNS_statistics/Re{Re_tau}/profiles/Re{Re_tau}.prof"
         print(f"Getting DNS-reynolds data from {filename_dns}")
         # Dataset columns:
         # 0    | 1    | 2    | 3    | 4    | 5    | 6      | 7      | 8      | 9      | 10   | 11   | 12   | 13   | 14   | 15     | 16   
         # y/h  | y+   | U+   | u'+  | v'+  | w'+  | -Om_z+ | om_x'+ | om_y'+ | om_z'+ | uv'+ | uw'+ | vw'+ | pr'+ | ps'+ | psto'+ | p'    
-        dns   = np.loadtxt(filename_dns,comments="%")
-        ydelta = dns[:,0]*2 # y/delta = (y/h)*2
+        dns    = np.loadtxt(filename_dns,comments="%")
+        ydelta = dns[:,0]*2 # y/delta = (y/h)*2 = y, as delta = 1
         yplus  = dns[:,1]   # y+ = y * u_tau / nu 
         um     = dns[:,2]   # u+_mean 
 
@@ -287,11 +306,39 @@ def get_dns_statistics(reynolds_number, input_params):
         ufwfm  = dns[:,11]
         vfwfm  = dns[:,12]
 
+
+    # Compare stablished and computed Retau and utau
+    dudy_wall = (um[1]-um[0])/(ydelta[1]-ydelta[0])
+    u_tauDns  = np.sqrt(kvisc * np.abs(dudy_wall) / rho)
+    Re_tauDns = u_tauDns * delta / kvisc
+    print("(DNS) Nominal Re_tau: ", Re_tau)
+    print("(DNS) Actual  Re_tau: ", Re_tauDns)
+    print("(DNS) Nominal u_tau:  ", u_tau)
+    print("(DNS) Actual  u_tau:  ", u_tauDns)
+    print("(DNS) kvisc    :", kvisc)
+    print("(DNS) dumdy|y0 :", dudy_wall, "    du: ", um[1]-um[0], "    dy: ", ydelta[1]-ydelta[0], "\n")
+
     # --- Stress decomposition: Viscous, Reynolds and Total stress ---
     dumdy = (um[1:] - um[:-1])/(ydelta[1:] - ydelta[:-1])
     viscous_stress_  = kvisc * rho * dumdy
     reynolds_stress_ = - rho * ufvfm[:-1]
     total_stress_    = viscous_stress_ + reynolds_stress_
+
+    # --- Viscous Transport budget ---
+    # vt_i = d^2(avg(u_{i,rmsf}^2))/dy^2
+    f_uk  = urmsf**2 - um**2 
+    Deltay_k = (ydelta[2:]-ydelta[:-2])/2 # length in y-coordinate of cell k from ODT grid 
+    vt_u_ = (kvisc) * ( (f_uk[2:] - 2*f_uk[1:-1] + f_uk[:-2])/(Deltay_k**2) )
+    vt_u_plus_ = vt_u_ * ( delta / u_tau**3 )
+
+    # --- Dissipation budget ---
+    # d_i = avg( ( d(u_{i,rmsf})/dy )^2 )
+    # -> cannot be calculated with available DNS data :/
+
+    # --- Production budget ---
+    dumdy = (um[2:] - um[:-2])/(ydelta[2:] - ydelta[:-2]) # 1st-order central finite difference
+    p_u_  = - 2 * ufvfm[1:-1] * dumdy
+    p_u_plus_ = p_u_ * ( delta / u_tau**3 ) 
 
     # Add "0" at grid boundaries to quantities computed from 1st- and 2nd-order derivatives to vstack vectors of the same size
     # -> involve 1st-order forward finite differences
@@ -299,9 +346,14 @@ def get_dns_statistics(reynolds_number, input_params):
     viscous_stress  = np.zeros(nunif2); viscous_stress[:-1]  = viscous_stress_  
     reynolds_stress = np.zeros(nunif2); reynolds_stress[:-1] = reynolds_stress_  
     total_stress    = np.zeros(nunif2); total_stress[:-1]    = total_stress_  
+    # -> involve 2nd-order centered finite differences
+    vt_u_plus = np.zeros(nunif2); vt_u_plus[1:-1] = vt_u_plus_
+    p_u_plus  = np.zeros(nunif2); p_u_plus[1:-1]  = p_u_plus_
 
-    return (ydelta, yplus, um, urmsf, vrmsf, wrmsf, ufufm, vfvfm, wfwfm, ufvfm, ufwfm, vfwfm,
-            viscous_stress, reynolds_stress, total_stress)
+    return (ydelta, yplus, um, urmsf, vrmsf, wrmsf, 
+            ufufm, vfvfm, wfwfm, ufvfm, ufwfm, vfwfm,
+            viscous_stress, reynolds_stress, total_stress, 
+            vt_u_plus, p_u_plus)
 
 
 def get_time(file):

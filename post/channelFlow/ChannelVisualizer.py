@@ -304,33 +304,31 @@ class ChannelVisualizer():
         plt.savefig(filename, dpi=600)
 
 
-    def build_TKE_budgets(self, yplus_odt, vt_u_plus_odt, vt_v_plus_odt, vt_w_plus_odt):
+    def build_TKE_budgets(self, yplus_odt, yplus_dns, vt_u_plus_odt, d_u_plus_odt, vt_u_plus_dns, p_u_plus_dns):
 
         filename = f"../../data/{self.caseN}/post/TKE_budgets.jpg"
         print(f"MAKING PLOT OF TKE BUDGETS ODT vs DNS in {filename}")
        
         fig, ax = plt.subplots()
 
-        ax.plot(yplus_odt, vt_u_odt, 'k-',  label=r'$vt_{u}+$')
-        ax.plot(yplus_odt, vt_v_odt, 'b--', label=r'$vt_{v}+$')
-        ax.plot(yplus_odt, vt_w_odt, 'r:',  label=r'$vt_{w}+$')
+        # ODT
+        ax.plot(yplus_odt[1:-1], vt_u_plus_odt[1:-1],  '-', color = '#ff7575', label=r'$vt_{u}^{+}$')
+        ax.plot(yplus_odt[1:-1], d_u_plus_odt[1:-1],   '-', color = '#22c7c7', label=r'$-d_{u}^{+}$')
+        # DNS
+        ax.plot(-yplus_dns[1:-1], vt_u_plus_dns[1:-1], '-', color = '#ff7575', label='')
+        ax.plot(-yplus_dns[1:-1], p_u_plus_dns[1:-1],  '-', color = '#0505ff', label='')
 
+        arrOffset  = -500 # arrows offset
+        textOffset = 100
         ax.plot([0,0], [0,3], '-', linewidth=1, color='gray')
-        ax.arrow( 30, 0.2,  50, 0, head_width=0.05, head_length=10, color='gray')
-        ax.arrow(-30, 0.2, -50, 0, head_width=0.05, head_length=10, color='gray')
-        ax.text(  30, 0.3, "ODT", fontsize=14, color='gray')
-        ax.text( -80, 0.3, "DNS", fontsize=14, color='gray')
-
+        ax.arrow( 30, arrOffset,  20, 0, head_width=50, head_length=5, color='gray')
+        ax.arrow(-30, arrOffset, -20, 0, head_width=50, head_length=5, color='gray')
+        ax.text(  30, arrOffset + textOffset, "ODT", fontsize=14, color='gray')
+        ax.text( -45, arrOffset + textOffset, "DNS", fontsize=14, color='gray')
         ax.set_xlabel(r'$y^+$')
         ax.set_ylabel("TKE budgets")
         ax.legend(loc='upper right', frameon=False, fontsize=16)
-        #ax.set_xlim([-300, 300])
+        ax.set_xlim([-100, 100])
 
         plt.tight_layout()
         plt.savefig(filename, dpi=600)
-
-        plt.figure()
-        plt.plot(vt_u_odt,'.b')
-        plt.plot(vt_v_odt,'.k')
-        plt.plot(vt_w_odt,'.r')
-        plt.savefig(f"../../data/{self.caseN}/post/auxiliar.jpg")
