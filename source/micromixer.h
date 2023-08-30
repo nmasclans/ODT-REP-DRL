@@ -35,7 +35,7 @@ class micromixer {
         double         dtStepNominal;  ///< nominal step size
         double         dt;             ///< actual step size (shortened based on output or tend)
 
-        vector<double> dxc;            ///< abs(\Delta(x^c))
+        vector<double> dxc;            ///< abs(\Delta(x^cCoord)), is prop. to cell "volume"
         vector<double> dx;             ///< abs(\Delta(x))
         vector<double> gf;             ///< grid factor for derivatives: (df/dx) = gf * (f - f)
 
@@ -62,7 +62,7 @@ class micromixer {
         virtual void setGf();                ///< sets the gf array
         virtual void setGridDxcDx();         ///< sets the dxc array
         virtual void set_oldrho_or_rhov();   ///< record old rho (or rho*u) for continuity
-        virtual bool adaptGridIfNeeded();   ///< expansion or contraction --> adapt
+        virtual bool adaptGridIfNeeded();    ///< expansion or contraction --> adapt
         virtual void setNominalStepSize();   ///< sets a nominal dt for the whole period
 
         void setStepSize();                  ///< set a local dt for interruptions (dump or tend)

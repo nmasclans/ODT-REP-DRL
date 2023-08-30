@@ -134,6 +134,7 @@ void micromixer::setStepSize() {
 /** Advance ODT solution: diffusion and reaction
  */
 
+// channelFlow: use Lsolver = EXPLICIT, runs this method
 void micromixer::advanceOdtSingleStep_Explicit(){
 
     setGridDxcDx();
@@ -146,6 +147,14 @@ void micromixer::advanceOdtSingleStep_Explicit(){
     if(domn->pram->Lspatial) transform(oldrho_or_rhov.begin(), oldrho_or_rhov.end(), domn->uvel->d.begin(), oldrho_or_rhov.begin(), multiplies<double>());
 
     for(int k=0; k<domn->v.size(); k++)
+        /* If the domain variable is transported, add mixing and source terms in the governing eq. of such variable
+         * The expressions of the mixing term (or diffusive transport) and the source term are derived from the 
+         * Reynolds Trenaport Theorem for a scalar quantity, applied when such quantity or domain variable is 
+         * transported, when L_transpored = true for that variable. 
+         * The loop iterates over the domain variables, pointed as domn->v.at(k) with k = 0,..,(domn->v.size()-1)
+         * channelFlow: has 7 domain variables: 'pos', 'posf', 'rho', 'dvisc', 'uvel', 'vvel', 'wvel' (with k = 0,..,6)
+         * channelFlow: from which 3 domain variables are transported (with L_transported = true): 'uvel', 'vvel', 'wvel' 
+         */
         if(domn->v.at(k)->L_transported) {
             domn->v.at(k)->getRhsMix(gf, dxc);
             domn->v.at(k)->getRhsSrc();
