@@ -1254,6 +1254,7 @@ void meshManager::updateDA(const double &time, double &tLastDA, int &cLastDA,
 
 void meshManager::adaptEddyRegionOfMesh(const double &time, double &tLastDA, int &cLastDA) {
 
+    // iStart and iEnd: index of the start/left and end/right edges of the eddy, respectively
     int iStart = domn->domainPositionToIndex(domn->ed->leftEdge,  true, 4);
     int iEnd   = domn->domainPositionToIndex(domn->ed->rightEdge, false, 5);
 

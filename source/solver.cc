@@ -153,7 +153,7 @@ void solver::calculateSolution() {
     }
 
     time = domn->pram->tEnd;
-    if(t0 < time)
+    if(t0 < time)                       // last diffusionCatchUpIfNeeded
         diffusionCatchUpIfNeeded(true);
 
     //-------------------------------------------------------------------------

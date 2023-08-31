@@ -39,7 +39,7 @@ class dv_uvw : public dv {
 
     public:
 
-        dv_uvw(){}
+        dv_uvw(){}      
         dv_uvw(domain     *line,
                const string s,
                const bool   Lt,

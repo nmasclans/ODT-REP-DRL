@@ -21,8 +21,11 @@
 
 void domaincase_odt_channel::init(domain *p_domn){
 
-    domn = p_domn;
+    // store pointer of the domain object
+    domn = p_domn; 
 
+    // add different variable types (being objects of dv subclasses) to the 'v' vector, class member of the 'domain' object
+    // each of these variables is created using their respective constr. and is pushed into the 'v' vector<dv*> of 'domain' object
     domn->v.push_back(new dv_pos(        domn, "pos",   false, true));   // last are: L_transported, L_output
     domn->v.push_back(new dv_posf(       domn, "posf",  false, true));
     domn->v.push_back(new dv_rho_const(  domn, "rho",   false, false));
@@ -31,6 +34,7 @@ void domaincase_odt_channel::init(domain *p_domn){
     domn->v.push_back(new dv_uvw(        domn, "vvel",  true,  true));
     domn->v.push_back(new dv_uvw(        domn, "wvel",  true,  true));
 
+    // assign specific elements from the 'v' vector to various member variables of the 'domain' object
     domn->pos   = domn->v.at(0);
     domn->posf  = domn->v.at(1);
     domn->rho   = domn->v.at(2);
@@ -41,12 +45,17 @@ void domaincase_odt_channel::init(domain *p_domn){
 
     //------------------- set variables used for mesh adaption
 
+    // a vector of pointers to 'dv' objects is created and initialized with the 'uvel' variable
+    // the domain member variable 'mesher' (of class 'meshManager') is initialized 
     vector<dv*> phi;
     phi.push_back(domn->uvel);
     domn->mesher->init(domn, phi);
 
     //------------------- set inlet_cell_dv_props for inlet cell inserted for suction/blowing case
 
+    // the 'domaincase' class has data member 'inlet_cell_dv_props', a vector that lists all dv properties
+    // for inserted inlet cell for channel suction/blowing case 
+    // channelFlow: the stored properties corresponts to the 1D odt line bottom, for y-coord minim 
     inlet_cell_dv_props.resize(domn->v.size());
 
     inlet_cell_dv_props[0] = -1;                                     // pos:  set elsewhere
@@ -62,7 +71,7 @@ void domaincase_odt_channel::init(domain *p_domn){
 
     //for(int i=0; i<domn->uvel->d.size(); i++)
     //  domn->uvel->d[i] = 10*domn->pos->d.at(i);
-      //domn->uvel->d[i] = 10*0.016/4.0/0.002*(1.0-domn->pos->d.at(i)*domn->pos->d.at(i));
+    //  domn->uvel->d[i] = 10*0.016/4.0/0.002*(1.0-domn->pos->d.at(i)*domn->pos->d.at(i));
 
 }
 

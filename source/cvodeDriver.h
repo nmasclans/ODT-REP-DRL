@@ -68,9 +68,9 @@ class cvodeDriver {
 
         ////////////////////// CONSTRUCTOR FUNCTIONS  /////////////////////
 
-        cvodeDriver(){Ldestruct = false;}                         // constructor
+        cvodeDriver(){Ldestruct = false;}                        // constructor
         void init(domain *p_domn, const bool p_LincludeRhsMix);  // initializer
-        ~cvodeDriver();                                           // destructor
+        ~cvodeDriver();                                          // destructor
 
 };
 
