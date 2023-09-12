@@ -72,13 +72,19 @@ void dv_uvw::getRhsSrc(const int ipt){
              * input param cCoord referers to the coordinate type, being 1 = planar, 2 = cylindrical, 3 = spherical
              * channelFlow: cCoord is set to 1 in the input.yaml file.
              */
+            // pressure gradient source term
             rhsSrc = vector<double>(domn->ngrd, -domn->pram->dPdx);
+            // statistics acceleration source term
+            // rhsSrc += ... // ADD STATISTICS ACCELERATION SOURCE TERM HERE !
+
             /* If buoyancy is enabled (domn->pram->Lbuoyant = True), this loop iterates over
              * the grid points and adjusts the values of the 'rhsSrc' vector.
              * A contribution to the 'rhsSrc' is added based on the density difference between the 
              * current point and the last point in the grid, and divides the result by the density
              * at the current point.
              */
+            // add buoyancy source term
+            // channelFlow: Lbuoyant = false by default, no buoyancy term added
             for(int i=0; i<domn->ngrd; i++) {
                 if(domn->pram->Lbuoyant)
                     rhsSrc.at(i) += (domn->rho->d.at(i) - domn->rho->d.at(domn->ngrd-1))*domn->pram->g;

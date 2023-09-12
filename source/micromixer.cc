@@ -38,13 +38,13 @@ void micromixer::init(domain *p_domn) {
 /** Advance ODT solution: diffusion and reaction
   */
 
-void micromixer::advanceOdt(const double p_tstart, const double p_tend, const int iLevel) { 
+void micromixer::advanceOdt(const double p_tstart, const double p_tend, const int iLevel) {  // default iLevel = -1 (in micromixer.h)
 
     tstart = p_tstart;
     tend   = p_tend;
 
     setNominalStepSize();
-    if(domn->pram->LdoDL) do_DL("init");
+    if(domn->pram->LdoDL) do_DL("init"); // channelFlow: LdoDL is false, by default
 
     for(time=tstart; time<tend; time+=dt, nsteps++) {
 
@@ -62,7 +62,7 @@ void micromixer::advanceOdt(const double p_tstart, const double p_tend, const in
 
     }
 
-    if(domn->pram->LdoDL) do_DL("calc a");
+    if(domn->pram->LdoDL) do_DL("calc a");  // channelFlow: LdoDL is false, by default
 
 }
 ///////////////////////////////////////////////////////////////////////////////
@@ -139,13 +139,14 @@ void micromixer::advanceOdtSingleStep_Explicit(){
 
     setGridDxcDx();
     setGf();
-    if(domn->pram->LdoDL) do_DL("set DL_1");
+    if(domn->pram->LdoDL) do_DL("set DL_1");  // channelFlow: LdoDL is false, by default
 
     domn->domc->setCaseSpecificVars();
 
     set_oldrho_or_rhov();
     if(domn->pram->Lspatial) transform(oldrho_or_rhov.begin(), oldrho_or_rhov.end(), domn->uvel->d.begin(), oldrho_or_rhov.begin(), multiplies<double>());
 
+    // --> Get right-hand-side terms of the NS governing equation for the transported variables
     for(int k=0; k<domn->v.size(); k++)
         /* If the domain variable is transported, add mixing and source terms in the governing eq. of such variable
          * The expressions of the mixing term (or diffusive transport) and the source term are derived from the 
@@ -160,6 +161,7 @@ void micromixer::advanceOdtSingleStep_Explicit(){
             domn->v.at(k)->getRhsSrc();
         }
 
+    // --> Diffuse transported variables using the NS governing equations   
     for(int k=0; k<domn->v.size(); k++)
         if(domn->v.at(k)->L_transported)
             for(int i=0; i < domn->ngrd; i++)
