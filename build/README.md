@@ -15,28 +15,35 @@ Optional software:
 ------------------------------------------------------------------
 ### Build instructions 
 
-STEP 1: run cmake
+STEP 1: run cmake.  
     Edit the user_config file for settings and paths.
-    RUN: `cmake -C user_config ../source`
+
+    `cmake -C user_config ../source`
 
 STEP 2 (optional if yaml is already installed): build and install yaml
-    RUN: `make yaml`
 
-STEP 3: build the ODT code
-    RUN: make -j8
+    `make yaml`
 
-(OPTIONAL) STEP 4:  build documentation
-    RUN: `make doxygen`
+STEP 3: build the ODT code.   
+    The -j8 option specifies that you want to use up to 8 parallel threads for compilation, which can significantly speed up the build process on multi-core processors.
+
+    `make -j8`
+
+(OPTIONAL) STEP 4:  build documentation  
+
+    `make doxygen`
     
 ------------------------------------------------------------------
 
 ### Cleanup instructions 
 
 Basic cleanup:
-    RUN: `make clean`
+
+    `make clean`
 
 Thorough cleanup:
-    RUN: `./clean_this_dir.sh`
+
+    `./clean_this_dir.sh`
 
 ------------------------------------------------------------------
 
