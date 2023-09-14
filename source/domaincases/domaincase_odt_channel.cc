@@ -30,9 +30,9 @@ void domaincase_odt_channel::init(domain *p_domn){
     domn->v.push_back(new dv_posf(       domn, "posf",  false, true));
     domn->v.push_back(new dv_rho_const(  domn, "rho",   false, false));
     domn->v.push_back(new dv_dvisc_const(domn, "dvisc", false, false));
-    domn->v.push_back(new dv_uvw(        domn, "uvel",  true,  true));
-    domn->v.push_back(new dv_uvw(        domn, "vvel",  true,  true));
-    domn->v.push_back(new dv_uvw(        domn, "wvel",  true,  true));
+    domn->v.push_back(new dv_uvw(        domn, "uvel",  true,  true, domn->pram->Lstatconv));
+    domn->v.push_back(new dv_uvw(        domn, "vvel",  true,  true, domn->pram->Lstatconv));
+    domn->v.push_back(new dv_uvw(        domn, "wvel",  true,  true, domn->pram->Lstatconv));
 
     // assign specific elements from the 'v' vector to various member variables of the 'domain' object
     domn->pos   = domn->v.at(0);

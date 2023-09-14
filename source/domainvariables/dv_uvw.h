@@ -25,12 +25,13 @@ class dv_uvw : public dv {
     //////////////////// DATA MEMBERS //////////////////////
 
     public:
-
+    
     //////////////////// MEMBER FUNCTIONS /////////////////
 
         virtual void getRhsSrc(const int ipt=-1);
         virtual void getRhsMix(const vector<double> &gf,
                                const vector<double> &dxc);
+        virtual void getRhsStatConv(const int ipt=-1);
 
     private:
 
@@ -40,10 +41,11 @@ class dv_uvw : public dv {
     public:
 
         dv_uvw(){}      
-        dv_uvw(domain     *line,
+        dv_uvw(domain      *line,
                const string s,
                const bool   Lt,
-               const bool   Lo=true);
+               const bool   Lo=true,
+               const bool   Lsc=false);
 
         virtual ~dv_uvw(){}
 

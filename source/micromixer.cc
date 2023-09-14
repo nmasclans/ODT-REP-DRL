@@ -12,6 +12,8 @@
 
 #include "interp_linear.h"
 
+using namespace std;
+
 ///////////////////////////////////////////////////////////////////////////////
 /** micromixer constructor function
  */
@@ -147,25 +149,43 @@ void micromixer::advanceOdtSingleStep_Explicit(){
     if(domn->pram->Lspatial) transform(oldrho_or_rhov.begin(), oldrho_or_rhov.end(), domn->uvel->d.begin(), oldrho_or_rhov.begin(), multiplies<double>());
 
     // --> Get right-hand-side terms of the NS governing equation for the transported variables
-    for(int k=0; k<domn->v.size(); k++)
+    for(int k=0; k<domn->v.size(); k++){
         /* If the domain variable is transported, add mixing and source terms in the governing eq. of such variable
-         * The expressions of the mixing term (or diffusive transport) and the source term are derived from the 
-         * Reynolds Trenaport Theorem for a scalar quantity, applied when such quantity or domain variable is 
-         * transported, when L_transpored = true for that variable. 
-         * The loop iterates over the domain variables, pointed as domn->v.at(k) with k = 0,..,(domn->v.size()-1)
-         * channelFlow: has 7 domain variables: 'pos', 'posf', 'rho', 'dvisc', 'uvel', 'vvel', 'wvel' (with k = 0,..,6)
-         * channelFlow: from which 3 domain variables are transported (with L_transported = true): 'uvel', 'vvel', 'wvel' 
-         */
+        * The expressions of the mixing term (or diffusive transport) and the source term are derived from the
+        * Reynolds Trenaport Theorem for a scalar quantity, applied when such quantity or domain variable is
+        * transported, when L_transpored = true for that variable.
+        * The loop iterates over the domain variables, pointed as domn->v.at(k) with k = 0,..,(domn->v.size()-1)
+        * channelFlow: has 7 domain variables: 'pos', 'posf', 'rho', 'dvisc', 'uvel', 'vvel', 'wvel' (with k = 0,..,6)
+        * channelFlow: from which 3 domain variables are transported (with L_transported = true): 'uvel', 'vvel', 'wvel' 
+        */
         if(domn->v.at(k)->L_transported) {
             domn->v.at(k)->getRhsMix(gf, dxc);
             domn->v.at(k)->getRhsSrc();
+            if(domn->v.at(k)->L_statconv) {
+                domn->v.at(k)->getRhsStatConv();
+            }
         }
+    }
 
     // --> Diffuse transported variables using the NS governing equations   
-    for(int k=0; k<domn->v.size(); k++)
-        if(domn->v.at(k)->L_transported)
-            for(int i=0; i < domn->ngrd; i++)
-                domn->v.at(k)->d.at(i) = domn->v.at(k)->d.at(i) + dt*( domn->v.at(k)->rhsMix.at(i) + domn->v.at(k)->rhsSrc.at(i));
+    for(int k=0; k<domn->v.size(); k++){
+        if(domn->v.at(k)->L_transported) {
+            if(domn->v.at(k)->L_statconv){
+                // update transported variables finite time difference (required in getRhsStatConv())
+                domn->v.at(k)->dvaldt.resize(domn->ngrd, 0.0);
+                // update transported variables value
+                for(int i=0; i < domn->ngrd; i++) {
+                    domn->v.at(k)->dvaldt.at(i) = domn->v.at(k)->rhsMix.at(i) + domn->v.at(k)->rhsSrc.at(i) + domn->v.at(k)->rhsStatConv.at(i);
+                    domn->v.at(k)->d.at(i) = domn->v.at(k)->d.at(i) + dt*( domn->v.at(k)->dvaldt.at(i) ); 
+                }
+            } else {
+                // update transported variables value
+                for(int i=0; i < domn->ngrd; i++) {
+                    domn->v.at(k)->d.at(i) = domn->v.at(k)->d.at(i) + dt*( domn->v.at(k)->rhsMix.at(i) + domn->v.at(k)->rhsSrc.at(i) );
+                }
+            }
+        }
+    }
 
     updateGrid();            // update cell sizes due to rho or rho*v variations (continuity)
 
@@ -320,7 +340,7 @@ void micromixer::setGf(){
 void micromixer::updateGrid() {
 
     //-------------- return for fixed grid cases
-
+    // channelFlow: this is the case for a channel flow
     if((domn->pram->bcType=="WALL" && (domn->pram->vBClo==0 || domn->pram->vBChi==0))) 
         return;
 
@@ -379,7 +399,6 @@ void micromixer::updateGrid() {
 
         domn->mesher->setGridFromDxc(dxc2);
     }
-
 
 }
 

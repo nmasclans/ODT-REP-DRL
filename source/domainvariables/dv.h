@@ -28,14 +28,19 @@ class dv {
 
         string                        var_name;               ///< name of variable
         vector<double>                d;                      ///< the data
+        vector<double>                dvaldt;                 ///< the data finite time difference
         bool                          L_transported;          ///< flag true if var is transported
         bool                          L_output;               ///< flag true if included in output
+        bool                          L_statconv;             ///< flag true if statistics convergence is activated
         bool                          LagSrc;                 ///< flag to lag source term in implicit solve (initially put in for enthalpy radiation)
+
+
 
         domain                        *domn;                  ///< pointer to domain object (parent)
 
         vector<double>                rhsSrc;                 ///< the data
         vector<double>                rhsMix;                 ///< the data
+        vector<double>                rhsStatConv;            ///< the data
 
         vector<double>                flux;
 
@@ -55,6 +60,7 @@ class dv {
         virtual void   getRhsSrc(const int ipt=-1){if(!L_transported) return;}
         virtual void   getRhsMix(const vector<double> &gf,
                                  const vector<double> &dxc){if(!L_transported) return;}
+        virtual void   getRhsStatConv(const int ipt=-1){return;}
 
         virtual void   interpVarToFacesHarmonic(const vector<double> &cvar, vector<double> &fvar);
         virtual double linearInterpToFace(const int &iface, const vector<double> &vec);

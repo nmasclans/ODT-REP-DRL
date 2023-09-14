@@ -9,6 +9,9 @@
 #include <string>
 #include <iomanip>
 #include <numeric> //accumulate
+#include <iostream>
+
+using namespace std;
 
 ///////////////////////////////////////////////////////////////////////////////
 /** solver initialization function
@@ -134,7 +137,6 @@ void solver::calculateSolution() {
             //    ss1.clear();  ss1 << setfill('0') << setw(4) << neddies; ss1 >> s1;
             //    domn->io->writeDataFile("odt_"+s1+"_diffuse.dat", time);
             //}
-
 
             domn->mesher->adaptEddyRegionOfMesh(time, tLastDA, cLastDA);
 

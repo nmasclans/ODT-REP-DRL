@@ -168,9 +168,9 @@ void domain::initEddyDomain() {
 
     v.push_back(new dv_pos(  this, "pos",   false, true));
     v.push_back(new dv_posf( this, "posf",  false, true));
-    v.push_back(new dv_uvw(  this, "uvel",  true,  true));   // last are: L_transported, L_output
-    v.push_back(new dv_uvw(  this, "vvel",  true,  true));
-    v.push_back(new dv_uvw(  this, "wvel",  true,  true));
+    v.push_back(new dv_uvw(  this, "uvel",  true,  true, false));   // last are: L_transported, L_output, L_statconv
+    v.push_back(new dv_uvw(  this, "vvel",  true,  true, false));
+    v.push_back(new dv_uvw(  this, "wvel",  true,  true, false));
     v.push_back(new dv_rho(  this, "rho",   false, false));
     v.push_back(new dv_dvisc(this, "dvisc", false, false));
     if(domn->pram->LdoDL)

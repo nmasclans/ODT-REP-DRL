@@ -5,6 +5,9 @@
 
 #include "dv.h"
 #include "domain.h"
+#include <iostream>
+
+using namespace std;
 
 ////////////////////////////////////////////////////////////////////////////////
 /*! dv constructor function
@@ -23,6 +26,7 @@ dv::dv(domain    *line,
     L_transported = Lt;
     L_output      = Lo;
     d             = vector<double>(domn->ngrd, 0.0);
+    dvaldt        = vector<double>(domn->ngrd, 0.0);
 
     LagSrc = false;
 

@@ -8,6 +8,9 @@
 #include "domain.h"
 #include <cstdlib>
 #include <cmath>
+#include <iostream>
+
+using namespace std;
 
 ////////////////////////////////////////////////////////////////////////////////
 /*! dv_uvw  constructor function
@@ -20,13 +23,20 @@
 dv_uvw::dv_uvw(domain  *line,
                const      string s,
                const bool Lt,
-               const bool Lo) {
+               const bool Lo,
+               const bool Lsc) {
     
     domn          = line;
     var_name      = s;
     L_transported = Lt;
     L_output      = Lo;
+    L_statconv    = Lsc;
     d             = vector<double>(domn->ngrd, 0.0); // variable value along at the grid points of the domain 
+    dvaldt        = vector<double>(domn->ngrd, 0.0); // variable discrete time derivative along at the grid points of the domain 
+
+    rhsSrc        = vector<double>(domn->ngrd, 0.0);
+    rhsMix        = vector<double>(domn->ngrd, 0.0);
+    rhsStatConv   = vector<double>(domn->ngrd, 0.0);
 
 }
 
@@ -74,8 +84,6 @@ void dv_uvw::getRhsSrc(const int ipt){
              */
             // pressure gradient source term
             rhsSrc = vector<double>(domn->ngrd, -domn->pram->dPdx);
-            // statistics acceleration source term
-            // rhsSrc += ... // ADD STATISTICS ACCELERATION SOURCE TERM HERE !
 
             /* If buoyancy is enabled (domn->pram->Lbuoyant = True), this loop iterates over
              * the grid points and adjusts the values of the 'rhsSrc' vector.
@@ -215,4 +223,24 @@ void dv_uvw::getRhsMix(const vector<double> &gf,
 
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/*! lv statistics convergence term part of the rhs function. 
+ *  Method implementation for statistics convergence term of the right-hand side (Rhs) 
+ *  @param ipt \input optional point to compute source at.
+ */
 
+void dv_uvw::getRhsStatConv(const int ipt) {
+    
+    if(!L_transported or !L_statconv)
+        return;
+
+    rhsStatConv.resize(domn->ngrd, 0.0);
+    dvaldt.resize(domn->ngrd, 0.0);
+
+    // statistics acceleration source term
+    if(ipt==-1) {
+        for(int i=0; i<domn->ngrd; i++) {
+            rhsStatConv.at(i) = dvaldt.at(i);
+        }
+    }
+}

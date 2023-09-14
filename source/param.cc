@@ -58,6 +58,7 @@ param::param(inputoutput *p_io) {
     LTMA           = io->params["LTMA"]           ? io->params["LTMA"].as<bool>()            : false;
     LplanarTau     = io->params["LplanarTau"]     ? io->params["LplanarTau"].as<bool>()      : false;
     Lignition      = io->params["Lignition"]      ? io->params["Lignition"].as<bool>()       : false;
+    Lstatconv      = io->params["Lstatconv"]      ? io->params["Lstatconv"].as<bool>()       : false;
 
     bcType         = io->params["bcType"]         ? io->params["bcType"].as<string>()        : errMsg<string>("bcType");
     cCoord         = io->params["cCoord"]         ? io->params["cCoord"].as<int>()           : 1;

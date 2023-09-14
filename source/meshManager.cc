@@ -1278,6 +1278,7 @@ void meshManager::adaptEddyRegionOfMesh(const double &time, double &tLastDA, int
 
 void meshManager::enforceDomainSize() {
 
+    // channelFlow: this is the case for a channel flow
     if( (domn->pram->bcType=="WALL" && (domn->pram->vBClo==0 || domn->pram->vBChi==0))) 
         return;
 
