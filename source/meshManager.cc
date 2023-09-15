@@ -859,7 +859,8 @@ void meshManager::setDxArray() {
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/** Given a position, find an index (use with pos)
+/** Given a position 'val', find an index 'return' (use with pos) of the positions
+ *  vector 'x' where 'val' is found between the positions, i.e. x[return]<val & x[return+1]>val 
  *
  * @param x      \input vector of cell positions
  * @param val    \input location which is converted to index
@@ -894,10 +895,10 @@ void meshManager::interp1pt(const vector<double> &x, const vector<double> &y,
 
     int i, ip;
 
-    i = findPos(x, xval, istart);
-    ip = i+1;
+    i = findPos(x, xval, istart); // position x[i]   < xval
+    ip = i+1;                     // position x[i+1] > xval
     if(i>0)
-        istart = i-1;
+        istart = i-1;             // for the next interpolated position (next call of interp1pt from interpVec), for faster computation
 
     yval = y.at(i) + (xval-x.at(i))*(y.at(ip)-y.at(i))/(x.at(ip)-x.at(i));
 

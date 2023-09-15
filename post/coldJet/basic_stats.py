@@ -108,7 +108,7 @@ def basic_stats(DI, nfbins=60, nx=-1, favre=False, do_yt=False, filter=True) :
             data = data_all[i_s:i_e+1, :]
             x  = data[:,ipos]
             xf = data[:,iposf]
-            xf = np.append(xf,x[-1]+(xf[-1]-x[-1]))
+            xf = np.append(xf,x[-1]+(xf[-1]-x[-1])) # NURIA: I thing it should be : np.append(xf, x[-1] + (x[-1]-xf[-1]))
 
             if doConditional :
                 dx = np.abs(np.abs(xf[1:])**cCoord - np.abs(xf[0:-1])**cCoord)

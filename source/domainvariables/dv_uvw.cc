@@ -235,6 +235,7 @@ void dv_uvw::getRhsStatConv(const int ipt) {
         return;
 
     rhsStatConv.resize(domn->ngrd, 0.0);
+    // TODO: now dvaldt are zeros, implement it!
     dvaldt.resize(domn->ngrd, 0.0);
 
     // statistics acceleration source term

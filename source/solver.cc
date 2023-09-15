@@ -149,7 +149,11 @@ void solver::calculateSolution() {
 
         //----------------------
 
-        time += sampleDt();             // advance the time
+        //cout << "tLast: " << time << ", "; 
+        time    += sampleDt();          // advance the time
+        //cout << "tNew = " << time << endl;
+
+        updateStatistics();             
 
         raiseDtSmean();                 // may reset PaSum, nPaSum, dtSmean
     }
@@ -497,3 +501,13 @@ void solver::lowerDtSmean() {
 
 }
 
+///////////////////////////////////////////////////////////////////////////////
+/** Update statistics of averaged/fluctuating domain variables
+ */
+
+void solver::updateStatistics() {
+
+    for(int i=0; i<domn->v.size(); i++)
+        domn->v.at(i)->update(time);  
+
+}

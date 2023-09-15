@@ -20,15 +20,16 @@ class ChannelVisualizer():
     #   Methods:                            ODT vs. DNS
     #--------------------------------------------------------------------------------------------
 
-    def build_u_mean_profile(self, y_odt, y_dns, u_odt, u_dns):
+    def build_u_mean_profile(self, y_odt, y_dns, u_odt, u_data_odt, u_dns):
         
         filename = f"../../data/{self.caseN}/post/u_mean.jpg"
         print(f"MAKING PLOT OF MEAN U PROFILE: ODT vs DNS in {filename}" )
 
         fig, ax = plt.subplots()
 
-        ax.semilogx(y_odt, u_odt, 'k-',  label=r'ODT')
-        ax.semilogx(y_dns, u_dns, 'k--', label=r'DNS')
+        ax.semilogx(y_dns, u_dns,      'k-',  label=r'DNS')
+        ax.semilogx(y_odt, u_odt,      'b--', label=r'ODT (calc. from odt inst. vel.)')
+        ax.semilogx(y_odt, u_data_odt, 'r:',  label=r'ODT (calc. during odt execution)')
 
         ax.set_xlabel(r'$y^+$')
         ax.set_ylabel(r'$u^+$')

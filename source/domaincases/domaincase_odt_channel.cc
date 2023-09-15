@@ -11,6 +11,7 @@
 #include "dv_rho_const.h"
 #include "dv_dvisc_const.h"
 #include "dv_uvw.h"
+#include "dv_uvw_mean.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 /** Initialization
@@ -26,22 +27,26 @@ void domaincase_odt_channel::init(domain *p_domn){
 
     // add different variable types (being objects of dv subclasses) to the 'v' vector, class member of the 'domain' object
     // each of these variables is created using their respective constr. and is pushed into the 'v' vector<dv*> of 'domain' object
-    domn->v.push_back(new dv_pos(        domn, "pos",   false, true));   // last are: L_transported, L_output
-    domn->v.push_back(new dv_posf(       domn, "posf",  false, true));
-    domn->v.push_back(new dv_rho_const(  domn, "rho",   false, false));
-    domn->v.push_back(new dv_dvisc_const(domn, "dvisc", false, false));
-    domn->v.push_back(new dv_uvw(        domn, "uvel",  true,  true, domn->pram->Lstatconv));
-    domn->v.push_back(new dv_uvw(        domn, "vvel",  true,  true, domn->pram->Lstatconv));
-    domn->v.push_back(new dv_uvw(        domn, "wvel",  true,  true, domn->pram->Lstatconv));
+    domn->v.push_back(new dv_pos(        domn, "pos",      false, true));   // last are: L_transported, L_output
+    domn->v.push_back(new dv_posf(       domn, "posf",     false, true));
+    domn->v.push_back(new dv_rho_const(  domn, "rho",      false, false));
+    domn->v.push_back(new dv_dvisc_const(domn, "dvisc",    false, false));
+    domn->v.push_back(new dv_uvw(        domn, "uvel",     true,  true, domn->pram->Lstatconv));
+    domn->v.push_back(new dv_uvw(        domn, "vvel",     true,  true, domn->pram->Lstatconv));
+    domn->v.push_back(new dv_uvw(        domn, "wvel",     true,  true, domn->pram->Lstatconv));
+    domn->v.push_back(new dv_uvw_mean(   domn, "uvelmean", false, true));
+    domn->v.push_back(new dv_uvw_mean(   domn, "vvelmean", false, true));
+    domn->v.push_back(new dv_uvw_mean(   domn, "wvelmean", false, true));
 
     // assign specific elements from the 'v' vector to various member variables of the 'domain' object
-    domn->pos   = domn->v.at(0);
-    domn->posf  = domn->v.at(1);
-    domn->rho   = domn->v.at(2);
-    domn->dvisc = domn->v.at(3);
-    domn->uvel  = domn->v.at(4);
-    domn->vvel  = domn->v.at(5);
-    domn->wvel  = domn->v.at(6);
+    int j = 0;
+    domn->pos      = domn->v.at(j++);
+    domn->posf     = domn->v.at(j++);
+    domn->rho      = domn->v.at(j++);
+    domn->dvisc    = domn->v.at(j++);
+    domn->uvel     = domn->v.at(j++);
+    domn->vvel     = domn->v.at(j++);
+    domn->wvel     = domn->v.at(j++);
 
     //------------------- set variables used for mesh adaption
 

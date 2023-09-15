@@ -11,6 +11,7 @@ target_sources(odt.x
         ${CMAKE_CURRENT_SOURCE_DIR}/dv_dvisc.cc           ${CMAKE_CURRENT_SOURCE_DIR}/dv_dvisc.h
         ${CMAKE_CURRENT_SOURCE_DIR}/dv_dvisc_const.cc     ${CMAKE_CURRENT_SOURCE_DIR}/dv_dvisc_const.h
         ${CMAKE_CURRENT_SOURCE_DIR}/dv_uvw.cc             ${CMAKE_CURRENT_SOURCE_DIR}/dv_uvw.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/dv_uvw_mean.cc        ${CMAKE_CURRENT_SOURCE_DIR}/dv_uvw_mean.h
         ${CMAKE_CURRENT_SOURCE_DIR}/dv_sca.cc             ${CMAKE_CURRENT_SOURCE_DIR}/dv_sca.h
         ${CMAKE_CURRENT_SOURCE_DIR}/dv_enth.cc            ${CMAKE_CURRENT_SOURCE_DIR}/dv_enth.h
         ${CMAKE_CURRENT_SOURCE_DIR}/dv_temp.cc            ${CMAKE_CURRENT_SOURCE_DIR}/dv_temp.h

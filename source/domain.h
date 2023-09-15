@@ -51,6 +51,9 @@ class domain {
         dv*                     uvel;
         dv*                     vvel;
         dv*                     wvel;
+        dv*                     uvelmean;
+        dv*                     vvelmean;
+        dv*                     wvelmean;
         dv*                     sdiff;
         dv*                     sca;
         dv*                     phase;

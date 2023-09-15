@@ -56,7 +56,7 @@ inputParams = {"kvisc":kvisc, "rho":rho, "dxmin": dxmin, "delta": delta, "Retau"
 odtStatisticsFilepath = "../../data/" + caseN + "/post/ODTstat.dat"
 if not os.path.isfile(odtStatisticsFilepath):
     compute_odt_statistics(odtStatisticsFilepath, inputParams)
-(ydelta_odt, yplus_odt, um_odt, urmsf_odt, vrmsf_odt, wrmsf_odt, ufufm_odt, vfvfm_odt, wfwfm_odt, ufvfm_odt, ufwfm_odt, vfwfm_odt, viscous_stress_odt, reynolds_stress_odt, total_stress_odt, vt_u_plus_odt, d_u_plus_odt) \
+(ydelta_odt, yplus_odt, um_odt, urmsf_odt, vrmsf_odt, wrmsf_odt, ufufm_odt, vfvfm_odt, wfwfm_odt, ufvfm_odt, ufwfm_odt, vfwfm_odt, viscous_stress_odt, reynolds_stress_odt, total_stress_odt, vt_u_plus_odt, d_u_plus_odt, um_data_odt) \
     = get_odt_statistics(odtStatisticsFilepath, inputParams)
 
 #------------ Get DNS statistics ---------------
@@ -68,7 +68,7 @@ if not os.path.isfile(odtStatisticsFilepath):
 # Build plots
 
 visualizer = ChannelVisualizer(caseN)
-visualizer.build_u_mean_profile(yplus_odt, yplus_dns, um_odt, um_dns)
+visualizer.build_u_mean_profile(yplus_odt, yplus_dns, um_odt, um_data_odt, um_dns)
 visualizer.build_u_rmsf_profile(yplus_odt, yplus_dns, urmsf_odt, vrmsf_odt, wrmsf_odt, urmsf_dns, vrmsf_dns, wrmsf_dns)
 visualizer.build_reynolds_stress_not_diagonal_profile(yplus_odt, yplus_dns, ufvfm_odt, ufwfm_odt, vfwfm_odt, ufvfm_dns, ufwfm_dns, vfwfm_dns)
 visualizer.build_reynolds_stress_diagonal_profile(yplus_odt, yplus_dns, ufufm_odt, vfvfm_odt, wfwfm_odt, ufufm_dns, vfvfm_dns, wfwfm_dns)

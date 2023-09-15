@@ -70,5 +70,7 @@
         "typeinfo": "cpp",
         "valarray": "cpp",
         "variant": "cpp"
-    }
+    },
+    "todohighlight.isEnable" : true,
+    "todohighlight.isCaseSensitive" : false
 }

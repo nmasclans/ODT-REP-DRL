@@ -83,7 +83,7 @@ param::param(inputoutput *p_io) {
 
     modDump        = io->params["modDump"]        ? io->params["modDump"].as<int>()          : 1000000; //errMsg<int>("modDump");
     modDisp        = io->params["modDisp"]        ? io->params["modDisp"].as<int>()          : 1;
-    Ltecplot       = io->params["Ltecplot"]       ? io->params["Ltecplot"].as<bool>()        : false; //errMsg<int>("modDump");
+    Ltecplot       = io->params["Ltecplot"]       ? io->params["Ltecplot"].as<bool>()        : false;   //errMsg<int>("modDump");
 
     LmultiPhase    = io->params["LmultiPhase"]    ? io->params["LmultiPhase"].as<bool>()     : false;
     eSurfTens      = io->params["eSurfTens"]      ? io->params["eSurfTens"].as<double>()     : 0.0;

@@ -42,7 +42,7 @@ def compute_odt_statistics(odt_statistics_filepath, input_params):
     nfiles = len(flist)          # num. files of instantaneous data, i.e. num. discrete time instants
     yu  = np.linspace(-delta,delta,nunif) # uniform grid in y-axis
     # empty vectors of time-averaged quantities
-    um  = np.zeros(nunif)        # mean velocity
+    um  = np.zeros(nunif)        # mean velocity, calulated in post-processing from instantaneous velocity
     vm  = np.zeros(nunif)
     wm  = np.zeros(nunif)
     u2m = np.zeros(nunif)        # mean square velocity (for rmsf and reynolds stresses)
@@ -53,22 +53,25 @@ def compute_odt_statistics(odt_statistics_filepath, input_params):
     vwm = np.zeros(nunif)
     dudy2m = np.zeros(nunif2-2)
 
-
     logging_files_period = 10000
     ifile_counter = 0
     ifile_total   = len(flist)
     for ifile in flist :
 
+        # ------------------ (get) Instantaneous velocity ------------------
+
         data = np.loadtxt(ifile)
-        y = data[:,0] # = y/delta, as delta = 1
-        u = data[:,2] # normalized by u_tau, u is in fact u+
-        v = data[:,3] # normalized by u_tau, v is in fact v+
-        w = data[:,4] # normalized by u_tau, w is in fact w+
+        y        = data[:,0] # = y/delta, as delta = 1
+        u        = data[:,2] # normalized by u_tau, u is in fact u+
+        v        = data[:,3] # normalized by u_tau, v is in fact v+
+        w        = data[:,4] # normalized by u_tau, w is in fact w+ 
 
         # interpolate to uniform grid
         uu = interp1d(y, u, fill_value='extrapolate')(yu)  
         vv = interp1d(y, v, fill_value='extrapolate')(yu)
         ww = interp1d(y, w, fill_value='extrapolate')(yu)
+
+        # ------------------ (compute) Velocity statistics, from instantaneous values ------------------
 
         # update mean profiles
         um  += uu                 
@@ -97,7 +100,7 @@ def compute_odt_statistics(odt_statistics_filepath, input_params):
         if ifile_counter % logging_files_period == 1:
             print(f"Calculating ODT statistics... {ifile_counter/ifile_total*100:.0f}%")
 
-    # means
+    # (computed) means
     um /= nfiles
     vm /= nfiles
     wm /= nfiles
@@ -145,6 +148,18 @@ def compute_odt_statistics(odt_statistics_filepath, input_params):
     RetauOdt = utau * delta / kvisc
     yuplus = yu * utau/kvisc    # scale y --> y+ (note: utau is close to unity)
 
+    # ------------------ (get) Velocity statistics computed during odt simulation ------------------
+    # the mean velocities are taken from the last discrete time datafile from odt execution
+    um_data_ = data[:,5] 
+    vm_data_ = data[:,6] 
+    wm_data_ = data[:,7]
+    um_data  = interp1d(y, um_data_, fill_value='extrapolate')(yu)  
+    vm_data  = interp1d(y, vm_data_, fill_value='extrapolate')(yu)
+    wm_data  = interp1d(y, wm_data_, fill_value='extrapolate')(yu)
+    um_data  = 0.5*(um_data[:nunif2] + np.flipud(um_data[nunif2:]))  # mirror data (symmetric)
+    vm_data  = 0.5*(vm_data[:nunif2] + np.flipud(vm_data[nunif2:]))
+    wm_data  = 0.5*(wm_data[:nunif2] + np.flipud(wm_data[nunif2:]))
+
     # --- Compute Stress Decomposition ---
     # Stress decomposition: Viscous, Reynolds and Total stress
     dumdy = (um[1:] - um[:-1])/(yu[1:] - yu[:-1])
@@ -183,12 +198,14 @@ def compute_odt_statistics(odt_statistics_filepath, input_params):
     odt_data = np.vstack([yu/delta,yuplus,um,vm,wm,urmsf,vrmsf,wrmsf,
                           ufufm,vfvfm,wfwfm,ufvfm,ufwfm,vfwfm,
                           viscous_stress,reynolds_stress,total_stress, # -> stress decomposition
-                          vt_u_plus, d_u_plus]).T            # -> TKE budgets for u-component
+                          vt_u_plus, d_u_plus,                         # -> TKE budgets for u-component
+                          um_data, vm_data, wm_data]).T            
     np.savetxt(odt_statistics_filepath, odt_data, 
-            header="y/delta,    y+,          u+_mean,     v+_mean,     w+_mean,     u+_rmsf,     v+_rmsf,     w+_rmsf,     "\
+            header= "y/delta,    y+,          u+_mean,     v+_mean,     w+_mean,     u+_rmsf,     v+_rmsf,     w+_rmsf,     "\
                     "<u'u'>+,     <v'v'>+,     <w'w'>+,     <u'v'>+,     <u'w'>+,     <v'w'>+,     " \
                     "tau_viscous, tau_reynolds,tau_total,   " \
-                    "vt_u+,       d_u+",
+                    "vt_u+,       d_u+,        " \
+                    "u+_mean_data,v+_mean_data,w+_mean_data" ,
             fmt='%12.5E')
 
     print("(ODT) Nominal Retau: ", Retau)
@@ -239,10 +256,14 @@ def get_odt_statistics(odt_statistics_filepath, input_params):
     vt_u = odt[:,17]  # Viscous transport 
     d_u  = odt[:,18]  # Dissipation
 
+    # velocity statistics calculated during odt execution
+    um_data = odt[:,19]  # u+_mean_data
+
     return (ydelta, yplus, um, urmsf, vrmsf, wrmsf, 
             ufufm, vfvfm, wfwfm, ufvfm, ufwfm, vfwfm, 
             viscous_stress, reynolds_stress, total_stress, 
-            vt_u, d_u)
+            vt_u, d_u,
+            um_data)
 
 
 def get_dns_statistics(Re_tau, input_params):

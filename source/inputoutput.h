@@ -50,7 +50,9 @@ class inputoutput {
         int                      iNextDumpTime;  ///< index of next dump time
         bool                     LdoDump;        ///< flag for whether we are dumping a file
 
-        ofstream                 gnufile;        ///< gnuplot script file
+        ofstream                gnufile;         ///< gnuplot script file y vs u,        at initial & end time
+        ofstream                gnufile_inst;    ///< gnuplot script file y vs u,v,w,    at each dumpTimes
+        ofstream                gnufile_stat;    ///< gnuplot script file y vs um,vm,wm, at each dumpTimes
 
         int                      nShift;         ///< for file naming
 

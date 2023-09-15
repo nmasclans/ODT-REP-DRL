@@ -63,6 +63,7 @@ class solver {
         bool   testLES_fracDomain( const double eSize);
         bool   testLES_integralLength(const double time, const double eSize);
         bool   testLES_thirds();
+        void   updateStatistics();
 
 
     //////////////////// CONSTRUCTOR FUNCTIONS /////////////////

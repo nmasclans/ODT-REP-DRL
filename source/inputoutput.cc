@@ -74,7 +74,7 @@ inputoutput::inputoutput(const string p_caseName, const int p_nShift){
 
     //----------- set the data directory and runtime file
 
-    string fname;
+    string       fname;
     stringstream ss1;
     string       s1;
 
@@ -94,6 +94,7 @@ inputoutput::inputoutput(const string p_caseName, const int p_nShift){
 
     //----------- set gnuplot file
 
+    // gnufile: gnuplot script file y vs u, at initial & end time
     fname = dataDir + "plot_odt.gnu";
     gnufile.open(fname.c_str());
     if(!gnufile) {
@@ -101,6 +102,21 @@ inputoutput::inputoutput(const string p_caseName, const int p_nShift){
         exit(0);
     }
 
+    // gnufile_inst: gnuplot script file y vs u,v,w, at each dumpTimes
+    fname = dataDir + "plot_instantaneous.gnu";
+    gnufile_inst.open(fname.c_str());
+    if(!gnufile_inst) {
+        cout << endl << "ERROR OPENING FILE: " << dataDir+"plot_instantaneous.gnu" << endl;
+        exit(0);
+    }
+    
+    //gnufile_stat: gnuplot script file y vs um,vm,wm, at each dumpTimes
+    fname = dataDir + "plot_statistics.gnu";
+    gnufile_stat.open(fname.c_str());
+    if(!gnufile_stat) {
+        cout << endl << "ERROR OPENING FILE: " << dataDir+"plot_statistics.gnu" << endl;
+        exit(0);
+    }
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -111,6 +127,8 @@ inputoutput::~inputoutput() {
 
     delete ostrm;
     gnufile.close();
+    gnufile_inst.close();
+    gnufile_stat.close();
 
 }
 
@@ -151,16 +169,20 @@ void inputoutput::outputProperties(const string fname, const double time) {
     ofile << "\n# Pressure (Pa) = " << domn->pram->pres << endl;
 
     // HEWSON setting tecplot friendly output
+    // channelFlow: Ltecplot is set to false
     if (domn->pram->Ltecplot)
         ofile << "VARIABLES =";
     else
         ofile << "#";
+    // Write text row of variables names, for each output variable column 
     for(int i=0,j=1; i<domn->v.size(); i++){
         if(domn->v.at(i)->L_output){
+            int strLength = domn->v.at(i)->var_name.length();
+            if (i == 0) {strLength++;}
             if (domn->pram->Ltecplot)
-                ofile << setw(14) << "\"" << j++ << "_" << domn->v.at(i)->var_name << "\"";
+                ofile << setw(18-strLength) << "\"" << j++ << "_" << domn->v.at(i)->var_name << "\"";
             else
-                ofile << setw(14) << j++ << "_" << domn->v.at(i)->var_name;
+                ofile << setw(18-strLength) << j++ << "_" << domn->v.at(i)->var_name;
         }
     }
 
@@ -201,12 +223,18 @@ void inputoutput::dumpDomainIfNeeded(){
 
     stringstream ss;
     ss << setfill('0') << setw(5) << iNextDumpTime;
-    string fname = dataDir + "dmp_" + ss.str() + ".dat";
+    string fnameRaw = "dmp_" + ss.str() + ".dat";
+    string fname    = dataDir + fnameRaw;
 
     outputProperties(fname, dumpTimes.at(iNextDumpTime));
 
     iNextDumpTime++;
     LdoDump = false;
+
+    // update gnufile of instantaneous and statistics vel. with dump file
+    gnufile_inst << "plot '" << fnameRaw << "' us 1:3; pause -1;" << endl;
+    gnufile_stat << "plot '" << fnameRaw << "' us 1:6; pause -1;" << endl;
+
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -261,7 +289,7 @@ void inputoutput::outputProgress() {
         dmb = dmb-domn->Ldomain();
 
     *ostrm << scientific << setprecision(3) << endl;
-    *ostrm << setw(5)  << domn->solv->neddies                    //  1: EE
+    *ostrm << setw(5)  << domn->solv->neddies                 //  1: EE
         << setw(12) << domn->solv->time                       //  2: time
         << setw(12) << domn->solv->time-domn->solv->t0        //  3: t-t0
         << setw(10) << domn->solv->iEtrials                   //  4: nEtry
