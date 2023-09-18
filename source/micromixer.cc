@@ -186,6 +186,11 @@ void micromixer::advanceOdtSingleStep_Explicit(){
             }
         }
     }
+    
+    // update averaged variables 
+    for(int k=0; k<domn->v.size(); k++){
+        domn->v.at(k)->updateStatisticsIfNeeded(time, dt); // todo: revisar si 'time' is the proper input
+    }
 
     updateGrid();            // update cell sizes due to rho or rho*v variations (continuity)
 
@@ -504,4 +509,3 @@ void micromixer::check_balance(int io) {
     cout << setprecision(13);
     cout << endl << "check: " << io << " " << mom;
 }
-

@@ -153,14 +153,13 @@ void solver::calculateSolution() {
         time    += sampleDt();          // advance the time
         //cout << "tNew = " << time << endl;
 
-        updateStatistics();             
-
         raiseDtSmean();                 // may reset PaSum, nPaSum, dtSmean
     }
 
     time = domn->pram->tEnd;
-    if(t0 < time)                       // last diffusionCatchUpIfNeeded
+    if(t0 < time){                       // last diffusionCatchUpIfNeeded
         diffusionCatchUpIfNeeded(true);
+    }
 
     //-------------------------------------------------------------------------
 
@@ -498,16 +497,5 @@ void solver::lowerDtSmean() {
 
     PaSumC += domn->ed->Pa;
     nPaSumC++;
-
-}
-
-///////////////////////////////////////////////////////////////////////////////
-/** Update statistics of averaged/fluctuating domain variables
- */
-
-void solver::updateStatistics() {
-
-    for(int i=0; i<domn->v.size(); i++)
-        domn->v.at(i)->update(time);  
 
 }

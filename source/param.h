@@ -40,6 +40,7 @@ class param {
         double  pres;            ///<  initial pressure (Pa)
         string  chemMechFile;    ///<  name of chemical mechanism file
         string  probType;        ///<  problem type: CHANNEL, CHANNEL_SCALAR, JETMIXL_RXN, COUETTE
+        double  tBeginAvg;       ///<  time at which to begin statistics calculation
 
         double  Z_param;         ///<  Viscous penalty parameter
         double  A_param;         ///<  Energy Distribution parameter alpha

@@ -226,6 +226,7 @@ void inputoutput::dumpDomainIfNeeded(){
     string fnameRaw = "dmp_" + ss.str() + ".dat";
     string fname    = dataDir + fnameRaw;
 
+    updateStatistics(dumpTimes.at(iNextDumpTime));
     outputProperties(fname, dumpTimes.at(iNextDumpTime));
 
     iNextDumpTime++;
@@ -376,3 +377,14 @@ void inputoutput::loadVarsFromRestartFile() {
 
 }
 
+
+///////////////////////////////////////////////////////////////////////////////
+/** Update statistics of averaged/fluctuating domain variables
+ */
+
+void inputoutput::updateStatistics(const double time) {
+
+    for(int i=0; i<domn->v.size(); i++)
+        domn->v.at(i)->updateIfNeeded(time);  
+
+}

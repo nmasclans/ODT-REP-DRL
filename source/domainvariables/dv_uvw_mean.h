@@ -2,6 +2,7 @@
  * @file dv_uvw_mean.h
  * @brief Header file for class dv_uvw_mean
  */
+// todo: eliminate subclass if considered
 
 #pragma once
 
@@ -29,13 +30,15 @@ class dv_uvw_mean : public dv {
         string      var_name_inst;  ///< var_name of corresponding instantaneous velocity component
 
     private:
-        double      tLast;          ///< time of last statistics update
+        double      tLastAvg;       ///< time of last statistics update
+        double      tBeginAvg;      ///< averaging time at which to begin calculating statistics
+        int         counter; // todo: erase counter
 
     //////////////////// MEMBER FUNCTIONS /////////////////
 
     public:
-        virtual void setVar(const int ipt=-1);
-        virtual void update(const double &time);
+        //virtual void setVar(const int ipt=-1);
+        virtual void updateStatisticsIfNeeded(const double &time);
 
     private:
 

@@ -66,7 +66,7 @@ class dv {
         virtual double linearInterpToFace(const int &iface, const vector<double> &vec);
         virtual void   setDvFromRegion(const int i1, const int i2);
         virtual void   resize();
-        virtual void   update(const double &time){};
+        virtual void   updateStatisticsIfNeeded(const double &time, const double &dt){};
 
     //////////////////// CONSTRUCTOR FUNCTIONS /////////////////
 

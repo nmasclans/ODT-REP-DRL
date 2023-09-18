@@ -33,6 +33,10 @@ dv_uvw::dv_uvw(domain  *line,
     L_statconv    = Lsc;
     d             = vector<double>(domn->ngrd, 0.0); // variable value along at the grid points of the domain 
     dvaldt        = vector<double>(domn->ngrd, 0.0); // variable discrete time derivative along at the grid points of the domain 
+    davg          = vector<double>(domn->ngrd, 0.0); // todo: add description
+
+    tLastAvg      = 0.0;
+    tBeginAvg     = domn->pram->tBeginAvg;
 
     rhsSrc        = vector<double>(domn->ngrd, 0.0);
     rhsMix        = vector<double>(domn->ngrd, 0.0);
@@ -244,4 +248,32 @@ void dv_uvw::getRhsStatConv(const int ipt) {
             rhsStatConv.at(i) = dvaldt.at(i);
         }
     }
+}
+
+
+void dv_uvw::updateStatisticsIfNeeded(const double &time, const double &dt) {
+    // todo: this doesn't take into account that the grid varies along time :(
+    // todo: posLastAvg and posCurrent , and interpolate statistics (somewhere in the code)
+
+    double tAvg;
+    double dtAvg;
+    double timeCurrent;
+    
+    timeCurrent = time + dt;
+    if (timeCurrent > tBeginAvg){ 
+        // calculate averaging time and delta time
+        tAvg  = timeCurrent - tBeginAvg;
+        dtAvg = tAvg - tLastAvg;
+        // update statistic
+        for(int k=0; k<domn->v.size(); k++){
+            for(int i=0; i<davg.size(); i++) {
+                davg.at(i) = ( tLastAvg * davg.at(i) + dtAvg * d.at(i) ) / tAvg;
+            }
+        } 
+        // update time quantities
+        tLastAvg = tAvg;
+    } else {
+        davg.resize(domn->ngrd,0.0);
+    }
+
 }

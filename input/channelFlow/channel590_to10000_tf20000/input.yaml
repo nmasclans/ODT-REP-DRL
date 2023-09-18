@@ -4,7 +4,7 @@
 params:
 
     seed:          22             #  random number generator seed (negative to randomize it)
-    tEnd:          150.           #  ending time of realization (s)
+    tEnd:          20000.0        #  ending time of realization (s)
     domainLength:  2.0            #  length of domain (m)
     ngrd0:         200            #  initial grid points
     rho0:          1.0            #  initial uniform density (kg/m^3)
@@ -13,7 +13,7 @@ params:
     pres:          101325.0       #  pressure (Pa)
     chemMechFile:  not_used.xml   #  name of chemical mechanism file
     probType:      CHANNEL        #  CHANNEL, CHANNEL_SCALAR, JETMIXL_RXN
-    tBeginAvg:     51.0           #  averaging time at which to begin statistics calculation
+    tBeginAvg:     10000.0        #  averaging time at which to begin statistics calculation
     #----------------------------------------------------------------------------------
     Z_param:       450.           #  Viscous penalty parameter
     A_param:       0.66666666667  #  Energy Distribution parameter alpha
@@ -43,7 +43,7 @@ params:
     Lp:            0.015          #  Most probable eddy size frac of domainLength
     Lmax:          0.333333333    #  Max eddy size frac of domainLength
     #----------------------------------------------------------------------------------
-    modDump:       1000000        #  accepted eddies before output file
+    modDump:       100000000      #  accepted eddies before output file
 
 ################### Boundary conditions
 
@@ -61,6 +61,6 @@ bcCond:
 ################### Dump times
 
 dumpTimesGen:
-    dTimeStart: 50.0     # make < 0 to ignore dumpTimesGen and use dumpTimes (if present)
-    dTimeEnd:   150.0
-    dTimeStep:  0.2
+    dTimeStart: 10000.0     # make < 0 to ignore dumpTimesGen and use dumpTimes (if present)
+    dTimeEnd:   20000.0
+    dTimeStep:  20.0

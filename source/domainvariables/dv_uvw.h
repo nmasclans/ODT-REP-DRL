@@ -25,16 +25,25 @@ class dv_uvw : public dv {
     //////////////////// DATA MEMBERS //////////////////////
 
     public:
+
+        vector<double>                davg;                    ///< todo: add description
+
+    private: 
+
+        double      tLastAvg;       ///< time of last statistics update
+        double      tBeginAvg;      ///< averaging time at which to begin calculating statistics
     
     //////////////////// MEMBER FUNCTIONS /////////////////
+
+    public:
 
         virtual void getRhsSrc(const int ipt=-1);
         virtual void getRhsMix(const vector<double> &gf,
                                const vector<double> &dxc);
         virtual void getRhsStatConv(const int ipt=-1);
+        virtual void updateStatisticsIfNeeded(const double &time, const double &dt);
 
     private:
-
 
     //////////////////// CONSTRUCTOR FUNCTIONS /////////////////
 

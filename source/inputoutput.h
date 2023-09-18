@@ -71,6 +71,8 @@ class inputoutput {
 
     void set_iNextDumpTime(double time);
 
+    void updateStatistics(const double time);
+
     private:
 
 
