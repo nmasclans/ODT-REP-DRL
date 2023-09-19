@@ -25,6 +25,7 @@ dv_posf::dv_posf(domain    *line,
     var_name      = s;
     L_transported = Lt;
     L_output      = Lo;
+    L_output_stat = false;
     d             = vector<double>(domn->ngrdf, 0.0);
 
     double dx = domn->pram->domainLength / domn->ngrd;

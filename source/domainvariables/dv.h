@@ -28,13 +28,10 @@ class dv {
 
         string                        var_name;               ///< name of variable
         vector<double>                d;                      ///< the data
-        vector<double>                dvaldt;                 ///< the data finite time difference
         bool                          L_transported;          ///< flag true if var is transported
         bool                          L_output;               ///< flag true if included in output
         bool                          L_statconv;             ///< flag true if statistics convergence is activated
         bool                          LagSrc;                 ///< flag to lag source term in implicit solve (initially put in for enthalpy radiation)
-
-
 
         domain                        *domn;                  ///< pointer to domain object (parent)
 
@@ -43,6 +40,14 @@ class dv {
         vector<double>                rhsStatConv;            ///< the data
 
         vector<double>                flux;
+
+        // statistics calculation
+        bool                          L_output_stat; // todo: add data members description
+        string                        var_name_stat; 
+        vector<double>                davg;
+
+        // statistics convergence   // todo: maybe eliminate dvaldt completely from aODT
+        vector<double>                dvaldt;                 ///< the data finite time difference
 
     //////////////////// MEMBER FUNCTIONS /////////////////
 

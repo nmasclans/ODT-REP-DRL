@@ -23,6 +23,7 @@ dv_dvisc::dv_dvisc(domain    *line,
     var_name      = s;
     L_transported = Lt;
     L_output      = Lo;
+    L_output_stat = false;
     d             = vector<double>(domn->ngrd, domn->pram->kvisc0 * domn->pram->rho0);
 
     if(Lt){

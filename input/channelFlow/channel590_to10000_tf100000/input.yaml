@@ -13,6 +13,7 @@ params:
     pres:          101325.0       #  pressure (Pa)
     chemMechFile:  not_used.xml   #  name of chemical mechanism file
     probType:      CHANNEL        #  CHANNEL, CHANNEL_SCALAR, JETMIXL_RXN
+    tBeginAvg:     10000.0           #  averaging time at which to begin statistics calculation
     #----------------------------------------------------------------------------------
     Z_param:       450.           #  Viscous penalty parameter
     A_param:       0.66666666667  #  Energy Distribution parameter alpha

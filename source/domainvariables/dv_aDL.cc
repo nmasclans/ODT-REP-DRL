@@ -24,6 +24,7 @@ dv_aDL::dv_aDL(domain     *line,
     var_name      = s;
     L_transported = Lt;
     L_output      = Lo;
+    L_output_stat = false;
     d             = vector<double>(domn->ngrd, 0.0);
 
 }

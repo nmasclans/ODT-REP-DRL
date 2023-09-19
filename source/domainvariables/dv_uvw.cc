@@ -10,6 +10,8 @@
 #include <cmath>
 #include <iostream>
 
+#include "interp_linear.h"
+
 using namespace std;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -30,17 +32,29 @@ dv_uvw::dv_uvw(domain  *line,
     var_name      = s;
     L_transported = Lt;
     L_output      = Lo;
-    L_statconv    = Lsc;
     d             = vector<double>(domn->ngrd, 0.0); // variable value along at the grid points of the domain 
-    dvaldt        = vector<double>(domn->ngrd, 0.0); // variable discrete time derivative along at the grid points of the domain 
-    davg          = vector<double>(domn->ngrd, 0.0); // todo: add description
-
-    tLastAvg      = 0.0;
-    tBeginAvg     = domn->pram->tBeginAvg;
-
+    
+    // -> N-S Eq data members 
     rhsSrc        = vector<double>(domn->ngrd, 0.0);
     rhsMix        = vector<double>(domn->ngrd, 0.0);
     rhsStatConv   = vector<double>(domn->ngrd, 0.0);
+    
+    // -> Statistics data members
+    L_output_stat = true;   // todo: add this as a domn->pram, include it into the input.yaml file
+    davg          = vector<double>(domn->ngrd, 0.0); // todo: add description
+    posLast       = vector<double>(domn->ngrd, 0.0); // todo: add description
+    tLastAvg      = 0.0;
+    tBeginAvg     = domn->pram->tBeginAvg;
+    // corresponding instantaneous value name for the mean velocity component <var_name>
+    if (var_name == "uvel") {var_name_stat = "uvelmean";}
+    else if (var_name == "vvel") {var_name_stat = "vvelmean";}
+    else if (var_name == "wvel") {var_name_stat = "wvelmean";}
+    else {cout << endl << "ERROR in dv_uvw initialization, invalid var_name = " << var_name << ", accepted values: uvel, vvel, wvel." << endl; exit(0); }
+
+    // -> Statistics convergence
+    L_statconv    = Lsc;
+    dvaldt        = vector<double>(domn->ngrd, 0.0); // variable discrete time derivative along at the grid points of the domain 
+    // todo: what to do with all the framework for calculating dvaldt, and initializing dvaldt in various .cc and .h files?
 
 }
 
@@ -252,28 +266,63 @@ void dv_uvw::getRhsStatConv(const int ipt) {
 
 
 void dv_uvw::updateStatisticsIfNeeded(const double &time, const double &dt) {
-    // todo: this doesn't take into account that the grid varies along time :(
-    // todo: posLastAvg and posCurrent , and interpolate statistics (somewhere in the code)
-
+    
     double tAvg;
     double dtAvg;
     double timeCurrent;
+    vector<double> posCurrent = domn->pos->d;
+
     
     timeCurrent = time + dt;
     if (timeCurrent > tBeginAvg){ 
+
+        // Interpolate statistics to new grid distribution if needed
+        if (~areVectorsEqual(posLast, posCurrent)){
+            vector <double> dmb;
+            dmb = davg;
+            Linear_interp Linterp(posLast, dmb);
+            davg.resize(domn->ngrd, 0.0);
+            for(int i=0; i<domn->ngrd; i++)
+                davg.at(i)= Linterp.interp(posCurrent[i]);
+        }
+
         // calculate averaging time and delta time
         tAvg  = timeCurrent - tBeginAvg;
         dtAvg = tAvg - tLastAvg;
+
         // update statistic
         for(int k=0; k<domn->v.size(); k++){
             for(int i=0; i<davg.size(); i++) {
                 davg.at(i) = ( tLastAvg * davg.at(i) + dtAvg * d.at(i) ) / tAvg;
             }
         } 
-        // update time quantities
+        // update time and position quantities
         tLastAvg = tAvg;
+
     } else {
         davg.resize(domn->ngrd,0.0);
     }
+    posLast.resize(domn->ngrd, 0.0);
+    posLast = posCurrent;
 
+}
+
+
+bool dv_uvw::areVectorsEqual(const vector<double> &vec1, const vector<double> &vec2) {
+    
+    // Check if the sizes are different
+    if (vec1.size() != vec2.size()) {
+        return false;
+    }
+
+    // Compare each element
+    for (size_t i = 0; i < vec1.size(); ++i) {
+        if (vec1[i] != vec2[i]) {
+            return false; // Elements are different
+        }
+    }
+
+    // All elements match
+    return true;
+    
 }

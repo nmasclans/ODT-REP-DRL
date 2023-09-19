@@ -26,12 +26,11 @@ class dv_uvw : public dv {
 
     public:
 
-        vector<double>                davg;                    ///< todo: add description
-
     private: 
 
-        double      tLastAvg;       ///< time of last statistics update
-        double      tBeginAvg;      ///< averaging time at which to begin calculating statistics
+        double                        tLastAvg;       ///< time of last statistics update
+        double                        tBeginAvg;      ///< averaging time at which to begin calculating statistics
+        vector<double>                posLast;        ///< todo: add description
     
     //////////////////// MEMBER FUNCTIONS /////////////////
 
@@ -44,6 +43,8 @@ class dv_uvw : public dv {
         virtual void updateStatisticsIfNeeded(const double &time, const double &dt);
 
     private:
+
+        bool areVectorsEqual(const vector<double> &vec1, const vector<double> &vec2);
 
     //////////////////// CONSTRUCTOR FUNCTIONS /////////////////
 

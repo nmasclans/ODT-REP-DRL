@@ -94,7 +94,9 @@ inputoutput::inputoutput(const string p_caseName, const int p_nShift){
 
     //----------- set gnuplot file
 
-    // gnufile: gnuplot script file y vs u, at initial & end time
+    // Create & open gnufiles
+    
+    // -> gnufile: gnuplot script file y vs u, at initial & end time
     fname = dataDir + "plot_odt.gnu";
     gnufile.open(fname.c_str());
     if(!gnufile) {
@@ -102,7 +104,7 @@ inputoutput::inputoutput(const string p_caseName, const int p_nShift){
         exit(0);
     }
 
-    // gnufile_inst: gnuplot script file y vs u,v,w, at each dumpTimes
+    // -> gnufile_inst: gnuplot script file y vs u,v,w, at each dumpTimes
     fname = dataDir + "plot_instantaneous.gnu";
     gnufile_inst.open(fname.c_str());
     if(!gnufile_inst) {
@@ -110,13 +112,19 @@ inputoutput::inputoutput(const string p_caseName, const int p_nShift){
         exit(0);
     }
     
-    //gnufile_stat: gnuplot script file y vs um,vm,wm, at each dumpTimes
+    // -> gnufile_stat: gnuplot script file y vs um,vm,wm, at each dumpTimes
     fname = dataDir + "plot_statistics.gnu";
     gnufile_stat.open(fname.c_str());
     if(!gnufile_stat) {
         cout << endl << "ERROR OPENING FILE: " << dataDir+"plot_statistics.gnu" << endl;
         exit(0);
     }
+
+    // Add axis labels and limits
+    gnufile << "set ylabel 'u+'; set xlabel 'y/delta'; set xrange [-1:1]; set yrange [0:25];" << endl;
+    gnufile_inst << "set ylabel 'u+'; set xlabel 'y/delta'; set xrange [-1:1]; set yrange [0:25];" << endl; 
+    gnufile_stat << "set ylabel 'umean+'; set xlabel 'y/delta'; set xrange [-1:1]; set yrange [0:25];" << endl;
+
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -174,10 +182,14 @@ void inputoutput::outputProperties(const string fname, const double time) {
         ofile << "VARIABLES =";
     else
         ofile << "#";
-    // Write text row of variables names, for each output variable column 
-    for(int i=0,j=1; i<domn->v.size(); i++){
+
+    // Write header: text row of variables names, for each output variable column 
+    // -> variable names
+    int strLength;
+    int j = 1;
+    for(int i=0; i<domn->v.size(); i++){
         if(domn->v.at(i)->L_output){
-            int strLength = domn->v.at(i)->var_name.length();
+            strLength = domn->v.at(i)->var_name.length();
             if (i == 0) {strLength++;}
             if (domn->pram->Ltecplot)
                 ofile << setw(18-strLength) << "\"" << j++ << "_" << domn->v.at(i)->var_name << "\"";
@@ -185,16 +197,33 @@ void inputoutput::outputProperties(const string fname, const double time) {
                 ofile << setw(18-strLength) << j++ << "_" << domn->v.at(i)->var_name;
         }
     }
+    // -> statistics names
+    for(int i=0; i<domn->v.size(); i++){
+        if(domn->v.at(i)->L_output_stat){
+            strLength = domn->v.at(i)->var_name_stat.length();
+            ofile << setw(18-strLength) << j++ << "_" << domn->v.at(i)->var_name_stat;
+        }
+    }
 
+    // Write data
     ofile << scientific;
     ofile << setprecision(10);
     for(int i=0; i<domn->ngrd; i++) {
         ofile << endl;
-        for(int k=0; k<domn->v.size(); k++)
-            if(domn->v.at(k)->L_output)
+        // -> output data
+        for(int k=0; k<domn->v.size(); k++){
+            if(domn->v.at(k)->L_output){
                 ofile << setw(19) << domn->v.at(k)->d.at(i);
+            }
+        }
+        // -> output statistics
+        for(int k=0; k<domn->v.size(); k++){
+            if(domn->v.at(k)->L_output_stat){
+                ofile << setw(19) << domn->v.at(k)->davg.at(i);
+            }
+        }
     }
-
+    
     ofile.close();
 
 }
@@ -226,7 +255,8 @@ void inputoutput::dumpDomainIfNeeded(){
     string fnameRaw = "dmp_" + ss.str() + ".dat";
     string fname    = dataDir + fnameRaw;
 
-    updateStatistics(dumpTimes.at(iNextDumpTime));
+    // todo: erase this 'updatestatistics' if considered
+    //updateStatistics(dumpTimes.at(iNextDumpTime));
     outputProperties(fname, dumpTimes.at(iNextDumpTime));
 
     iNextDumpTime++;
@@ -377,14 +407,14 @@ void inputoutput::loadVarsFromRestartFile() {
 
 }
 
-
-///////////////////////////////////////////////////////////////////////////////
-/** Update statistics of averaged/fluctuating domain variables
- */
-
-void inputoutput::updateStatistics(const double time) {
-
-    for(int i=0; i<domn->v.size(); i++)
-        domn->v.at(i)->updateIfNeeded(time);  
-
-}
+// todo: erase this method if considered
+/////////////////////////////////////////////////////////////////////////////////
+///** Update statistics of averaged/fluctuating domain variables
+// */
+//
+//void inputoutput::updateStatistics(const double time) {
+//
+//    for(int i=0; i<domn->v.size(); i++)
+//        domn->v.at(i)->updateIfNeeded(time);  
+//
+//}
