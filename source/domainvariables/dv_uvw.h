@@ -28,9 +28,10 @@ class dv_uvw : public dv {
 
     private: 
 
-        double                        tLastAvg;       ///< time of last statistics update
-        double                        tBeginAvg;      ///< averaging time at which to begin calculating statistics
-        vector<double>                posLast;        ///< todo: add description
+        double                   tLastAvg;                    ///< time of last statistics update
+        double                   tBeginAvg;                   ///< averaging time at which to begin calculating statistics
+        vector<double>           posLast;                     ///< todo: add description
+        bool                     gridStatisticsEverUpdated;   ///< todo: add description
     
     //////////////////// MEMBER FUNCTIONS /////////////////
 
@@ -40,7 +41,8 @@ class dv_uvw : public dv {
         virtual void getRhsMix(const vector<double> &gf,
                                const vector<double> &dxc);
         virtual void getRhsStatConv(const int ipt=-1);
-        virtual void updateStatisticsIfNeeded(const double &time, const double &dt);
+        virtual void updateStatistics(const double &timeCurrent);
+        virtual void adaptGridStatistics();
 
     private:
 

@@ -25,7 +25,7 @@ import os
 from scipy.interpolate import interp1d
 
 from ChannelVisualizer import ChannelVisualizer
-from utils import get_dns_data, get_time
+from utils import *
 
 
 #--------------------------------------------------------------------------------------------
@@ -33,8 +33,8 @@ from utils import get_dns_data, get_time
 #------------ input parameters ---------------
 
 try :
-    caseN          = sys.argv[1]
-    reynolds_number = int(sys.argv[2])
+    caseN = sys.argv[1]
+    Retau = int(sys.argv[2])
     delta_aver_time = int(sys.argv[3])
 except :
     raise ValueError("Include the case name in the call")
@@ -46,14 +46,18 @@ if not os.path.exists("../../data/"+caseN+"/post") :
 
 # --- Get ODT input parameters ---
 
-with open("../../data/"+caseN+"/input/input.yaml") as ifile :
+odtInputDataFilepath  = "../../data/" + caseN + "/input/input.yaml"
+with open(odtInputDataFilepath) as ifile :
     yml = yaml.load(ifile, Loader=yaml.FullLoader)
-kvisc  = yml["params"]["kvisc0"]
-dxmin  = yml["params"]["dxmin"]
-delta  = yml["params"]["domainLength"] * 0.5
-Retau  = 1.0/kvisc
-tEnd   = yml["params"]["tEnd"]
-tStart = yml["dumpTimesGen"]["dTimeStart"]
+kvisc = yml["params"]["kvisc0"] # kvisc = nu = mu / rho
+rho   = yml["params"]["rho0"]
+dxmin = yml["params"]["dxmin"]
+delta = yml["params"]["domainLength"] * 0.5
+utau  = 1.0
+dTimeStart = yml["dumpTimesGen"]["dTimeStart"]
+dTimeEnd   = yml["dumpTimesGen"]["dTimeEnd"]
+dTimeStep  = yml["dumpTimesGen"]["dTimeStep"]
+inputParams = {"kvisc":kvisc, "rho":rho, "dxmin": dxmin, "delta": delta, "Retau": Retau, "caseN": caseN, "utau": utau, 'dTimeStart':dTimeStart, 'dTimeEnd':dTimeEnd, 'dTimeStep':dTimeStep} 
 
 # --- Get ODT computational data ---
 
@@ -64,7 +68,7 @@ nunif  = int(1/dxmin)        # num. points uniform grid (using smallest grid siz
 nunif2 = int(nunif/2)        # half of num. points (for ploting to domain center, symmetry in y-axis)
 
 # Averaging times
-averaging_times = np.arange(tStart, tEnd+0.1, delta_aver_time)
+averaging_times = np.arange(dTimeStart, dTimeEnd+0.1, delta_aver_time)
 num_aver_times  = len(averaging_times)
 
 yu  = np.linspace(-delta,delta,nunif) # uniform grid in y-axis
@@ -129,7 +133,6 @@ for ifile in flist :
         uvm[:,idx] = uvm_aux/nfiles    
         uwm[:,idx] = uwm_aux/nfiles    
         vwm[:,idx] = vwm_aux/nfiles    
-        
 
 # mirror data (symmetric channel in y-axis)
 um  = 0.5 * (um[:nunif2,:]  + np.flipud(um[nunif2:,:]))  # mirror data (symmetric)
@@ -172,17 +175,22 @@ yuplus = yu * utau/kvisc
 print("Nominal Retau: ", Retau)
 print("Actual  Retau (at simulation end):", RetauOdt)
 
+
+#------------ ODT statistics-during-runtime data ---------------
+
+(ydelta_rt, yplus_rt, um_rt, vm_rt, wm_rt) = compute_odt_statistics_during_runtime(inputParams, averaging_times)
+
 #------------ DNS data ---------------
 
-(ydelta_dns, yplus_dns, um_dns, urmsf_dns, vrmsf_dns, wrmsf_dns, ufufm_dns, vfvfm_dns, wfwfm_dns, ufvfm_dns, ufwfm_dns, vfwfm_dns) \
-    = get_dns_data(reynolds_number)
+(ydelta_dns, yplus_dns, um_dns, urmsf_dns, vrmsf_dns, wrmsf_dns, ufufm_dns, vfvfm_dns, wfwfm_dns, ufvfm_dns, ufwfm_dns, vfwfm_dns, viscous_stress_dns, reynolds_stress_dns, total_stress_dns, vt_u_plus_dns,               p_u_plus_dns) \
+    = get_dns_statistics(Retau, inputParams)
 
 #--------------------------------------------------------------------------------------------
 
 # Build plots
 
 visualizer = ChannelVisualizer(caseN)
-visualizer.build_u_mean_profile_odt_convergence(yuplus, yplus_dns, um, um_dns, averaging_times)
+visualizer.build_u_mean_profile_odt_convergence(yuplus, yplus_dns, um, um_dns, averaging_times, y_odt_rt = yplus_rt, u_odt_rt = um_rt)
 visualizer.build_u_rmsf_profile_odt_convergence(yuplus, yplus_dns, urmsf, vrmsf, wrmsf, urmsf_dns, vrmsf_dns, wrmsf_dns, averaging_times)
 visualizer.build_reynolds_stress_diagonal_profile_odt_convergence(    yuplus, yplus_dns, ufufm, vfvfm, wfwfm, ufufm_dns, vfvfm_dns, wfwfm_dns, averaging_times)
 visualizer.build_reynolds_stress_not_diagonal_profile_odt_convergence(yuplus, yplus_dns, ufvfm, ufwfm, vfwfm, ufvfm_dns, ufwfm_dns, vfwfm_dns, averaging_times)

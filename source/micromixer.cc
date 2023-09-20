@@ -50,9 +50,15 @@ void micromixer::advanceOdt(const double p_tstart, const double p_tend, const in
 
     for(time=tstart; time<tend; time+=dt, nsteps++) {
 
+        updateStatisticsIfNeeded(time); // todo: revisar si 'time' is the proper input
+
         if(adaptGridIfNeeded() || LforceSetNominalStepSize)
            setNominalStepSize();                             // resets LforceSetNominalStepSize
         setStepSize();
+
+        updateStatisticsIfNeeded(time); 
+
+
         if(domn->pram->Lsolver=="EXPLICIT")
             advanceOdtSingleStep_Explicit();
         else if(domn->pram->Lsolver=="SEMI-IMPLICIT")
@@ -60,6 +66,7 @@ void micromixer::advanceOdt(const double p_tstart, const double p_tend, const in
         else if(domn->pram->Lsolver=="STRANG")
             advanceOdtSingleStep_StrangSplit();
 
+        updateStatisticsIfNeeded(time+dt);
         domn->io->dumpDomainIfNeeded();
 
     }
@@ -186,14 +193,9 @@ void micromixer::advanceOdtSingleStep_Explicit(){
             }
         }
     }
-    
-    // update averaged variables 
-    for(int k=0; k<domn->v.size(); k++){
-        domn->v.at(k)->updateStatisticsIfNeeded(time, dt); // todo: revisar si 'time' is the proper input
-    }
-
+        
     updateGrid();            // update cell sizes due to rho or rho*v variations (continuity)
-
+    
     if(domn->pram->LdoDL) do_DL("set DL_2");
 
     domn->mesher->enforceDomainSize();     // chop the domain
@@ -423,6 +425,19 @@ bool micromixer::adaptGridIfNeeded() {
         return true;
     }
     return false;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// todo: add description
+
+void micromixer::adaptGridStatisticsIfNeeded() { // todo: check if ever used, erase if needed
+    for(int k=0; k<domn->v.size(); k++)
+        domn->v.at(k)->adaptGridStatistics();
+}
+
+void micromixer::updateStatisticsIfNeeded(const double &timeCurrent) {
+    for(int k=0; k<domn->v.size(); k++)
+        domn->v.at(k)->updateStatistics(timeCurrent); // todo: revisar si 'time' is the proper input
 }
 
 ///////////////////////////////////////////////////////////////////////////////

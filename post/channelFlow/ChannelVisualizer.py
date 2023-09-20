@@ -138,7 +138,7 @@ class ChannelVisualizer():
     #   Methods:       ODT profiles convergence for increasing averaging time
     #--------------------------------------------------------------------------------------------
 
-    def build_u_mean_profile_odt_convergence(self, y_odt, y_dns, u_odt_converg, u_dns, averaging_times):
+    def build_u_mean_profile_odt_convergence(self, y_odt, y_dns, u_odt_converg, u_dns, averaging_times, y_odt_rt = None, u_odt_rt=None):
         """
         Builds a plot of the u_mean profile of ODT data at several averaging times  
         Mean stream-wise direction (u_mean) is already normalized by u_tau.
@@ -157,6 +157,8 @@ class ChannelVisualizer():
         """
         assert u_odt_converg.shape[0] == len(y_odt)
         assert u_odt_converg.shape[1] == len(averaging_times)
+        if ((y_odt_rt is not None) and (u_odt_rt is not None)):
+            assert u_odt_rt.shape[0] == len(y_odt_rt)
 
         filename = f"../../data/{self.caseN}/post/u_mean_odt_convergence.jpg"
         print(f"MAKING PLOT OF MEAN U PROFILE CONVERGENCE of ODT in {filename}" )
@@ -164,6 +166,8 @@ class ChannelVisualizer():
         fig, ax = plt.subplots(figsize=(8,6))
 
         ax.semilogx(y_odt, u_odt_converg, label = [r"$T_{{avg}}={}$".format(t) for t in averaging_times])
+        if ((y_odt_rt is not None) and (u_odt_rt is not None)):
+            ax.semilogx(y_odt_rt, u_odt_rt, label = [r"$T_{{avg}}={}$ (rt)".format(t) for t in averaging_times])
         ax.semilogx(y_dns, u_dns, 'k--', label=r"DNS")
 
         ax.set_xlabel(r'$y^+$') #, fontsize=22)

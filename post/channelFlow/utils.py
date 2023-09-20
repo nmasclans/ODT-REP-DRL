@@ -401,8 +401,89 @@ def get_time(file):
     return time
 
 
+def compute_odt_statistics_during_runtime(input_params, averaging_times):
+    """
+    Get ODT statistics, previously saved in a .dat file using 'compute_odt_statistics' function
 
+    Parameters:
+        odt_statistics_filepath (str): ODT statistics filepath
+        input_params (dict): ODT input parameters dictionary
+        time_vec (np.array): vector of times at which the statistic is evaluated
 
+    Returns:
+        ODT statistics calculated during runtime, output of the simulation at each dumpTime instant
+        um, vm, wm (np.ndarrays)
+    """
+
+    # --- Get ODT input parameters ---
+    
+    rho        = input_params["rho"]
+    kvisc      = input_params["kvisc"] # = nu = mu / rho 
+    dxmin      = input_params["dxmin"]
+    delta      = input_params["delta"]
+    Retau      = input_params["Retau"]
+    case_name  = input_params["caseN"]
+    dTimeStart = input_params["dTimeStart"]
+    dTimeEnd   = input_params["dTimeEnd"]
+    dTimeStep  = input_params["dTimeStep"]
+
+    # Averaging times and files identification
+    dTimeVec = np.arange(dTimeStart, dTimeEnd+1e-3, dTimeStep).round(2)
+    averaging_times_num = len(averaging_times)
+    averaging_times_idx = []
+    for t_idx in range(averaging_times_num):
+         averaging_times_idx.append(np.where(dTimeVec==averaging_times[t_idx])[0][0])
+    print(averaging_times_idx)
+    averaging_times_str = [str(idx).zfill(5) for idx in averaging_times_idx]
+    if (len(averaging_times_str) != averaging_times_num):
+        raise ValueError("Not all averaging_times where found!")
+
+    # --- Compute ODT computational data ---
+
+    flist = ['../../data/' + case_name + '/data/data_00000/dmp_' + s  + '.dat' for s in averaging_times_str]
+
+    # Num points uniform grid
+    nunif  = int(1/dxmin)        # num. points uniform grid (using smallest grid size)   
+    nunif2 = int(nunif/2)        # half of num. points (for ploting to domain center, symmetry in y-axis)
+
+    yu = np.linspace(-delta, delta, nunif)
+    um = np.zeros([nunif, averaging_times_num]) 
+    vm = np.zeros([nunif, averaging_times_num])
+    wm = np.zeros([nunif, averaging_times_num])
+
+    for i in range(averaging_times_num):
+
+        data = np.loadtxt(flist[i])
+        y  = data[:,0] # not normalized
+        um_data = data[:,5] # normalized by u_tau, u is in fact u+
+        vm_data = data[:,6] # normalized by u_tau, v is in fact v+
+        wm_data = data[:,7] # normalized by u_tau, w is in fact w+
+        
+        # interpolate to uniform grid
+        um[:,i] = interp1d(y, um_data, fill_value='extrapolate')(yu)  
+        vm[:,i] = interp1d(y, vm_data, fill_value='extrapolate')(yu)
+        wm[:,i] = interp1d(y, wm_data, fill_value='extrapolate')(yu)
+
+    # mirror data (symmetric channel in y-axis)
+    um = 0.5 * (um[:nunif2,:]  + np.flipud(um[nunif2:,:])) 
+    vm = 0.5 * (vm[:nunif2,:]  + np.flipud(vm[nunif2:,:]))
+    wm = 0.5 * (wm[:nunif2,:]  + np.flipud(wm[nunif2:,:]))
+
+    # ------------ scale y to y+ ------------
+
+    # y-coordinates
+    ydelta = yu/delta
+    yu += delta         # domain center is at 0; shift so left side is zero
+    yu = yu[:nunif2]    # plotting to domain center
+    # Re_tau of ODT data
+    dudy = (um[1,-1]-um[0,-1])/(yu[1]-yu[0])
+    utau = np.sqrt(kvisc * np.abs(dudy))
+    # scale y --> y+ (note: utau should be unity)
+    yuplus = yu * utau/kvisc 
+
+    # --- Save ODT computational data ---
+
+    return (ydelta, yuplus, um, vm, wm)
 
 
 

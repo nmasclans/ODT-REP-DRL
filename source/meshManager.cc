@@ -12,6 +12,8 @@
 #include <iostream>
 #include <numeric> //accumulate
 
+#define _ADAPT_GRID_ 1 // todo: erase definition
+
 using namespace std;
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -38,6 +40,8 @@ void meshManager::init(domain *p_domn, const vector<dv*> p_phi) {
  */
 
 void meshManager::adaptGrid(int iLowerDummy, int iUpperDummy) {
+
+#if _ADAPT_GRID_ // todo: eliminate if, endif.
 
     for(int i=0; i<phi.size(); i++)
         phi.at(i)->setVar();
@@ -123,6 +127,8 @@ void meshManager::adaptGrid(int iLowerDummy, int iUpperDummy) {
 //    if(domn->pram->cCoord != 1) removeFaceNearZero();
 //    if(domn->pram->cCoord != 1) makeCellWithZeroSymmetric();
 //    if(domn->pram->cCoord != 1) splitCellWithZero();
+
+#endif
 
 }
 

@@ -72,6 +72,9 @@ class micromixer {
         void advanceOdtSingleStep_Explicit();
         void advanceOdtSingleStep_SemiImplicit();
         void advanceOdtSingleStep_StrangSplit();
+        
+        void adaptGridStatisticsIfNeeded();
+        void updateStatisticsIfNeeded(const double &timeCurrent);
 
         bool LforceSetNominalStepSize;       ///< used in updateGrid when splitting cells to indicate to reset timestep size later
 

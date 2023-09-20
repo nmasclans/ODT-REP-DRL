@@ -45,6 +45,7 @@ dv_uvw::dv_uvw(domain  *line,
     posLast       = vector<double>(domn->ngrd, 0.0); // todo: add description
     tLastAvg      = 0.0;
     tBeginAvg     = domn->pram->tBeginAvg;
+    gridStatisticsEverUpdated = false;
     // corresponding instantaneous value name for the mean velocity component <var_name>
     if (var_name == "uvel") {var_name_stat = "uvelmean";}
     else if (var_name == "vvel") {var_name_stat = "vvelmean";}
@@ -265,26 +266,17 @@ void dv_uvw::getRhsStatConv(const int ipt) {
 }
 
 
-void dv_uvw::updateStatisticsIfNeeded(const double &time, const double &dt) {
-    
+void dv_uvw::updateStatistics(const double &timeCurrent) {
+    // improve time & dt input arguments to sth more intuitive
+
     double tAvg;
     double dtAvg;
-    double timeCurrent;
-    vector<double> posCurrent = domn->pos->d;
-
     
-    timeCurrent = time + dt;
-    if (timeCurrent > tBeginAvg){ 
+    // Interpolate statistics to new grid distribution if needed
+    adaptGridStatistics(); // todo: maybe move inside the if loop, thing about it
 
-        // Interpolate statistics to new grid distribution if needed
-        if (~areVectorsEqual(posLast, posCurrent)){
-            vector <double> dmb;
-            dmb = davg;
-            Linear_interp Linterp(posLast, dmb);
-            davg.resize(domn->ngrd, 0.0);
-            for(int i=0; i<domn->ngrd; i++)
-                davg.at(i)= Linterp.interp(posCurrent[i]);
-        }
+    // Update statistics if needed
+    if (timeCurrent > tBeginAvg){ 
 
         // calculate averaging time and delta time
         tAvg  = timeCurrent - tBeginAvg;
@@ -299,14 +291,35 @@ void dv_uvw::updateStatisticsIfNeeded(const double &time, const double &dt) {
         // update time and position quantities
         tLastAvg = tAvg;
 
-    } else {
-        davg.resize(domn->ngrd,0.0);
     }
-    posLast.resize(domn->ngrd, 0.0);
-    posLast = posCurrent;
 
 }
 
+void dv_uvw::adaptGridStatistics() {
+   
+    vector<double> posCurrent = domn->pos->d;
+
+    // todo: implement more efficiency without the need of an if, do this somewhere in the code
+    if (!gridStatisticsEverUpdated){  
+        posLast = domn->pos->d;
+        davg.resize(domn->ngrd,0.0);
+        gridStatisticsEverUpdated = true;
+    }
+
+    // Interpolate statistics to new grid distribution if needed
+    if (!areVectorsEqual(posLast, posCurrent)){
+        vector <double> dmb;
+        dmb = davg;
+        Linear_interp Linterp(posLast, dmb);
+        davg.resize(domn->ngrd, 0.0);
+        for(int i=0; i<domn->ngrd; i++)
+            davg.at(i)= Linterp.interp(posCurrent[i]);
+        // update grid positions if outdated
+        posLast.resize(domn->ngrd, 0.0);
+        posLast = posCurrent;
+    }
+    
+}
 
 bool dv_uvw::areVectorsEqual(const vector<double> &vec1, const vector<double> &vec2) {
     
