@@ -11,7 +11,6 @@
 #include "dv_rho_const.h"
 #include "dv_dvisc_const.h"
 #include "dv_uvw.h"
-#include "dv_uvw_mean.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 /** Initialization
@@ -34,10 +33,6 @@ void domaincase_odt_channel::init(domain *p_domn){
     domn->v.push_back(new dv_uvw(        domn, "uvel",     true,  true, domn->pram->Lstatconv));
     domn->v.push_back(new dv_uvw(        domn, "vvel",     true,  true, domn->pram->Lstatconv));
     domn->v.push_back(new dv_uvw(        domn, "wvel",     true,  true, domn->pram->Lstatconv));
-    // todo: erase these lines if considered
-    //domn->v.push_back(new dv_uvw_mean(   domn, "uvelmean", false, true));
-    //domn->v.push_back(new dv_uvw_mean(   domn, "vvelmean", false, true));
-    //domn->v.push_back(new dv_uvw_mean(   domn, "wvelmean", false, true));
 
     // assign specific elements from the 'v' vector to various member variables of the 'domain' object
     int j = 0;
