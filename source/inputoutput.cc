@@ -160,7 +160,17 @@ void inputoutput::outputProperties(const string fname, const double time) {
     //--------------------------
 
     ofstream ofile(fname.c_str());
+
+    // storing statistics in fine grid
+    size_t dotPos = fname.rfind('.');
+    string fnameStat = fname.substr(0,dotPos) + "_stat" +  fname.substr(dotPos);
+    ofstream ofileStat(fnameStat.c_str());
+
     if(!ofile) {
+        *ostrm << "\n\n***************** ERROR OPENING FILE " << fname << endl << endl;
+        exit(0);
+    }
+    if(!ofileStat) {
         *ostrm << "\n\n***************** ERROR OPENING FILE " << fname << endl << endl;
         exit(0);
     }
@@ -170,18 +180,24 @@ void inputoutput::outputProperties(const string fname, const double time) {
 
     //--------------------------
 
-    ofile << "# time = "   << time;
+    ofile     << "# time = "   << time;
+    ofileStat << "# time = "   << time;
 
-    ofile << "\n# Grid points = "   << domn->ngrd;
+    ofile     << "\n# Grid points = "   << domn->ngrd;
+    ofileStat << "\n# FINE UNIFORM Grid points = "   << domn->pram->nunif;
 
-    ofile << "\n# Pressure (Pa) = " << domn->pram->pres << endl;
+    ofile     << "\n# Pressure (Pa) = " << domn->pram->pres << endl;
+    ofileStat << "\n# Pressure (Pa) = " << domn->pram->pres << endl;
 
     // HEWSON setting tecplot friendly output
     // channelFlow: Ltecplot is set to false
-    if (domn->pram->Ltecplot)
-        ofile << "VARIABLES =";
-    else
-        ofile << "#";
+    if (domn->pram->Ltecplot) {
+        ofile     << "VARIABLES =";
+        ofileStat << "VARIABLES =";
+    } else {
+        ofile     << "#";
+        ofileStat << "#";
+    }
 
     // Write header: text row of variables names, for each output variable column 
     // -> variable names
@@ -198,14 +214,23 @@ void inputoutput::outputProperties(const string fname, const double time) {
         }
     }
     // -> statistics names
+    j = 1;
+    bool isFirstOutputStat = true;
     for(int i=0; i<domn->v.size(); i++){
         if(domn->v.at(i)->L_output_stat){
+            if (isFirstOutputStat) {
+                string strPosUnif = "posUnif";
+                strLength = strPosUnif.length();
+                ofileStat << setw(18-(strLength+1)) << j++ << "_" << strPosUnif;
+                isFirstOutputStat = false;
+            }
             strLength = domn->v.at(i)->var_name_stat.length();
-            ofile << setw(18-strLength) << j++ << "_" << domn->v.at(i)->var_name_stat;
+            ofileStat << setw(18-strLength) << j++ << "_" << domn->v.at(i)->var_name_stat;
         }
     }
 
     // Write data
+    // -> instantaneous data
     ofile << scientific;
     ofile << setprecision(10);
     for(int i=0; i<domn->ngrd; i++) {
@@ -216,15 +241,27 @@ void inputoutput::outputProperties(const string fname, const double time) {
                 ofile << setw(19) << domn->v.at(k)->d.at(i);
             }
         }
-        // -> output statistics
+    }
+    ofile.close();
+
+    // -> statistics data
+    ofileStat << scientific;
+    ofileStat << setprecision(10);
+    bool isFirstColumn;
+    for (int i=0; i<domn->pram->nunif; i++) {
+        ofileStat << endl;
+        isFirstColumn = true;
         for(int k=0; k<domn->v.size(); k++){
             if(domn->v.at(k)->L_output_stat){
-                ofile << setw(19) << domn->v.at(k)->davg.at(i);
+                if (isFirstColumn) {
+                    ofileStat << setw(19) << domn->v.at(k)->posUnif.at(i);
+                    isFirstColumn = false;
+                }
+                ofileStat << setw(19) << domn->v.at(k)->davg.at(i);
             }
         }
     }
-    
-    ofile.close();
+    ofileStat.close();
 
 }
 
@@ -260,9 +297,12 @@ void inputoutput::dumpDomainIfNeeded(){
     iNextDumpTime++;
     LdoDump = false;
 
-    // update gnufile of instantaneous and statistics vel. with dump file
+    // update gnufile of instantaneous vel. with dump file
     gnufile_inst << "plot '" << fnameRaw << "' us 1:3; pause -1;" << endl;
-    gnufile_stat << "plot '" << fnameRaw << "' us 1:6; pause -1;" << endl;
+    // update gnufile of statistics with dump file
+    size_t dotPos = fnameRaw.rfind('.');
+    string fnameRawStat = fnameRaw.substr(0,dotPos) + "_stat" +  fnameRaw.substr(dotPos);
+    gnufile_stat << "plot '" << fnameRawStat << "' us 1:2; pause -1;" << endl;
 
 }
 

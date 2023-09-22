@@ -73,6 +73,7 @@ class param {
         double  gDens;           ///<  grid density for mesher
         double  dxmin;           ///<  min grid spacing: = dxmin / domain length
         double  dxmax;           ///<  max grid spacing = dxmax / domain length
+        int     nunif;           ///<  num. points uniform grid of calculated statistics (using smallest grid size)   
 
         double  Pmax;            ///<  maximum eddy acceptance probability
         double  Pav;             ///<  Average acceptance probability

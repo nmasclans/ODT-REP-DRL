@@ -430,11 +430,6 @@ bool micromixer::adaptGridIfNeeded() {
 ///////////////////////////////////////////////////////////////////////////////
 // todo: add description
 
-///void micromixer::adaptGridStatisticsIfNeeded() { // todo: check if ever used, erase if needed
-///    for(int k=0; k<domn->v.size(); k++)
-///        domn->v.at(k)->adaptGridStatistics();
-///}
-
 void micromixer::updateStatisticsIfNeeded(const double &timeCurrent) {
     for(int k=0; k<domn->v.size(); k++)
         domn->v.at(k)->updateStatistics(timeCurrent); // todo: revisar si 'time' is the proper input

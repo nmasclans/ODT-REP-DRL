@@ -39,23 +39,38 @@ dv_uvw::dv_uvw(domain  *line,
     rhsMix        = vector<double>(domn->ngrd, 0.0);
     rhsStatConv   = vector<double>(domn->ngrd, 0.0);
     
-    // -> Statistics data members
+    // ---------------------------- Statistics calc. during runtime ---------------------------- 
+    
+    // gral configuration
     L_output_stat = true;   // todo: add this as a domn->pram, include it into the input.yaml file
-    davg          = vector<double>(domn->ngrd, 0.0); 
-    posLast       = vector<double>(domn->ngrd, 0.0); 
+    
+    // storing time
     tLastAvg      = 0.0;
     tBeginAvg     = domn->pram->tBeginAvg;
-    gridStatisticsEverUpdated = false;
+    
     // corresponding instantaneous value name for the mean velocity component <var_name>
     if (var_name == "uvel") {var_name_stat = "uvelmean";}
     else if (var_name == "vvel") {var_name_stat = "vvelmean";}
     else if (var_name == "wvel") {var_name_stat = "wvelmean";}
     else {cout << endl << "ERROR in dv_uvw initialization, invalid var_name = " << var_name << ", accepted values: uvel, vvel, wvel." << endl; exit(0); }
 
+    // position uniform fine grid
+    nunif        = domn->pram->nunif;                // num. points uniform grid (using smallest grid size)   
+    posUnif      = vector<double>(nunif, 0.0);   // uniform grid in y-axis
+    double delta = domn->pram->domainLength / 2;   // half-channel length 
+    for (int i=0; i<nunif; i++) {
+        posUnif[i] = - delta + i * (2.0 * delta) / (nunif - 1);
+    }
+
+    // statistics uniform fine grid
+    davg         = vector<double>(nunif, 0.0); 
+
+    // ------------------------------------------------------------------------------------------
+
     // -> Statistics convergence
     L_statconv    = Lsc;
     dvaldt        = vector<double>(domn->ngrd, 0.0); // variable discrete time derivative along at the grid points of the domain 
-    // todo: what to do with all the framework for calculating dvaldt, and initializing dvaldt in various .cc and .h files?
+    // todo: what to do with all the framework for calculating dvaldt, and initializing dvaldt in various .cc and .h files?    
 
 }
 
@@ -272,19 +287,27 @@ void dv_uvw::updateStatistics(const double &timeCurrent) {
     double tAvg;
     double dtAvg;
     
-    // Interpolate statistics to new grid distribution if needed
-    adaptGridStatistics(); // todo: maybe move inside the if loop, thing about it
-
-    // calculate averaging time and delta time
+    // Averaging time and delta time
     tAvg  = timeCurrent - tBeginAvg;
     dtAvg = tAvg - tLastAvg;
 
     // Update statistics if needed
-    if (dtAvg > 0){ // tLastAvg initialized as 0, while timeCurrent < tBeginAvg --> tLastAvg = 0 not updated --> dtAvg < 0
+    // info: tLastAvg initialized as 0, while timeCurrent < tBeginAvg --> tLastAvg = 0 not updated --> dtAvg < 0
+    if (dtAvg > 0){ 
 
+        // interpolate instantaneous velocity to uniform fine grid
+        vector <double> dmb;
+        vector <double> dUnif(nunif, 0.0);
+        dmb     = d;
+        Linear_interp Linterp(domn->pos->d, dmb);
+        
+        for (int i=0; i<nunif; i++) {
+            dUnif.at(i) = Linterp.interp(posUnif[i]);
+        }
+        
         // update statistic at each grid point
-        for(int i=0; i<domn->ngrd; i++) {
-            davg.at(i) = ( tLastAvg * davg.at(i) + dtAvg * d.at(i) ) / tAvg;
+        for(int i=0; i<nunif; i++) {
+            davg.at(i) = ( tLastAvg * davg.at(i) + dtAvg * dUnif.at(i) ) / tAvg;
         }
 
         // update time and position quantities
@@ -292,49 +315,4 @@ void dv_uvw::updateStatistics(const double &timeCurrent) {
 
     }
 
-}
-
-void dv_uvw::adaptGridStatistics() {
-   
-    vector<double> posCurrent = domn->pos->d;
-
-    // todo: implement more efficiency without the need of an if, do this somewhere in the code
-    if (!gridStatisticsEverUpdated){  
-        posLast = domn->pos->d;
-        davg.resize(domn->ngrd,0.0);
-        gridStatisticsEverUpdated = true;
-    }
-
-    // Interpolate statistics to new grid distribution if needed
-    if (!areVectorsEqual(posLast, posCurrent)){
-        vector <double> dmb;
-        dmb = davg;
-        Linear_interp Linterp(posLast, dmb);
-        davg.resize(domn->ngrd, 0.0);
-        for(int i=0; i<domn->ngrd; i++)
-            davg.at(i)= Linterp.interp(posCurrent[i]);
-        // update grid positions if outdated
-        posLast.resize(domn->ngrd, 0.0);
-        posLast = posCurrent;
-    }
-    
-}
-
-bool dv_uvw::areVectorsEqual(const vector<double> &vec1, const vector<double> &vec2) {
-    
-    // Check if the sizes are different
-    if (vec1.size() != vec2.size()) {
-        return false;
-    }
-
-    // Compare each element
-    for (size_t i = 0; i < vec1.size(); ++i) {
-        if (vec1[i] != vec2[i]) {
-            return false; // Elements are different
-        }
-    }
-
-    // All elements match
-    return true;
-    
 }

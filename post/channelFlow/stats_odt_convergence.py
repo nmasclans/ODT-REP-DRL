@@ -17,6 +17,9 @@
 # Values are in wall units (y+, u+) for both ODT and DNS results,
 # Scaling is done in the input file (not explicitly here).
 
+## todo: change many things of this script and related functions to incorporate the new implementation of 
+## statistics in a fine uniform grid, and saved in dmp_...._stat.dat
+
 import numpy as np
 import glob as gb
 import yaml

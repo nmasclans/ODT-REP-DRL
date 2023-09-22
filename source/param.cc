@@ -135,6 +135,10 @@ param::param(inputoutput *p_io) {
     Lmin  *= domainLength;
     Lp    *= domainLength;
 
+    // -------------------- statistics uniform grid
+
+    nunif    = int(1/dxmin);
+
     //--------------------- sanity checks
 
     if( (cCoord == 2) && (xDomainCenter != 0.0) && ( abs(xDomainCenter) < 0.5*domainLength) ) {

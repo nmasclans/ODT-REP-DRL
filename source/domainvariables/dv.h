@@ -45,6 +45,7 @@ class dv {
         bool                          L_output_stat; // todo: add data members description
         string                        var_name_stat; // todo: add description
         vector<double>                davg;          // todo: add description
+        vector<double>                posUnif;       // todo: add description
 
         // statistics convergence   // todo: maybe eliminate dvaldt completely from aODT
         vector<double>                dvaldt;                 ///< the data finite time difference
@@ -72,7 +73,6 @@ class dv {
         virtual void   setDvFromRegion(const int i1, const int i2);
         virtual void   resize();
         virtual void   updateStatistics(const double &timeCurrent){};
-        ///virtual void   adaptGridStatistics(){}; // todo: check if needed, erase if considered
 
     //////////////////// CONSTRUCTOR FUNCTIONS /////////////////
 

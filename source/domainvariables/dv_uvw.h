@@ -30,9 +30,9 @@ class dv_uvw : public dv {
 
         double                   tLastAvg;                    ///< time of last statistics update
         double                   tBeginAvg;                   ///< averaging time at which to begin calculating statistics
-        vector<double>           posLast;                     ///< todo: add description
         bool                     gridStatisticsEverUpdated;   ///< todo: add description
-    
+        int                      nunif;
+
     //////////////////// MEMBER FUNCTIONS /////////////////
 
     public:
@@ -44,9 +44,6 @@ class dv_uvw : public dv {
         virtual void updateStatistics(const double &timeCurrent);
 
     private:
-
-        virtual void adaptGridStatistics();
-        bool areVectorsEqual(const vector<double> &vec1, const vector<double> &vec2);
 
     //////////////////// CONSTRUCTOR FUNCTIONS /////////////////
 
