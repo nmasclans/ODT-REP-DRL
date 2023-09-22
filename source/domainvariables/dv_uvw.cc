@@ -41,8 +41,8 @@ dv_uvw::dv_uvw(domain  *line,
     
     // -> Statistics data members
     L_output_stat = true;   // todo: add this as a domn->pram, include it into the input.yaml file
-    davg          = vector<double>(domn->ngrd, 0.0); // todo: add description
-    posLast       = vector<double>(domn->ngrd, 0.0); // todo: add description
+    davg          = vector<double>(domn->ngrd, 0.0); 
+    posLast       = vector<double>(domn->ngrd, 0.0); 
     tLastAvg      = 0.0;
     tBeginAvg     = domn->pram->tBeginAvg;
     gridStatisticsEverUpdated = false;
@@ -275,19 +275,18 @@ void dv_uvw::updateStatistics(const double &timeCurrent) {
     // Interpolate statistics to new grid distribution if needed
     adaptGridStatistics(); // todo: maybe move inside the if loop, thing about it
 
+    // calculate averaging time and delta time
+    tAvg  = timeCurrent - tBeginAvg;
+    dtAvg = tAvg - tLastAvg;
+
     // Update statistics if needed
-    if (timeCurrent > tBeginAvg){ 
+    if (dtAvg > 0){ // tLastAvg initialized as 0, while timeCurrent < tBeginAvg --> tLastAvg = 0 not updated --> dtAvg < 0
 
-        // calculate averaging time and delta time
-        tAvg  = timeCurrent - tBeginAvg;
-        dtAvg = tAvg - tLastAvg;
+        // update statistic at each grid point
+        for(int i=0; i<domn->ngrd; i++) {
+            davg.at(i) = ( tLastAvg * davg.at(i) + dtAvg * d.at(i) ) / tAvg;
+        }
 
-        // update statistic
-        for(int k=0; k<domn->v.size(); k++){
-            for(int i=0; i<davg.size(); i++) {
-                davg.at(i) = ( tLastAvg * davg.at(i) + dtAvg * d.at(i) ) / tAvg;
-            }
-        } 
         // update time and position quantities
         tLastAvg = tAvg;
 

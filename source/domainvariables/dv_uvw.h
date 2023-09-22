@@ -42,10 +42,10 @@ class dv_uvw : public dv {
                                const vector<double> &dxc);
         virtual void getRhsStatConv(const int ipt=-1);
         virtual void updateStatistics(const double &timeCurrent);
-        virtual void adaptGridStatistics();
 
     private:
 
+        virtual void adaptGridStatistics();
         bool areVectorsEqual(const vector<double> &vec1, const vector<double> &vec2);
 
     //////////////////// CONSTRUCTOR FUNCTIONS /////////////////

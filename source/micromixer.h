@@ -57,6 +57,9 @@ class micromixer {
 
         void check_balance(int io);
 
+        ////void adaptGridStatisticsIfNeeded(); // todo: check if used, erase if considered
+        void updateStatisticsIfNeeded(const double &timeCurrent);
+
     protected:
 
         virtual void setGf();                ///< sets the gf array
@@ -72,9 +75,6 @@ class micromixer {
         void advanceOdtSingleStep_Explicit();
         void advanceOdtSingleStep_SemiImplicit();
         void advanceOdtSingleStep_StrangSplit();
-        
-        void adaptGridStatisticsIfNeeded();
-        void updateStatisticsIfNeeded(const double &timeCurrent);
 
         bool LforceSetNominalStepSize;       ///< used in updateGrid when splitting cells to indicate to reset timestep size later
 
