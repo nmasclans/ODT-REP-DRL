@@ -14,6 +14,8 @@
 
 using namespace std;
 
+#define _CONSTANT_RHS_CONV_STAT_ 1 // todo: set to 0, or better erase! just for testing RhsStatConv is well implemented
+
 ////////////////////////////////////////////////////////////////////////////////
 /*! dv_uvw  constructor function
  *
@@ -72,7 +74,7 @@ dv_uvw::dv_uvw(domain  *line,
     dvaldt        = vector<double>(domn->ngrd, 0.0); // variable discrete time derivative along at the grid points of the domain 
     // todo: what to do with all the framework for calculating dvaldt, and initializing dvaldt in various .cc and .h files?    
      // todo: maybe rename it to dd_dt
-     
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -274,12 +276,26 @@ void dv_uvw::getRhsStatConv(const int ipt) {
 
     rhsStatConv.resize(domn->ngrd, 0.0);
 
+#if _CONSTANT_RHS_CONV_STAT_
     // statistics acceleration source term
     if(ipt==-1) {
-        for(int i=0; i<domn->ngrd; i++) {
-            rhsStatConv.at(i) = 0.0; // todo: change!
+        if(var_name == "uvel" && domn->pram->cCoord != 3.0) {
+            for(int i=0; i<domn->ngrd; i++) {
+                rhsStatConv.at(i) = 1.0; // todo: change!
+            }
         }
     }
+#else
+    if(ipt==-1) {
+        if(var_name == "uvel" && domn->pram->cCoord != 3.0) {
+            for(int i=0; i<domn->ngrd; i++) {
+                rhsStatConv.at(i) = 0.0; // todo: change!
+            }
+        }
+    }
+#endif
+
+
 }
 
 

@@ -434,7 +434,6 @@ def get_odt_statistics_during_runtime(input_params, averaging_times):
     averaging_times_idx = []
     for t_idx in range(averaging_times_num):
          averaging_times_idx.append(np.where(dTimeVec==averaging_times[t_idx])[0][0])
-    print(averaging_times_idx)
     averaging_times_str = [str(idx).zfill(5) for idx in averaging_times_idx]
     if (len(averaging_times_str) != averaging_times_num):
         raise ValueError("Not all averaging_times where found!")
