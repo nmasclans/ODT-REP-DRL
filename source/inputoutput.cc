@@ -80,12 +80,19 @@ inputoutput::inputoutput(const string p_caseName, const int p_nShift){
 
     ss1.clear(); ss1 << setfill('0') << setw(5) << proc.myid + nShift;
     s1 = ss1.str();
-    dataDir = "../data/"+caseName+"/data/data_" + s1 + "/";   // e.g., "../data_00001", etc.
+    dataDir     = "../data/"+caseName+"/data/data_" + s1 + "/";   // e.g., "../data_00001", etc.
+    dataDirStat = "../data/"+caseName+"/data/data_" + s1 + "/statistics/";
 
     int iflag = mkdir(dataDir.c_str(), 0755);
     if(iflag != 0) {
         cout << "\n********** Error, process " << proc.myid << "failed to create "
             << dataDir << ", or it was already there" << endl;
+        exit(0);
+    }
+    iflag = mkdir(dataDirStat.c_str(), 0755);
+    if(iflag != 0) {
+        cout << "\n********** Error, process " << proc.myid << "failed to create "
+            << dataDirStat << ", or it was already there" << endl;
         exit(0);
     }
 
@@ -108,15 +115,15 @@ inputoutput::inputoutput(const string p_caseName, const int p_nShift){
     fname = dataDir + "plot_instantaneous.gnu";
     gnufile_inst.open(fname.c_str());
     if(!gnufile_inst) {
-        cout << endl << "ERROR OPENING FILE: " << dataDir+"plot_instantaneous.gnu" << endl;
+        cout << endl << "ERROR OPENING FILE: " << dataDir + "plot_instantaneous.gnu" << endl;
         exit(0);
     }
     
     // -> gnufile_stat: gnuplot script file y vs um,vm,wm, at each dumpTimes
-    fname = dataDir + "plot_statistics.gnu";
+    fname = dataDirStat + "plot_statistics.gnu";
     gnufile_stat.open(fname.c_str());
     if(!gnufile_stat) {
-        cout << endl << "ERROR OPENING FILE: " << dataDir+"plot_statistics.gnu" << endl;
+        cout << endl << "ERROR OPENING FILE: " << dataDirStat + "plot_statistics.gnu" << endl;
         exit(0);
     }
 
@@ -161,9 +168,12 @@ void inputoutput::outputProperties(const string fname, const double time) {
 
     ofstream ofile(fname.c_str());
 
-    // storing statistics in fine grid
+    // Filepath and ofstream of statistics from 'fname' filepath of instantaneous data
     size_t dotPos = fname.rfind('.');
     string fnameStat = fname.substr(0,dotPos) + "_stat" +  fname.substr(dotPos);
+    // add subdirectory for statistics only
+    size_t barPos = fnameStat.rfind("/");
+    fnameStat.insert(barPos+1, "statistics/");
     ofstream ofileStat(fnameStat.c_str());
 
     if(!ofile) {

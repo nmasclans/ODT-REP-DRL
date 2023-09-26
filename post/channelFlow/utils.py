@@ -401,7 +401,7 @@ def get_time(file):
     return time
 
 
-def compute_odt_statistics_during_runtime(input_params, averaging_times):
+def get_odt_statistics_during_runtime(input_params, averaging_times):
     """
     Get ODT statistics, previously saved in a .dat file using 'compute_odt_statistics' function
 
@@ -440,7 +440,7 @@ def compute_odt_statistics_during_runtime(input_params, averaging_times):
 
     # --- Compute ODT computational data ---
 
-    flist = ['../../data/' + case_name + '/data/data_00000/dmp_' + s  + '.dat' for s in averaging_times_str]
+    flist = ['../../data/' + case_name + '/data/data_00000/dmp_' + s  + '_stat.dat' for s in averaging_times_str]
 
     # Num points uniform grid
     nunif  = int(1/dxmin)        # num. points uniform grid (using smallest grid size)   
@@ -454,10 +454,10 @@ def compute_odt_statistics_during_runtime(input_params, averaging_times):
     for i in range(averaging_times_num):
 
         data = np.loadtxt(flist[i])
-        y  = data[:,0] # not normalized
-        um_data = data[:,5] # normalized by u_tau, u is in fact u+
-        vm_data = data[:,6] # normalized by u_tau, v is in fact v+
-        wm_data = data[:,7] # normalized by u_tau, w is in fact w+
+        y  = data[:,0]      # not normalized
+        um_data = data[:,1] # normalized by u_tau, u is in fact u+
+        vm_data = data[:,2] # normalized by u_tau, v is in fact v+
+        wm_data = data[:,3] # normalized by u_tau, w is in fact w+
         
         # interpolate to uniform grid
         um[:,i] = interp1d(y, um_data, fill_value='extrapolate')(yu)  

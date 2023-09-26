@@ -34,7 +34,8 @@ class inputoutput {
 
         string                   caseName;       ///< input file directory
         string                   inputFileDir;   ///< input file directory
-        string                   dataDir;        ///< data directory (output)
+        string                   dataDir;        ///< data directory (output of instantaneous data)
+        string                   dataDirStat;    ///< data directory (output of statistics)
 
         YAML::Node               inputFile;      ///< yaml input file object base node
         YAML::Node               params;         ///< yaml sub node
