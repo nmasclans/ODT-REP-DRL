@@ -157,27 +157,36 @@ class ChannelVisualizer():
         """
         assert u_odt_converg.shape[0] == len(y_odt)
         assert u_odt_converg.shape[1] == len(averaging_times)
-        if ((y_odt_rt is not None) and (u_odt_rt is not None)):
+
+        is_runtime_statistics_calculated = ((y_odt_rt is not None) and (u_odt_rt is not None))
+        if is_runtime_statistics_calculated:
             assert u_odt_rt.shape[0] == len(y_odt_rt)
 
-        filename = f"../../data/{self.caseN}/post/u_mean_odt_convergence.jpg"
-        print(f"MAKING PLOT OF MEAN U PROFILE CONVERGENCE of ODT in {filename}" )
+        filename = f"../../data/{self.caseN}/post/u_mean_odt_convergence_postprocess_statistics.jpg"
+        print(f"MAKING PLOT OF MEAN U PROFILE CONVERGENCE of ODT with POST-PROCESSING CALCULATED STATISTICS in {filename}" )
 
         fig, ax = plt.subplots(figsize=(8,6))
-
         ax.semilogx(y_odt, u_odt_converg, label = [r"$T_{{avg}}={}$".format(t) for t in averaging_times])
-        if ((y_odt_rt is not None) and (u_odt_rt is not None)):
-            ax.semilogx(y_odt_rt, u_odt_rt, label = [r"$T_{{avg}}={}$ (rt)".format(t) for t in averaging_times])
         ax.semilogx(y_dns, u_dns, 'k--', label=r"DNS")
-
-        ax.set_xlabel(r'$y^+$') #, fontsize=22)
-        ax.set_ylabel(r'$u^+$') #, fontsize=22)
+        ax.set_xlabel(r'$y^+$')
+        ax.set_ylabel(r'$u^+$')
         ax.legend(loc='upper center', ncol = 3, bbox_to_anchor=(0.5,1.35))
         fig.subplots_adjust(top=0.75, bottom=0.15)  # Leave space for the legend above the first subplot
-        #ax.set_ylim([0, 30])
-        #ax.set_xlim([1, 1000])
-
         plt.savefig(filename, dpi=600)
+
+        if is_runtime_statistics_calculated:
+
+            filename = f"../../data/{self.caseN}/post/u_mean_odt_convergence_runtime_statistics.jpg"
+            print(f"MAKING PLOT OF MEAN U PROFILE CONVERGENCE of ODT with RUNTIME-CALCULATED STATISTICS in {filename}" )
+            
+            fig, ax = plt.subplots(figsize=(8,6))
+            ax.semilogx(y_odt_rt, u_odt_rt, label = [r"$T_{{avg}}={}$ (rt)".format(t) for t in averaging_times])
+            ax.semilogx(y_dns, u_dns, 'k--', label=r"DNS")
+            ax.set_xlabel(r'$y^+$')
+            ax.set_ylabel(r'$u^+$')
+            ax.legend(loc='upper center', ncol = 3, bbox_to_anchor=(0.5,1.35))
+            fig.subplots_adjust(top=0.75, bottom=0.15)  # Leave space for the legend above the first subplot
+            plt.savefig(filename, dpi=600)
 
 
     def build_u_rmsf_profile_odt_convergence(self, y_odt, y_dns, \

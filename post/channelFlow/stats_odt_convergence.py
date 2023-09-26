@@ -98,7 +98,6 @@ vwm     = np.zeros([nunif, num_aver_times])
 nfiles = 0
 for ifile in flist :
     nfiles += 1
-
     data = np.loadtxt(ifile)
     y = data[:,0] # not normalized
     u = data[:,2] # normalized by u_tau, u is in fact u+
@@ -175,13 +174,13 @@ RetauOdt = utau * delta / kvisc
 # scale y --> y+ (note: utau should be unity)
 yuplus = yu * utau/kvisc    
 
-print("Nominal Retau: ", Retau)
-print("Actual  Retau (at simulation end):", RetauOdt)
+print("\n(ODT) Nominal Retau: ", Retau)
+print("(ODT) Actual  Retau (at simulation end):", RetauOdt)
 
 
 #------------ ODT statistics-during-runtime data ---------------
 
-(ydelta_rt, yplus_rt, um_rt, vm_rt, wm_rt) = compute_odt_statistics_during_runtime(inputParams, averaging_times)
+(ydelta_rt, yplus_rt, um_rt, vm_rt, wm_rt) = get_odt_statistics_during_runtime(inputParams, averaging_times)
 
 #------------ DNS data ---------------
 

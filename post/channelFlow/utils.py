@@ -278,7 +278,7 @@ def get_dns_statistics(Re_tau, input_params):
 
     if Re_tau == 590:
         filename_dns = "DNS_statistics/Re590/dnsChannel_Re590_means.dat"
-        print(f"Getting DNS-means data from {filename_dns}")
+        print(f"\nGetting DNS-means data from {filename_dns}")
         # Dataset columns
         # 0    | 1    | 2     | 3         | 4     | 5         | 6
         # y/h  | y+   | Umean | dUmean/dy | Wmean | dWmean/dy | Pmean
@@ -307,7 +307,7 @@ def get_dns_statistics(Re_tau, input_params):
     
     else:
         filename_dns = f"DNS_statistics/Re{Re_tau}/profiles/Re{Re_tau}.prof"
-        print(f"Getting DNS-reynolds data from {filename_dns}")
+        print(f"\nGetting DNS-reynolds data from {filename_dns}")
         # Dataset columns:
         # 0    | 1    | 2    | 3    | 4    | 5    | 6      | 7      | 8      | 9      | 10   | 11   | 12   | 13   | 14   | 15     | 16   
         # y/h  | y+   | U+   | u'+  | v'+  | w'+  | -Om_z+ | om_x'+ | om_y'+ | om_z'+ | uv'+ | uw'+ | vw'+ | pr'+ | ps'+ | psto'+ | p'    
@@ -332,7 +332,7 @@ def get_dns_statistics(Re_tau, input_params):
     dudy_wall = (um[1]-um[0])/(ydelta[1]-ydelta[0])
     u_tauDns  = np.sqrt(kvisc * np.abs(dudy_wall) / rho)
     Re_tauDns = u_tauDns * delta / kvisc
-    print("(DNS) Nominal Re_tau: ", Re_tau)
+    print("\n(DNS) Nominal Re_tau: ", Re_tau)
     print("(DNS) Actual  Re_tau: ", Re_tauDns)
     print("(DNS) Nominal u_tau:  ", u_tau)
     print("(DNS) Actual  u_tau:  ", u_tauDns)
@@ -440,7 +440,7 @@ def get_odt_statistics_during_runtime(input_params, averaging_times):
 
     # --- Compute ODT computational data ---
 
-    flist = ['../../data/' + case_name + '/data/data_00000/dmp_' + s  + '_stat.dat' for s in averaging_times_str]
+    flist = ['../../data/' + case_name + '/data/data_00000/statistics/dmp_' + s  + '_stat.dat' for s in averaging_times_str]
 
     # Num points uniform grid
     nunif  = int(1/dxmin)        # num. points uniform grid (using smallest grid size)   
