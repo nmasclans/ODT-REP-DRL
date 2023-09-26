@@ -150,6 +150,7 @@ def compute_odt_statistics(odt_statistics_filepath, input_params):
 
     # ------------------ (get) Velocity statistics computed during odt simulation ------------------
     # the mean velocities are taken from the last discrete time datafile from odt execution
+    # todo: this will lead to error, run-time statistics data is now stored in a subfolder
     um_data_ = data[:,5] 
     vm_data_ = data[:,6] 
     wm_data_ = data[:,7]

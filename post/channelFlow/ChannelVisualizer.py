@@ -23,7 +23,7 @@ class ChannelVisualizer():
     def build_u_mean_profile(self, y_odt, y_dns, u_odt, u_data_odt, u_dns):
         
         filename = f"../../data/{self.caseN}/post/u_mean.jpg"
-        print(f"MAKING PLOT OF MEAN U PROFILE: ODT vs DNS in {filename}" )
+        print(f"\nMAKING PLOT OF MEAN U PROFILE: ODT vs DNS in {filename}" )
 
         fig, ax = plt.subplots()
 
@@ -44,7 +44,7 @@ class ChannelVisualizer():
     def build_u_rmsf_profile(self, y_odt, y_dns, urmsf_odt, vrmsf_odt, wrmsf_odt, urmsf_dns, vrmsf_dns, wrmsf_dns):
 
         filename = f"../../data/{self.caseN}/post/u_rmsf.jpg"
-        print(f"MAKING PLOT OF RMS VEL PROFILES: ODT vs DNS in {filename}" )
+        print(f"\nMAKING PLOT OF RMS VEL PROFILES: ODT vs DNS in {filename}" )
 
         fig, ax = plt.subplots()
 
@@ -75,7 +75,7 @@ class ChannelVisualizer():
     def build_reynolds_stress_diagonal_profile(self, y_odt, y_dns, Rxx_odt, Ryy_odt, Rzz_odt, Rxx_dns, Ryy_dns, Rzz_dns):
 
         filename = f"../../data/{self.caseN}/post/reynolds_stress_diagonal.jpg"
-        print(f"MAKING PLOT OF REYNOLDS STRESSES PROFILES (DIAGONAL): ODT vs DNS in {filename}" )
+        print(f"\nMAKING PLOT OF REYNOLDS STRESSES PROFILES (DIAGONAL): ODT vs DNS in {filename}" )
 
         fig, ax = plt.subplots()
 
@@ -106,7 +106,7 @@ class ChannelVisualizer():
     def build_reynolds_stress_not_diagonal_profile(self, y_odt, y_dns, Rxy_odt, Rxz_odt, Ryz_odt, Rxy_dns, Rxz_dns, Ryz_dns):
 
         filename = f"../../data/{self.caseN}/post/reynolds_stress_not_diagonal.jpg"
-        print(f"MAKING PLOT OF REYNOLDS STRESSES PROFILES (NOT-DIAGONAL): ODT vs DNS in {filename}" )
+        print(f"\nMAKING PLOT OF REYNOLDS STRESSES PROFILES (NOT-DIAGONAL): ODT vs DNS in {filename}" )
 
         fig, ax = plt.subplots()
 
@@ -163,7 +163,7 @@ class ChannelVisualizer():
             assert u_odt_rt.shape[0] == len(y_odt_rt)
 
         filename = f"../../data/{self.caseN}/post/u_mean_odt_convergence_postprocess_statistics.jpg"
-        print(f"MAKING PLOT OF MEAN U PROFILE CONVERGENCE of ODT with POST-PROCESSING CALCULATED STATISTICS in {filename}" )
+        print(f"\nMAKING PLOT OF MEAN U PROFILE CONVERGENCE of ODT with POST-PROCESSING CALCULATED STATISTICS in {filename}" )
 
         fig, ax = plt.subplots(figsize=(8,6))
         ax.semilogx(y_odt, u_odt_converg, label = [r"$T_{{avg}}={}$".format(t) for t in averaging_times])
@@ -177,7 +177,7 @@ class ChannelVisualizer():
         if is_runtime_statistics_calculated:
 
             filename = f"../../data/{self.caseN}/post/u_mean_odt_convergence_runtime_statistics.jpg"
-            print(f"MAKING PLOT OF MEAN U PROFILE CONVERGENCE of ODT with RUNTIME-CALCULATED STATISTICS in {filename}" )
+            print(f"\nMAKING PLOT OF MEAN U PROFILE CONVERGENCE of ODT with RUNTIME-CALCULATED STATISTICS in {filename}" )
             
             fig, ax = plt.subplots(figsize=(8,6))
             ax.semilogx(y_odt_rt, u_odt_rt, label = [r"$T_{{avg}}={}$ (rt)".format(t) for t in averaging_times])
@@ -194,7 +194,7 @@ class ChannelVisualizer():
                                              urmsf_dns, vrmsf_dns, wrmsf_dns, averaging_times):
 
         filename = f"../../data/{self.caseN}/post/u_rmsf_odt_convergence.jpg"
-        print(f"MAKING PLOT OF RMS VEL PROFILES: ODT vs DNS in {filename}" )
+        print(f"\nMAKING PLOT OF RMS VEL PROFILES: ODT vs DNS in {filename}" )
 
         fig, ax = plt.subplots(3, figsize=(9,9))
 
@@ -229,7 +229,7 @@ class ChannelVisualizer():
             Rxx_dns, Ryy_dns, Rzz_dns, averaging_times):
 
         filename = f"../../data/{self.caseN}/post/reynolds_stress_diagonal_odt_convergence.jpg"
-        print(f"MAKING PLOT OF REYNOLDS STRESSES PROFILES (DIAGONAL): ODT vs DNS in {filename}" )
+        print(f"\nMAKING PLOT OF REYNOLDS STRESSES PROFILES (DIAGONAL): ODT vs DNS in {filename}" )
 
         fig, ax = plt.subplots(3, figsize=(9,9))
 
@@ -264,7 +264,7 @@ class ChannelVisualizer():
             Rxy_dns, Rxz_dns, Ryz_dns, averaging_times):
 
         filename = f"../../data/{self.caseN}/post/reynolds_stress_not_diagonal_odt_convergence.jpg"
-        print(f"MAKING PLOT OF REYNOLDS STRESSES PROFILES (NOT-DIAGONAL): ODT vs DNS in {filename}" )
+        print(f"\nMAKING PLOT OF REYNOLDS STRESSES PROFILES (NOT-DIAGONAL): ODT vs DNS in {filename}" )
 
         fig, ax = plt.subplots(3, figsize=(9,9))
 
@@ -299,7 +299,7 @@ class ChannelVisualizer():
                                    tau_viscous_dns, tau_reynolds_dns, tau_total_dns):
         
         filename = f"../../data/{self.caseN}/post/stress_decomposition.jpg"
-        print(f"MAKING PLOT OF STRESS DECOMPOSITION ODT vs DNS in {filename}")
+        print(f"\nMAKING PLOT OF STRESS DECOMPOSITION ODT vs DNS in {filename}")
 
         fig, ax = plt.subplots(2,figsize=(9,9))
         ax[0].set_title("ODT")
@@ -321,7 +321,7 @@ class ChannelVisualizer():
     def build_TKE_budgets(self, yplus_odt, yplus_dns, vt_u_plus_odt, d_u_plus_odt, vt_u_plus_dns, p_u_plus_dns):
 
         filename = f"../../data/{self.caseN}/post/TKE_budgets.jpg"
-        print(f"MAKING PLOT OF TKE BUDGETS ODT vs DNS in {filename}")
+        print(f"\nMAKING PLOT OF TKE BUDGETS ODT vs DNS in {filename}")
        
         fig, ax = plt.subplots()
 
