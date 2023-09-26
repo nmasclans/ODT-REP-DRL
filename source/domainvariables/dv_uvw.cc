@@ -63,7 +63,7 @@ dv_uvw::dv_uvw(domain  *line,
     }
 
     // statistics uniform fine grid
-    davg         = vector<double>(nunif, 0.0); 
+    davg         = vector<double>(nunif, 0.0);
 
     // ------------------------------------------------------------------------------------------
 
@@ -71,7 +71,8 @@ dv_uvw::dv_uvw(domain  *line,
     L_statconv    = Lsc;
     dvaldt        = vector<double>(domn->ngrd, 0.0); // variable discrete time derivative along at the grid points of the domain 
     // todo: what to do with all the framework for calculating dvaldt, and initializing dvaldt in various .cc and .h files?    
-
+     // todo: maybe rename it to dd_dt
+     
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -266,16 +267,17 @@ void dv_uvw::getRhsMix(const vector<double> &gf,
 void dv_uvw::getRhsStatConv(const int ipt) {
     
     if(!L_transported or !L_statconv)
-        return;
+        *domn->io->ostrm << endl << "ERROR:  dv_uvw::getRhsStatConv can only be called for dv objects with L_transported = true and L_statconv = true" << endl;
+
+    if(domn->pram->Lspatial)
+        *domn->io->ostrm << endl << "ERROR: Lspatial = true not implemented for method dv_uvw::getRhsStatConv; set Lspatial = false or Lstatconv = false" << endl;
 
     rhsStatConv.resize(domn->ngrd, 0.0);
-    // TODO: now dvaldt are zeros, implement it!
-    dvaldt.resize(domn->ngrd, 0.0);
 
     // statistics acceleration source term
     if(ipt==-1) {
         for(int i=0; i<domn->ngrd; i++) {
-            rhsStatConv.at(i) = dvaldt.at(i);
+            rhsStatConv.at(i) = 0.0; // todo: change!
         }
     }
 }
