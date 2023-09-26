@@ -57,7 +57,6 @@ class micromixer {
 
         void check_balance(int io);
 
-        ////void adaptGridStatisticsIfNeeded(); // todo: check if used, erase if considered
         void updateStatisticsIfNeeded(const double &timeCurrent);
 
     protected:
