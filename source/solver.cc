@@ -102,13 +102,13 @@ void solver::calculateSolution() {
 
         diffusionCatchUpIfNeeded();
 
-        domn->mesher->adaptAfterSufficientDiffTime(time, tLastDA, cLastDA, dtCUmax);
         domn->mimx->updateStatisticsIfNeeded(time);
+        
+        domn->mesher->adaptAfterSufficientDiffTime(time, tLastDA, cLastDA, dtCUmax);
 
         computeDtCUmax();
 
         LeddyAccepted = sampleEddyAndImplementIfAccepted();  // ODT may reduce dtSmean; sets Pa
-        domn->mimx->updateStatisticsIfNeeded(time);
 
         iEtrials++;
 
@@ -141,8 +141,8 @@ void solver::calculateSolution() {
             //}
 
             domn->mesher->adaptEddyRegionOfMesh(time, tLastDA, cLastDA);
+            
             domn->mimx->updateStatisticsIfNeeded(time);
-
 
             if (neddies % domn->pram->modDump == 0) {
                 ss1.clear();  ss1 << setfill('0') << setw(4) << neddies; ss1 >> s1;

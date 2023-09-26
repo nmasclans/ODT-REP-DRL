@@ -50,14 +50,9 @@ void micromixer::advanceOdt(const double p_tstart, const double p_tend, const in
 
     for(time=tstart; time<tend; time+=dt, nsteps++) {
 
-        updateStatisticsIfNeeded(time); // todo: revisar si 'time' is the proper input
-
         if(adaptGridIfNeeded() || LforceSetNominalStepSize)
            setNominalStepSize();                             // resets LforceSetNominalStepSize
         setStepSize();
-
-        updateStatisticsIfNeeded(time); 
-
 
         if(domn->pram->Lsolver=="EXPLICIT")
             advanceOdtSingleStep_Explicit();
@@ -67,6 +62,7 @@ void micromixer::advanceOdt(const double p_tstart, const double p_tend, const in
             advanceOdtSingleStep_StrangSplit();
 
         updateStatisticsIfNeeded(time+dt);
+        
         domn->io->dumpDomainIfNeeded();
 
     }
