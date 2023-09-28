@@ -102,8 +102,6 @@ void solver::calculateSolution() {
 
         diffusionCatchUpIfNeeded();
 
-        domn->mimx->updateStatisticsIfNeeded(time);
-        
         domn->mesher->adaptAfterSufficientDiffTime(time, tLastDA, cLastDA, dtCUmax);
 
         computeDtCUmax();
@@ -142,8 +140,6 @@ void solver::calculateSolution() {
 
             domn->mesher->adaptEddyRegionOfMesh(time, tLastDA, cLastDA);
             
-            domn->mimx->updateStatisticsIfNeeded(time);
-
             if (neddies % domn->pram->modDump == 0) {
                 ss1.clear();  ss1 << setfill('0') << setw(4) << neddies; ss1 >> s1;
                 domn->io->writeDataFile("odt_"+s1+"_adptDif.dat", time);

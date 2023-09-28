@@ -137,7 +137,7 @@ param::param(inputoutput *p_io) {
 
     // -------------------- statistics uniform grid
 
-    nunif    = int(1/dxmin);
+    nunif  = int(1/dxmin);
 
     //--------------------- sanity checks
 
