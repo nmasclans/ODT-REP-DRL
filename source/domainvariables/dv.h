@@ -30,7 +30,7 @@ class dv {
         vector<double>                d;                      ///< the data
         bool                          L_transported;          ///< flag true if var is transported
         bool                          L_output;               ///< flag true if included in output
-        bool                          L_statconv;             ///< flag true if statistics convergence is activated
+        bool                          L_statConv;             ///< flag true if statistics convergence is activated
         bool                          LagSrc;                 ///< flag to lag source term in implicit solve (initially put in for enthalpy radiation)
 
         domain                        *domn;                  ///< pointer to domain object (parent)
@@ -42,13 +42,17 @@ class dv {
         vector<double>                flux;
 
         // statistics calculation
-        bool                          L_output_stat; // todo: add data members description
-        string                        var_name_stat; // todo: add description
-        vector<double>                davg;          // todo: add description
-        vector<double>                posUnif;       // todo: add description
+        bool                          L_output_stat;          ///< todo: add data members description
+        string                        var_name_stat;          ///< todo: add description
+        vector<double>                davg;                   ///< todo: add description
+        vector<double>                posUnif;                ///< todo: add description
 
-        // statistics convergence   // todo: maybe eliminate dvaldt completely from aODT
-        vector<double>                dvaldt;                 ///< the data finite time difference
+        // statistics convergence
+        vector<double>                ddavgdt;                ///< todo: add description
+        string                        var_name_ddavgdt;       ///< todo: add description
+        vector<double>                F_statConv;             ///< todo: add description      
+        vector<double>                F_statConv_nunif;       ///< todo: add description      
+
 
     //////////////////// MEMBER FUNCTIONS /////////////////
 
@@ -66,7 +70,7 @@ class dv {
         virtual void   getRhsSrc(const int ipt=-1){if(!L_transported) return;}
         virtual void   getRhsMix(const vector<double> &gf,
                                  const vector<double> &dxc){if(!L_transported) return;}
-        virtual void   getRhsStatConv(const int ipt=-1){return;}
+        virtual void   getRhsStatConv(const double &timeCurrent, const int ipt=-1){return;}
 
         virtual void   interpVarToFacesHarmonic(const vector<double> &cvar, vector<double> &fvar);
         virtual double linearInterpToFace(const int &iface, const vector<double> &vec);

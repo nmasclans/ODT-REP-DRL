@@ -164,22 +164,19 @@ void micromixer::advanceOdtSingleStep_Explicit(){
         if(domn->v.at(k)->L_transported) {
             domn->v.at(k)->getRhsMix(gf, dxc);
             domn->v.at(k)->getRhsSrc();
-            if(domn->v.at(k)->L_statconv) {
-                domn->v.at(k)->getRhsStatConv();
+            if(domn->v.at(k)->L_statConv) {
+                domn->v.at(k)->getRhsStatConv(time+dt);
             }
         }
     }
 
     // --> Diffuse transported variables using the NS governing equations   
+    // update transported variables value
     for(int k=0; k<domn->v.size(); k++){
         if(domn->v.at(k)->L_transported) {
-            if(domn->v.at(k)->L_statconv){
-                // update transported variables finite time difference (required in getRhsStatConv())
-                domn->v.at(k)->dvaldt.resize(domn->ngrd, 0.0);
-                // update transported variables value
+            if(domn->v.at(k)->L_statConv){
                 for(int i=0; i < domn->ngrd; i++) {
-                    domn->v.at(k)->dvaldt.at(i) = domn->v.at(k)->rhsMix.at(i) + domn->v.at(k)->rhsSrc.at(i) + domn->v.at(k)->rhsStatConv.at(i);
-                    domn->v.at(k)->d.at(i) = domn->v.at(k)->d.at(i) + dt*( domn->v.at(k)->dvaldt.at(i) ); 
+                    domn->v.at(k)->d.at(i) = domn->v.at(k)->d.at(i) + dt*( domn->v.at(k)->rhsMix.at(i) + domn->v.at(k)->rhsSrc.at(i) + domn->v.at(k)->rhsStatConv.at(i) ); 
                 }
             } else {
                 // update transported variables value

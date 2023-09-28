@@ -31,7 +31,11 @@ class dv_uvw : public dv {
         double                   tLastAvg;                    ///< time of last statistics update
         double                   tBeginAvg;                   ///< averaging time at which to begin calculating statistics
         bool                     gridStatisticsEverUpdated;   ///< todo: add description
-        int                      nunif;
+        int                      nunif;                       ///< todo: add description
+        double                   time_statConv;
+        double                   time_statConvLast;
+        vector<double>           Favg_statConv;
+        vector<double>           Favg_statConvLast;
 
     //////////////////// MEMBER FUNCTIONS /////////////////
 
@@ -40,7 +44,7 @@ class dv_uvw : public dv {
         virtual void getRhsSrc(const int ipt=-1);
         virtual void getRhsMix(const vector<double> &gf,
                                const vector<double> &dxc);
-        virtual void getRhsStatConv(const int ipt=-1);
+        virtual void getRhsStatConv(const double &timeCurrent, const int ipt=-1);
         virtual void updateStatistics(const double &timeCurrent);
 
     private:
