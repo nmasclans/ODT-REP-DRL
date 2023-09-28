@@ -55,12 +55,13 @@ with open(odtInputDataFilepath) as ifile :
 kvisc = yml["params"]["kvisc0"] # kvisc = nu = mu / rho
 rho   = yml["params"]["rho0"]
 dxmin = yml["params"]["dxmin"]
-delta = yml["params"]["domainLength"] * 0.5
+domainLength = yml["params"]["domainLength"] 
+delta = domainLength * 0.5
 utau  = 1.0
 dTimeStart = yml["dumpTimesGen"]["dTimeStart"]
 dTimeEnd   = yml["dumpTimesGen"]["dTimeEnd"]
 dTimeStep  = yml["dumpTimesGen"]["dTimeStep"]
-inputParams = {"kvisc":kvisc, "rho":rho, "dxmin": dxmin, "delta": delta, "Retau": Retau, "caseN": caseN, "utau": utau, 'dTimeStart':dTimeStart, 'dTimeEnd':dTimeEnd, 'dTimeStep':dTimeStep} 
+inputParams = {"kvisc":kvisc, "rho":rho, "dxmin": dxmin, "domainLength" : domainLength, "delta": delta, "Retau": Retau, "caseN": caseN, "utau": utau, 'dTimeStart':dTimeStart, 'dTimeEnd':dTimeEnd, 'dTimeStep':dTimeStep} 
 
 # --- Get ODT computational data ---
 
@@ -180,7 +181,8 @@ print("(ODT) Actual  Retau (at simulation end):", RetauOdt)
 
 #------------ ODT statistics-during-runtime data ---------------
 
-(ydelta_rt, yplus_rt, um_rt, vm_rt, wm_rt) = get_odt_statistics_during_runtime(inputParams, averaging_times)
+(ydelta_rt, yplus_rt, um_rt, CI, yuplus_all, um_all, um_symmetric_all) = get_odt_statistics_during_runtime(inputParams, averaging_times)
+
 
 #------------ DNS data ---------------
 
@@ -196,4 +198,4 @@ visualizer.build_u_mean_profile_odt_convergence(yuplus, yplus_dns, um, um_dns, a
 visualizer.build_u_rmsf_profile_odt_convergence(yuplus, yplus_dns, urmsf, vrmsf, wrmsf, urmsf_dns, vrmsf_dns, wrmsf_dns, averaging_times)
 visualizer.build_reynolds_stress_diagonal_profile_odt_convergence(    yuplus, yplus_dns, ufufm, vfvfm, wfwfm, ufufm_dns, vfvfm_dns, wfwfm_dns, averaging_times)
 visualizer.build_reynolds_stress_not_diagonal_profile_odt_convergence(yuplus, yplus_dns, ufvfm, ufwfm, vfwfm, ufvfm_dns, ufwfm_dns, vfwfm_dns, averaging_times)
-
+visualizer.build_um_profile_symmetric_vs_nonsymmetric_odt_convergence(CI, yuplus_all, um_all, um_symmetric_all, averaging_times)

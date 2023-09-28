@@ -64,14 +64,22 @@ compute_odt_statistics(odtStatisticsFilepath, inputParams)
 (ydelta_dns, yplus_dns, um_dns, urmsf_dns, vrmsf_dns, wrmsf_dns, ufufm_dns, vfvfm_dns, wfwfm_dns, ufvfm_dns, ufwfm_dns, vfwfm_dns, viscous_stress_dns, reynolds_stress_dns, total_stress_dns, vt_u_plus_dns,               p_u_plus_dns) \
     = get_dns_statistics(Retau, inputParams)
 
+#------------ Compute Convergence Indicator (CI) for ODT uavg ------------
+
+(CI_tEnd, yuplus_all, um_all, um_symmetric_all) = compute_convergence_indicator_odt_tEnd(inputParams)
+(CI_list) = compute_convergence_indicator_odt_along_time(inputParams)
+
 #--------------------------------------------------------------------------------------------
 
 # Build plots
 
 visualizer = ChannelVisualizer(caseN)
+
 visualizer.build_u_mean_profile(yplus_odt, yplus_dns, um_odt, um_rt_odt, um_dns)
 visualizer.build_u_rmsf_profile(yplus_odt, yplus_dns, urmsf_odt, vrmsf_odt, wrmsf_odt, urmsf_dns, vrmsf_dns, wrmsf_dns)
 visualizer.build_reynolds_stress_not_diagonal_profile(yplus_odt, yplus_dns, ufvfm_odt, ufwfm_odt, vfwfm_odt, ufvfm_dns, ufwfm_dns, vfwfm_dns)
 visualizer.build_reynolds_stress_diagonal_profile(yplus_odt, yplus_dns, ufufm_odt, vfvfm_odt, wfwfm_odt, ufufm_dns, vfvfm_dns, wfwfm_dns)
 visualizer.build_stress_decomposition(ydelta_odt, ydelta_dns, viscous_stress_odt, reynolds_stress_odt, total_stress_odt, viscous_stress_dns, reynolds_stress_dns, total_stress_dns)
 visualizer.build_TKE_budgets(yplus_odt, yplus_dns, vt_u_plus_odt, d_u_plus_odt, vt_u_plus_dns, p_u_plus_dns)
+visualizer.build_um_profile_symmetric_vs_nonsymmetric(CI_tEnd, yuplus_all, um_all, um_symmetric_all)
+visualizer.build_CI_evolution(CI_list)

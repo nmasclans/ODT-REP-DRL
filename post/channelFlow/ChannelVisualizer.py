@@ -20,16 +20,16 @@ class ChannelVisualizer():
     #   Methods:                            ODT vs. DNS
     #--------------------------------------------------------------------------------------------
 
-    def build_u_mean_profile(self, y_odt, y_dns, u_odt, u_data_odt, u_dns):
+    def build_u_mean_profile(self, y_odt, y_dns, u_odt, u_rt_odt, u_dns):
         
         filename = f"../../data/{self.caseN}/post/u_mean.jpg"
         print(f"\nMAKING PLOT OF MEAN U PROFILE: ODT vs DNS in {filename}" )
 
         fig, ax = plt.subplots()
 
-        ax.semilogx(y_dns, u_dns,      'k-',  label=r'DNS')
-        ax.semilogx(y_odt, u_odt,      'b--', label=r'ODT (calc. from odt inst. vel.)')
-        ax.semilogx(y_odt, u_data_odt, 'r:',  label=r'ODT (calc. during odt execution)')
+        ax.semilogx(y_dns, u_dns,    'k-',  label=r'DNS')
+        ax.semilogx(y_odt, u_odt,    'b--', label=r'ODT (calc. from odt inst. vel.)')
+        ax.semilogx(y_odt, u_rt_odt, 'r:',  label=r'ODT (calc. during odt execution)')
 
         ax.set_xlabel(r'$y^+$')
         ax.set_ylabel(r'$u^+$')
@@ -346,3 +346,58 @@ class ChannelVisualizer():
 
         plt.tight_layout()
         plt.savefig(filename, dpi=600)
+
+    
+    def build_um_profile_symmetric_vs_nonsymmetric(self, CI, yuplus, um_nonsym, um_sym):
+
+        filename = f"../../data/{self.caseN}/post/u_mean_symmetric_vs_nonsymmetric.jpg"
+        print(f"\nMAKING PLOT OF UM+ ORIGINAL NON-SYMMETRIC PROFILE vs SYMMETRIC PROFILE in {filename}")
+
+        fig, ax = plt.subplots()
+        ax.plot(yuplus, um_nonsym,  'k-',  label=r"um+ non-sym (original)")
+        ax.plot(yuplus, um_sym,     'b--', label=r"um+ symmetric")
+
+        ax.set_xlabel(r'$y^+$')
+        ax.set_ylabel(r"$um^+$")
+        ax.set_title(f"um+ original (non-sym) vs. symmetric \nCI = {CI:.3f}")
+
+        ax.legend(loc='best', frameon=False, fontsize=16)
+
+        plt.tight_layout()
+        plt.savefig(filename, dpi=600)
+
+
+    def build_um_profile_symmetric_vs_nonsymmetric_odt_convergence(self, CI, yuplus, um_nonsym, um_sym, averaging_times):
+
+        filename = f"../../data/{self.caseN}/post/u_mean_symmetric_vs_nonsymmetric_odt_convergence.jpg"
+        print(f"\nMAKING PLOT OF UM+ ORIGINAL NON-SYMMETRIC PROFILE vs SYMMETRIC PROFILE for ODT CONVERGENCE in {filename}")
+
+        num_profiles = um_nonsym.shape[1]
+
+        fig, ax = plt.subplots()
+        for p in range(num_profiles):
+            ax.plot(yuplus, um_nonsym[:,p], '--', label=f"um+ non-sym:  t = {averaging_times[p]:.0f}, CI = {CI[p]:.1f}")
+            ax.plot(yuplus, um_sym[:,p],    ':',  label=f"um+ symmetric: t = {averaging_times[p]:.0f}")
+
+        ax.set_xlabel(r'$y^+$')
+        ax.set_ylabel(r"$um^+$")
+        ax.set_title(f"um+ original (non-sym) vs. symmetric")
+
+        ax.legend(loc='best', frameon=False, fontsize=16)
+
+        plt.tight_layout()
+        plt.savefig(filename, dpi=600)
+
+    def build_CI_evolution(self, CI_list):
+        # todo: include time data in the x axis, by now it is just index position in the CI list
+
+        filename = f"../../data/{self.caseN}/post/CI_vs_time.jpg"
+        print(f"\nMAKING PLOT OF CI EVOLUTION ALONG TIME in {filename}")
+
+        fig, ax = plt.subplots()
+        ax.plot(CI_list)
+        ax.set_ylabel("Convergence Indicator (CI)")
+        plt.tight_layout()
+        plt.savefig(filename, dpi=600)
+
+

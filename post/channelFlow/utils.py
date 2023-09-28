@@ -7,6 +7,7 @@ import yaml
 import glob as gb
 import numpy as np
 from scipy.interpolate import interp1d
+import matplotlib.pyplot as plt
 
 
 def compute_odt_statistics(odt_statistics_filepath, input_params):
@@ -150,16 +151,16 @@ def compute_odt_statistics(odt_statistics_filepath, input_params):
     data_stat = np.loadtxt(flist_stat[-1])
     yum      = data_stat[:,0]
     um_data_ = data_stat[:,1] 
-    vm_data_ = data_stat[:,2] 
-    wm_data_ = data_stat[:,3]
+    data2_   = data_stat[:,2] 
+    data3_   = data_stat[:,3]
     
     um_data  = interp1d(yum, um_data_, fill_value='extrapolate')(yu)  
-    vm_data  = interp1d(yum, vm_data_, fill_value='extrapolate')(yu)  
-    wm_data  = interp1d(yum, wm_data_, fill_value='extrapolate')(yu)  
+    data2    = interp1d(yum, data2_,   fill_value='extrapolate')(yu)  
+    data3    = interp1d(yum, data3_,   fill_value='extrapolate')(yu)  
 
     um_data  = 0.5*(um_data[:nunif2] + np.flipud(um_data[nunif2:]))  # mirror data (symmetric)
-    vm_data  = 0.5*(vm_data[:nunif2] + np.flipud(vm_data[nunif2:]))
-    wm_data  = 0.5*(wm_data[:nunif2] + np.flipud(wm_data[nunif2:]))
+    data2    = 0.5*(data2[:nunif2] + np.flipud(data2[nunif2:]))
+    data3    = 0.5*(data3[:nunif2] + np.flipud(data3[nunif2:]))
 
     # --- y-coordinate, y+ ---
     yu += delta         # domain center is at 0; shift so left side is zero
@@ -208,13 +209,13 @@ def compute_odt_statistics(odt_statistics_filepath, input_params):
                           ufufm,vfvfm,wfwfm,ufvfm,ufwfm,vfwfm,
                           viscous_stress,reynolds_stress,total_stress, # -> stress decomposition
                           vt_u_plus, d_u_plus,                         # -> TKE budgets for u-component
-                          um_data, vm_data, wm_data]).T            
+                          um_data, data2, data3]).T            
     np.savetxt(odt_statistics_filepath, odt_data, 
             header= "y/delta,    y+,          u+_mean,     v+_mean,     w+_mean,     u+_rmsf,     v+_rmsf,     w+_rmsf,     "\
                     "<u'u'>+,     <v'v'>+,     <w'w'>+,     <u'v'>+,     <u'w'>+,     <v'w'>+,     " \
                     "tau_viscous, tau_reynolds,tau_total,   " \
                     "vt_u+,       d_u+,        " \
-                    "u+_mean_rt,  v+_mean_rt,  w+_mean_rt" ,
+                    "u+_mean_rt,  dumean+_dt,  F_statConv" ,
             fmt='%12.5E')
 
     print("(ODT) Nominal Retau: ", Retau)
@@ -422,20 +423,22 @@ def get_odt_statistics_during_runtime(input_params, averaging_times):
 
     Returns:
         ODT statistics calculated during runtime, output of the simulation at each dumpTime instant
-        um, vm, wm (np.ndarrays)
+        um (np.ndarrays)
     """
 
     # --- Get ODT input parameters ---
     
-    rho        = input_params["rho"]
-    kvisc      = input_params["kvisc"] # = nu = mu / rho 
-    dxmin      = input_params["dxmin"]
-    delta      = input_params["delta"]
-    Retau      = input_params["Retau"]
-    case_name  = input_params["caseN"]
-    dTimeStart = input_params["dTimeStart"]
-    dTimeEnd   = input_params["dTimeEnd"]
-    dTimeStep  = input_params["dTimeStep"]
+    rho          = input_params["rho"]
+    kvisc        = input_params["kvisc"] # = nu = mu / rho 
+    domainLength = input_params["domainLength"]
+    dxmin        = input_params["dxmin"]
+    delta        = input_params["delta"]
+    Retau        = input_params["Retau"]
+    case_name    = input_params["caseN"]
+    dTimeStart   = input_params["dTimeStart"]
+    dTimeEnd     = input_params["dTimeEnd"]
+    dTimeStep    = input_params["dTimeStep"]
+    dxmin       *= domainLength
 
     # Averaging times and files identification
     dTimeVec = np.arange(dTimeStart, dTimeEnd+1e-3, dTimeStep).round(2)
@@ -455,28 +458,43 @@ def get_odt_statistics_during_runtime(input_params, averaging_times):
     nunif  = int(1/dxmin)        # num. points uniform grid (using smallest grid size)   
     nunif2 = int(nunif/2)        # half of num. points (for ploting to domain center, symmetry in y-axis)
 
-    yu = np.linspace(-delta, delta, nunif)
     um = np.zeros([nunif, averaging_times_num]) 
-    vm = np.zeros([nunif, averaging_times_num])
-    wm = np.zeros([nunif, averaging_times_num])
 
     for i in range(averaging_times_num):
 
         data = np.loadtxt(flist[i])
-        y  = data[:,0]      # not normalized
+        yu_data = data[:,0] # not normalized
         um_data = data[:,1] # normalized by u_tau, u is in fact u+
-        vm_data = data[:,2] # normalized by u_tau, v is in fact v+
-        wm_data = data[:,3] # normalized by u_tau, w is in fact w+
         
-        # interpolate to uniform grid
-        um[:,i] = interp1d(y, um_data, fill_value='extrapolate')(yu)  
-        vm[:,i] = interp1d(y, vm_data, fill_value='extrapolate')(yu)
-        wm[:,i] = interp1d(y, wm_data, fill_value='extrapolate')(yu)
+        if i == 0:
+            yu = np.copy(yu_data)
+        else: 
+            assert (yu==yu_data).all(), "ERROR: statistics uniform fine grid 'yu_data' should be equal to linspace 'yu'"
+        
+        um[:,i] = um_data
+
+    # All data, not symmetrical
+    um_all = np.copy(um)
+    yu_all = np.copy(yu)
 
     # mirror data (symmetric channel in y-axis)
-    um = 0.5 * (um[:nunif2,:]  + np.flipud(um[nunif2:,:])) 
-    vm = 0.5 * (vm[:nunif2,:]  + np.flipud(vm[nunif2:,:]))
-    wm = 0.5 * (wm[:nunif2,:]  + np.flipud(wm[nunif2:,:]))
+    um = 0.5 * (um[:nunif2,:]  + np.flipud(um[nunif2:,:]))  # um_
+
+    # ------------------------ Calculate symmetric field ------------------------
+    
+    # calculate 'symmetric' part of um in all fine grid
+    um_symmetric_all  = np.copy(um_all)
+    um_symmetric_half = np.copy(um)
+    um_symmetric_all[:nunif2,:]  = um_symmetric_half
+    um_symmetric_all[nunif2:,:]  = np.flipud(um_symmetric_half)
+
+    # ----------- Calculate indicate - Integral deviation from symmetry -----------
+
+    # CI = Eps_s : Convergence Indicator, from Pirozzoli207-A --- along fine uniform grid
+    CI  = np.sqrt( 0.5 * np.sum( (um_all - um_symmetric_all)**2 , axis = 0) ) # rmse
+    print("\n(ODT) Convergence Indicator (CI, Esp_s) for each averaging time:")
+    for i in range(len(averaging_times)):
+        print(f"     At tavg = {averaging_times[i]:.1f} : CI = {CI[i]:.3f}")
 
     # ------------ scale y to y+ ------------
 
@@ -488,11 +506,115 @@ def get_odt_statistics_during_runtime(input_params, averaging_times):
     dudy = (um[1,-1]-um[0,-1])/(yu[1]-yu[0])
     utau = np.sqrt(kvisc * np.abs(dudy))
     # scale y --> y+ (note: utau should be unity)
-    yuplus = yu * utau/kvisc 
+    yuplus     = yu     * utau / kvisc 
+    yuplus_all = yu_all * utau / kvisc
 
     # --- Save ODT computational data ---
 
-    return (ydelta, yuplus, um, vm, wm)
+    return (ydelta, yuplus, um, CI, yuplus_all, um_all, um_symmetric_all)
+
+
+def compute_convergence_indicator_odt_tEnd(input_params):
+    
+    # --- Get ODT input parameters ---
+
+    domainLength = input_params["domainLength"]
+    dxmin        = input_params["dxmin"]
+    delta        = input_params["delta"]
+    case_name    = input_params["caseN"]
+    kvisc        = input_params["kvisc"]
+    utau         = input_params["utau"]
+    # un-normalize
+    dxmin *= domainLength
+    # uniform fine grid
+    nunif  = int(1/dxmin) 
+    nunif2 = int(nunif/2)
+
+    # --------------- Get ODT statistics ---------------
+
+    flist_stat     = sorted(gb.glob('../../data/' + case_name + '/data/data_00000/statistics/dmp_*_stat.dat'))
+    file_stat_last = flist_stat[-1]
+    print("file_stat_last = ", file_stat_last)
+    data = np.loadtxt(file_stat_last)
+
+    # uniform fine grid (u.f.g) - '1_posUnif' 
+    yu = data[:,0]
+    # u_avg statistic runtime-calculated in u.f.g - '2_uvelmean'
+    um = data[:,1]
+    assert len(yu) == nunif, "ERROR: size error, uniform fine grid should have length 'nunif'"
+
+    # ------------------------ Calculate symmetric field ------------------------
+
+    # calculate 'symmetric' part of um
+    um_symmetric_half = 0.5*(um[:nunif2] + np.flipud(um[nunif2:]))  
+    um_symmetric = np.copy(um)
+    um_symmetric[:nunif2]  = um_symmetric_half
+    um_symmetric[nunif2:]  = np.flipud(um_symmetric_half)
+
+    # ----------- Calculate indicate - Integral deviation from symmetry -----------
+
+    # dy necessary for computing the integral of CI - really not necessary for the integral, as fine grid is uniform 
+    ### dyu = yu[1:] - yu[:-1] 
+    # CI = Eps_s : Convergence Indicator, from Pirozzoli207-A
+    CI  = np.sqrt( 0.5 * np.sum( (um - um_symmetric)**2 ) ) # rmse
+    print("\n(ODT) Convergence Indicator at tEnd (CI, Esp_s) = ", CI)
+
+    # ------------ scale y to y+ ------------
+
+    # Re_tau of ODT data
+    dudy = (um[1]-um[0])/(yu[1]-yu[0])
+    utau = np.sqrt(kvisc * np.abs(dudy))
+    # scale y --> y+ (note: utau should be unity)
+    yuplus = yu * utau/kvisc 
+
+    return (CI, yuplus, um, um_symmetric)
+
+
+
+def compute_convergence_indicator_odt_along_time(input_params):
+    
+    # --- Get ODT input parameters ---
+
+    domainLength = input_params["domainLength"]
+    dxmin        = input_params["dxmin"]
+    delta        = input_params["delta"]
+    case_name    = input_params["caseN"]
+    kvisc        = input_params["kvisc"]
+    utau         = input_params["utau"]
+    # un-normalize
+    dxmin *= domainLength
+    # uniform fine grid
+    nunif  = int(1/dxmin) 
+    nunif2 = int(nunif/2)
+
+    # --------------- Get ODT statistics ---------------
+
+    flist_stat     = sorted(gb.glob('../../data/' + case_name + '/data/data_00000/statistics/dmp_*_stat.dat'))
+    CI_list = []
+
+    for ifile in flist_stat: 
+
+        data = np.loadtxt(ifile)
+        # u_avg statistic runtime-calculated in u.f.g - '2_uvelmean'
+        um = data[:,1]
+
+        # ------------------------ Calculate symmetric field ------------------------
+
+        # calculate 'symmetric' part of um
+        um_symmetric_half = 0.5*(um[:nunif2] + np.flipud(um[nunif2:]))  
+        um_symmetric = np.copy(um)
+        um_symmetric[:nunif2]  = um_symmetric_half
+        um_symmetric[nunif2:]  = np.flipud(um_symmetric_half)
+
+        # ----------- Calculate indicate - Integral deviation from symmetry -----------
+
+        # CI = Eps_s : Convergence Indicator, from Pirozzoli207-A
+        CI = np.sqrt( 0.5 * np.sum( (um - um_symmetric)**2 ) ) # rmse
+        CI_list.append(CI)
+
+    return (CI_list)
+
+
 
 
 
