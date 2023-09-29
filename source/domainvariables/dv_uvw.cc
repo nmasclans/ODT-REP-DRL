@@ -14,7 +14,8 @@
 
 using namespace std;
 
-#define _CONSTANT_RHS_CONV_STAT_ 1 // todo: set to 0, or better erase! just for testing RhsStatConv is well implemented
+#define _CONSTANT_RHS_CONV_STAT_ 0 // todo: set to 0, or better erase! just for testing RhsStatConv is well implemented
+#define _ENFORCED_F_INST_ 1
 
 ////////////////////////////////////////////////////////////////////////////////
 /*! dv_uvw  constructor function
@@ -279,7 +280,23 @@ void dv_uvw::getRhsStatConv(const double &timeCurrent, const int ipt) {
   
     if(ipt==-1) {
         if(var_name == "uvel" && domn->pram->cCoord != 3.0) {
-            
+
+            // update the rhs term for statistics convergence 'rhsStatConv'
+
+#if _CONSTANT_RHS_CONV_STAT_ // todo: erase this #if, just for initial testing
+            for(int i=0; i<domn->ngrd; i++)
+                rhsStatConv.at(i) = 0.0; 
+
+#elif _ENFORCED_F_INST_
+            for(int i=0; i<nunif; i++)
+                F_statConv_nunif.at(i) = ddavgdt.at(i);
+            Linear_interp Linterp(posUnif, F_statConv_nunif);    
+            //F_statConv.resize(domn->ngrd);
+            //for(int i=0; i<domn->ngrd; i++)
+            //    F_statConv.at(i)= Linterp.interp(domn->pos->d[i]); // todo: erase this code for compt. efficiency
+            for(int i=0; i<domn->ngrd; i++)
+                rhsStatConv.at(i) = Linterp.interp(domn->pos->d[i]);
+#else 
             // Calculate instantaneous value of the RhsStatConv load
             Favg_statConv  = ddavgdt;
             time_statConv  = timeCurrent - tBeginAvg; 
@@ -288,27 +305,21 @@ void dv_uvw::getRhsStatConv(const double &timeCurrent, const int ipt) {
             
             // interpolate 'F_statConv_nunif' from uniform fine grid to adaptative non-uniform grid
             // todo: dmb not created, ddavgdt included directly in Linterp, check if this causes problems?
+            vector <double> dmb;
+            dmb = F_statConv_nunif;
             Linear_interp Linterp(posUnif, F_statConv_nunif); 
             F_statConv.resize(domn->ngrd);
             for(int i=0; i<domn->ngrd; i++)
-                F_statConv.at(i)= Linterp.interp(domn->pos->d[i]);
-
-            // update the rhs term for statistics convergence 'rhsStatConv'
+                F_statConv.at(i)  = Linterp.interp(domn->pos->d[i]);
             for(int i=0; i<domn->ngrd; i++)
-#if _CONSTANT_RHS_CONV_STAT_ // todo: erase this #if, just for initial testing
-                rhsStatConv.at(i) = 0.0; 
-#else
                 rhsStatConv.at(i) = F_statConv.at(i); 
-#endif
-
             // Update Favg and time at timeCurrent instant, for next call of getRhsStatConv
             Favg_statConvLast = Favg_statConv;
             time_statConvLast = time_statConv;
+#endif
 
         }
     }
-
-
 }
 
 

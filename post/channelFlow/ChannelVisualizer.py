@@ -388,15 +388,19 @@ class ChannelVisualizer():
         plt.tight_layout()
         plt.savefig(filename, dpi=600)
 
-    def build_CI_evolution(self, CI_list):
+    def build_CI_evolution(self, time, CI):
         # todo: include time data in the x axis, by now it is just index position in the CI list
 
         filename = f"../../data/{self.caseN}/post/CI_vs_time.jpg"
         print(f"\nMAKING PLOT OF CI EVOLUTION ALONG TIME in {filename}")
 
         fig, ax = plt.subplots()
-        ax.plot(CI_list)
+        ax.plot(time, CI)
+        ax.set_xlabel("Time (t) [s]")
         ax.set_ylabel("Convergence Indicator (CI)")
+        ax.set_ylim([0, 3])
+
+        plt.grid()
         plt.tight_layout()
         plt.savefig(filename, dpi=600)
 

@@ -26,7 +26,7 @@ void domaincase_odt_channel::init(domain *p_domn){
 
     // add different variable types (being objects of dv subclasses) to the 'v' vector, class member of the 'domain' object
     // each of these variables is created using their respective constr. and is pushed into the 'v' vector<dv*> of 'domain' object
-    domn->v.push_back(new dv_pos(        domn, "pos",      false, true));   // last are: L_transported, L_output
+    domn->v.push_back(new dv_pos(        domn, "pos",      false, true));   // last are: L_transported, L_output, L_statconv
     domn->v.push_back(new dv_posf(       domn, "posf",     false, true));
     domn->v.push_back(new dv_rho_const(  domn, "rho",      false, false));
     domn->v.push_back(new dv_dvisc_const(domn, "dvisc",    false, false));

@@ -67,7 +67,7 @@ compute_odt_statistics(odtStatisticsFilepath, inputParams)
 #------------ Compute Convergence Indicator (CI) for ODT uavg ------------
 
 (CI_tEnd, yuplus_all, um_all, um_symmetric_all) = compute_convergence_indicator_odt_tEnd(inputParams)
-(CI_list) = compute_convergence_indicator_odt_along_time(inputParams)
+(time_list, CI_list) = compute_convergence_indicator_odt_along_time(inputParams)
 
 #--------------------------------------------------------------------------------------------
 
@@ -82,4 +82,4 @@ visualizer.build_reynolds_stress_diagonal_profile(yplus_odt, yplus_dns, ufufm_od
 visualizer.build_stress_decomposition(ydelta_odt, ydelta_dns, viscous_stress_odt, reynolds_stress_odt, total_stress_odt, viscous_stress_dns, reynolds_stress_dns, total_stress_dns)
 visualizer.build_TKE_budgets(yplus_odt, yplus_dns, vt_u_plus_odt, d_u_plus_odt, vt_u_plus_dns, p_u_plus_dns)
 visualizer.build_um_profile_symmetric_vs_nonsymmetric(CI_tEnd, yuplus_all, um_all, um_symmetric_all)
-visualizer.build_CI_evolution(CI_list)
+visualizer.build_CI_evolution(time_list, CI_list)

@@ -591,6 +591,7 @@ def compute_convergence_indicator_odt_along_time(input_params):
 
     flist_stat     = sorted(gb.glob('../../data/' + case_name + '/data/data_00000/statistics/dmp_*_stat.dat'))
     CI_list = []
+    time_list = []
 
     for ifile in flist_stat: 
 
@@ -612,7 +613,9 @@ def compute_convergence_indicator_odt_along_time(input_params):
         CI = np.sqrt( 0.5 * np.sum( (um - um_symmetric)**2 ) ) # rmse
         CI_list.append(CI)
 
-    return (CI_list)
+        time_list.append(get_time(ifile))
+
+    return (time_list, CI_list)
 
 
 
