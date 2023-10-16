@@ -10,6 +10,69 @@ from scipy.interpolate import interp1d
 import matplotlib.pyplot as plt
 
 
+def get_odt_instantaneous(input_params):
+    """
+    Get ODT instantaneous fields
+
+    Parameters:
+        input_params (dict): ODT input parameters dictionary
+
+    Returns:
+        ODT instantaneous coordinates and fields
+        uvel, vvel, wvel (np.ndarrays)
+    """
+
+    print(f"\nGetting ODT instantaneous data from {odt_statistics_filepath}")
+
+    # --- Get ODT input parameters ---
+
+    dxmin = input_params["dxmin"]
+    domainLength = input_params["domainLength"]
+
+    # un-normalize
+    dxmin *= domainLength       
+
+    # --- Get ODT data ---
+
+    flist     = sorted(gb.glob('../../data/' + case_name + '/data/data_00000/dmp_*.dat'))
+    num_files = len(flist)
+
+    nunif  = int(1/dxmin)        # num. points uniform grid (using smallest grid size)   
+    nunif2 = int(nunif/2)        # half of num. points (for ploting to domain center, symmetry in y-axis)
+    
+    yu    = np.linspace(-delta,delta,nunif) # uniform grid in y-axis
+    uvel = np.zeros([nunif, num_files])
+    vvel = np.zeros([nunif, num_files])
+    wvel = np.zeros([nunif, num_files])
+
+    for i in range(num_files):
+
+        ifile = flist[i]
+        data = np.loadtxt(ifile)
+        y    = data[:,0] # = y/delta, as delta = 1
+        u    = data[:,2] # normalized by u_tau, u is in fact u+
+        v    = data[:,3] # normalized by u_tau, v is in fact v+
+        w    = data[:,4] # normalized by u_tau, w is in fact w+ 
+
+        # interpolate to uniform grid
+        uu = interp1d(y, u, fill_value='extrapolate')(yu)  
+        vv = interp1d(y, v, fill_value='extrapolate')(yu)
+        ww = interp1d(y, w, fill_value='extrapolate')(yu)
+
+        # store time instant data
+        uvel[:,i] = uu
+        vvel[:,i] = vv
+        wvel[:,i] = ww
+
+    # mirror data -> half channel
+    uvel = 0.5*(uvel[:nunif2,:] + np.flipud(uvel[nunif2:,:]))
+    vvel = 0.5*(vvel[:nunif2,:] + np.flipud(vvel[nunif2:,:]))
+    wvel = 0.5*(wvel[:nunif2,:] + np.flipud(wvel[nunif2:,:]))
+
+    return (uvel, vvel, wvel)
+
+
+
 def compute_odt_statistics(odt_statistics_filepath, input_params):
     """
     Compute ODT statistics from multiple .dat files with instantaneous data
@@ -240,7 +303,7 @@ def get_odt_statistics(odt_statistics_filepath, input_params):
     """
     # --- Get ODT statistics ---
 
-    print(f"Getting ODT data from {odt_statistics_filepath}")
+    print(f"\nGetting ODT data from {odt_statistics_filepath}")
     odt = np.loadtxt(odt_statistics_filepath)
 
     ydelta = odt[:,0]  # y/delta
