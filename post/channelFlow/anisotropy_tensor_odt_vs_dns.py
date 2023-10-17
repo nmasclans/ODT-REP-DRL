@@ -221,40 +221,40 @@ for sim in simulation_list:
         bar_map_color.append(yplus[p])
 
 
-    # ---------------------- Plot histogram ---------------------- 
-
-    # Prepare data
-    num_points_bar = len(bar_map_x)
-    bar_map_data = np.zeros([num_points_bar, 2])
-    bar_map_data[:,0] = bar_map_x
-    bar_map_data[:,1] = bar_map_y
-    bar_map_df = pd.DataFrame( bar_map_data, columns = ['x','y'])
-    ###print("\n(x,y) barycentric map positions:")
-    ###print(bar_map_df)
-
-    # bins
-    xbins = np.linspace( 0.0, 1.0, nbins )
-    ybins = np.linspace( 0.0, 1.0, nbins )
-    bar_h, bar_xedges, bar_yedges = np.histogram2d( bar_map_df.x, bar_map_df.y, bins = [ xbins, ybins ], normed = True )
-    bar_h = bar_h + 1.0e-12
-    bar_h = bar_h.T
-    bar_xcenters = ( bar_xedges[:-1] + bar_xedges[1:] )/2
-    bar_ycenters = ( bar_yedges[:-1] + bar_yedges[1:] )/2
-
-    # find maximum number of occurencies in the barycentric map, but only within the realizability triangle area
-    max_x = -1.0
-    max_y = -1.0
-    max_z = -1.0
-    for i in range( 0, len( bar_xcenters ) ):
-        for j in range( 0, len( bar_ycenters ) ):
-            if ( ( bar_ycenters[j] - bar_xcenters[i]*math.sqrt(3.0) ) < 0.0 ) and ( bar_ycenters[j] > 0.0 ) and ( ( bar_ycenters[j] + math.sqrt(3.0)*(bar_xcenters[i]-1.0) ) < 0.0 ): 
-                if bar_h[i,j] > max_z:
-                    max_z = bar_h[i,j]
-                    max_x = bar_xcenters[j] # in histogram the axis are flipped
-                    max_y = bar_ycenters[i] # in histogram the axis are flipped	
-    bar_x = max_x
-    bar_y = max_y
-    print(f"\nMaximum number of occurencies in the barycentric map point (x,y) = ({bar_x:.2f},{bar_y:.2f}) with # occurencies = {max_z:.2f}")
+    ### ---------------------- Plot histogram ---------------------- 
+    ##
+    ### Prepare data
+    ##num_points_bar = len(bar_map_x)
+    ##bar_map_data = np.zeros([num_points_bar, 2])
+    ##bar_map_data[:,0] = bar_map_x
+    ##bar_map_data[:,1] = bar_map_y
+    ##bar_map_df = pd.DataFrame( bar_map_data, columns = ['x','y'])
+    #####print("\n(x,y) barycentric map positions:")
+    #####print(bar_map_df)
+    ##
+    ### bins
+    ##xbins = np.linspace( 0.0, 1.0, nbins )
+    ##ybins = np.linspace( 0.0, 1.0, nbins )
+    ##bar_h, bar_xedges, bar_yedges = np.histogram2d( bar_map_df.x, bar_map_df.y, bins = [ xbins, ybins ], normed = True )
+    ##bar_h = bar_h + 1.0e-12
+    ##bar_h = bar_h.T
+    ##bar_xcenters = ( bar_xedges[:-1] + bar_xedges[1:] )/2
+    ##bar_ycenters = ( bar_yedges[:-1] + bar_yedges[1:] )/2
+    ##
+    ### find maximum number of occurencies in the barycentric map, but only within the realizability triangle area
+    ##max_x = -1.0
+    ##max_y = -1.0
+    ##max_z = -1.0
+    ##for i in range( 0, len( bar_xcenters ) ):
+    ##    for j in range( 0, len( bar_ycenters ) ):
+    ##        if ( ( bar_ycenters[j] - bar_xcenters[i]*math.sqrt(3.0) ) < 0.0 ) and ( bar_ycenters[j] > 0.0 ) and ( ( bar_ycenters[j] + math.sqrt(3.0)*(bar_xcenters[i]-1.0) ) < 0.0 ): 
+    ##            if bar_h[i,j] > max_z:
+    ##                max_z = bar_h[i,j]
+    ##                max_x = bar_xcenters[j] # in histogram the axis are flipped
+    ##                max_y = bar_ycenters[i] # in histogram the axis are flipped	
+    ##bar_x = max_x
+    ##bar_y = max_y
+    ##print(f"\nMaximum number of occurencies in the barycentric map point (x,y) = ({bar_x:.2f},{bar_y:.2f}) with # occurencies = {max_z:.2f}")
 
     # ---------------------- Plot Barycentric Map ---------------------- 
 
@@ -265,7 +265,7 @@ for sim in simulation_list:
     norm   = colors.Normalize(vmin = 0, vmax = yplus_max)
 
     # Plot data into the barycentric map
-    plt.scatter( bar_x, bar_y, color='red', zorder = 4, marker = 'o', s = 85, edgecolor = 'black', linewidth = 0.8 )
+    ##plt.scatter( bar_x, bar_y, color='red', zorder = 4, marker = 'o', s = 85, edgecolor = 'black', linewidth = 0.8 )
     plt.scatter( bar_map_x, bar_map_y, c = bar_map_color, cmap = cmap, norm=norm, zorder = 3, marker = 'o', s = 85, edgecolor = 'black', linewidth = 0.8 )
 
     # Plot barycentric map lines

@@ -23,6 +23,7 @@ params:
     diffCFL:       0.5            #  multiplies min diffusion timestep
     #----------------------------------------------------------------------------------
     Lsolver:       EXPLICIT       #  EXPLICIT, SEMI-IMPLICIT, STRANG
+    Lstatconv:     false          #  flag to turn on statistics convergence (by added source term)
     #----------------------------------------------------------------------------------
     bcType:        WALL           #  OUTFLOW, WALL, PERIODIC, WALL_OUT
     cCoord:        1              #  1 = planar, 2 = cylindrical, 3 = spherical
@@ -63,4 +64,4 @@ bcCond:
 dumpTimesGen:
     dTimeStart: 10000.0     # make < 0 to ignore dumpTimesGen and use dumpTimes (if present)
     dTimeEnd:   100000.0
-    dTimeStep:  1.0
+    dTimeStep:  100.0
