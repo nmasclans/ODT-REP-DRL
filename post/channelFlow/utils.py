@@ -72,7 +72,6 @@ def get_odt_instantaneous(input_params):
     return (uvel, vvel, wvel)
 
 
-
 def compute_odt_statistics(odt_statistics_filepath, input_params):
     """
     Compute ODT statistics from multiple .dat files with instantaneous data
@@ -633,7 +632,6 @@ def compute_convergence_indicator_odt_tEnd(input_params):
     return (CI, yuplus, um, um_symmetric)
 
 
-
 def compute_convergence_indicator_odt_along_time(input_params):
     
     # --- Get ODT input parameters ---
@@ -681,7 +679,134 @@ def compute_convergence_indicator_odt_along_time(input_params):
     return (time_list, CI_list)
 
 
+def compute_odt_statistics_at_chosen_time(input_params, time_end):
+    """
+    Compute ODT statistics from multiple .dat files with instantaneous data
+    at increasing simulation time until chosen time time_end is reached
 
+    Parameters:
+        input_params (dict): ODT input parameters dictionary
+    
+    Returns:
+        ODT statistics calculated up until time = time_end, specifically
+        (ydelta, um, urmsf, vrmsf, wrmsf, ufufm, vfvfm, wfwfm, ufvfm, ufwfm, vfwfm)
 
+    """
+
+    # --- Get ODT input parameters ---
+    
+    rho   = input_params["rho"]
+    kvisc = input_params["kvisc"] # = nu = mu / rho 
+    dxmin = input_params["dxmin"]
+    delta = input_params["delta"]
+    Retau = input_params["Retau"]
+    case_name = input_params["caseN"]
+    
+    # un-normalize
+    domainLength = input_params["domainLength"]
+    dxmin *= domainLength
+
+    # --- Compute ODT computational data ---
+
+    flist = sorted(gb.glob('../../data/' + case_name + '/data/data_00000/dmp_*.dat'))
+    flist_stat = sorted(gb.glob('../../data/' + case_name + '/data/data_00000/statistics/dmp_*_stat.dat'))
+
+    nunif  = int(1/dxmin)        # num. points uniform grid (using smallest grid size)   
+    nunif2 = int(nunif/2)        # half of num. points (for ploting to domain center, symmetry in y-axis)
+    nfiles = len(flist)          # num. files of instantaneous data, i.e. num. discrete time instants
+    yu  = np.linspace(-delta,delta,nunif) # uniform grid in y-axis
+    # empty vectors of time-averaged quantities
+    um  = np.zeros(nunif)        # mean velocity, calulated in post-processing from instantaneous velocity
+    vm  = np.zeros(nunif)
+    wm  = np.zeros(nunif)
+    u2m = np.zeros(nunif)        # mean square velocity (for rmsf and reynolds stresses)
+    v2m = np.zeros(nunif)
+    w2m = np.zeros(nunif)
+    uvm = np.zeros(nunif)        # mean velocity correlations (for reynolds stresses)
+    uwm = np.zeros(nunif)
+    vwm = np.zeros(nunif)
+
+    for ifile in flist :
+
+        # ------------------ Check instantaneous time < time_end ------------------
+        
+        time_current = get_time(ifile)
+        if time_current > time_end:
+            break
+    
+        # ------------------ (get) Instantaneous velocity ------------------
+
+        data = np.loadtxt(ifile)
+        y    = data[:,0] # = y/delta, as delta = 1
+        u    = data[:,2] # normalized by u_tau, u is in fact u+
+        v    = data[:,3] # normalized by u_tau, v is in fact v+
+        w    = data[:,4] # normalized by u_tau, w is in fact w+ 
+
+        # interpolate to uniform grid
+        uu = interp1d(y, u, fill_value='extrapolate')(yu)  
+        vv = interp1d(y, v, fill_value='extrapolate')(yu)
+        ww = interp1d(y, w, fill_value='extrapolate')(yu)
+
+        # ------------------ (compute) Velocity statistics, from instantaneous values ------------------
+
+        # update mean profiles
+        um  += uu                 
+        vm  += vv
+        wm  += ww
+        u2m += uu*uu
+        v2m += vv*vv
+        w2m += ww*ww
+        uvm += uu*vv
+        uwm += uu*ww
+        vwm += vv*ww
+
+    # (computed) means
+    um /= nfiles
+    vm /= nfiles
+    wm /= nfiles
+    um = 0.5*(um[:nunif2] + np.flipud(um[nunif2:]))  # mirror data (symmetric)
+    vm = 0.5*(vm[:nunif2] + np.flipud(vm[nunif2:]))
+    wm = 0.5*(wm[:nunif2] + np.flipud(wm[nunif2:]))
+
+    # squared means
+    u2m /= nfiles
+    v2m /= nfiles
+    w2m /= nfiles
+    u2m = 0.5*(u2m[:nunif2] + np.flipud(u2m[nunif2:]))
+    v2m = 0.5*(v2m[:nunif2] + np.flipud(v2m[nunif2:]))
+    w2m = 0.5*(w2m[:nunif2] + np.flipud(w2m[nunif2:]))
+
+    # velocity correlations
+    uvm /= nfiles
+    uwm /= nfiles
+    vwm /= nfiles
+    uvm = 0.5*(uvm[:nunif2] + np.flipud(uvm[nunif2:]))
+    uwm = 0.5*(uwm[:nunif2] + np.flipud(uwm[nunif2:]))
+    vwm = 0.5*(vwm[:nunif2] + np.flipud(vwm[nunif2:]))
+
+    # Reynolds stresses
+    ufufm = u2m - um*um # = <uf·uf>
+    vfvfm = v2m - vm*vm # = <vf·vf>
+    wfwfm = w2m - wm*wm # = <wf·wf>
+    ufvfm = uvm - um*vm # = <uf·vf>
+    ufwfm = uwm - um*wm # = <uf·wf>
+    vfwfm = vwm - vm*wm # = <vf·wf>
+
+    # root-mean-squared fluctuations (rmsf)
+    urmsf = np.sqrt(ufufm) 
+    vrmsf = np.sqrt(vfvfm) 
+    wrmsf = np.sqrt(wfwfm) 
+
+    # --- y-coordinate, y+ ---
+    yu += delta         # domain center is at 0; shift so left side is zero
+    yu = yu[:nunif2]    # plotting to domain center
+    dudy = (um[1]-um[0])/(yu[1]-yu[0])
+    utau = np.sqrt(kvisc * np.abs(dudy) / rho)
+    RetauOdt = utau * delta / kvisc
+    yuplus = yu * utau/kvisc    # scale y --> y+ (note: utau is close to unity)
+    ydelta = yu
+
+    return (ydelta, yuplus, um, urmsf, vrmsf, wrmsf, 
+            ufufm, vfvfm, wfwfm, ufvfm, ufwfm, vfwfm)
 
 
