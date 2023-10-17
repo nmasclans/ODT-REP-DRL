@@ -32,7 +32,7 @@ from utils import *
 
 plt.rc( 'text', usetex = True )
 plt.rc( 'font', size = 14 )
-plt.rcParams['text.latex.preamble'] = [ r'\usepackage{amsmath}', r'\usepackage{amssymb}', r'\usepackage{color}' ]
+plt.rc('text.latex', preamble=r"\usepackage{amsmath} \usepackage{amsmath} \usepackage{amssymb} \usepackage{color}")
 
 #--------------------------------------------------------------------------------------------
 
