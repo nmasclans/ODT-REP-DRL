@@ -72,5 +72,6 @@
         "variant": "cpp"
     },
     "todohighlight.isEnable" : true,
-    "todohighlight.isCaseSensitive" : false
+    "todohighlight.isCaseSensitive": false,
+    "workbench.editor.enablePreview": false
 }

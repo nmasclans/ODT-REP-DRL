@@ -64,4 +64,4 @@ bcCond:
 dumpTimesGen:
     dTimeStart: 50.0     # make < 0 to ignore dumpTimesGen and use dumpTimes (if present)
     dTimeEnd:   1000.0
-    dTimeStep:  5.0
+    dTimeStep:  0.2
