@@ -67,6 +67,9 @@ inputParams = {"kvisc":kvisc, "rho":rho, "dxmin": dxmin, "domainLength" : domain
 #------------ Averaging times ---------------
 
 averaging_times = np.arange(tStart, tEnd+0.1, delta_aver_time)
+# remove first time, as only 1 file is used to calculate the statistics, therefore 
+# they are just instantaneous, and make the reynolds stress tensor not satisfy realizability conditions
+averaging_times = averaging_times[1:] 
 num_aver_times  = len(averaging_times)
 
 for avg_time in averaging_times:
@@ -114,11 +117,14 @@ for avg_time in averaging_times:
 
     detR  = np.linalg.det(R_ij)    # length(detR) = num_points
     cond3 = ( detR >= 0 ).all()
-
+    
     if cond1 and cond2 and cond3:
         print("\nCONGRATULATIONS, the reynolds stress tensor satisfies REALIZABILITY CONDITIONS.")
     else:
-        raise Exception("The reynolds stress tensor does not satisfy REALIZABILITY CONDITIONS")
+        print("\nERROR: The reynolds stress tensor does not satisfy REALIZABILITY CONDITIONS")
+        print("\nERROR: Cond 1 is ", cond1," - Cond 2 is ", cond2, "- Cond 3 is ", cond3)
+        print("EXECUTION TERMINATED")
+        exit(0)
 
     #-----------------------------------------------------------------------------------------
     #           Anisotropy tensor, eigen-decomposition, mapping to barycentric map 

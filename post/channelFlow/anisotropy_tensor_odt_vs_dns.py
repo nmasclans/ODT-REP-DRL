@@ -67,6 +67,7 @@ kvisc = yml["params"]["kvisc0"] # kvisc = nu = mu / rho
 rho   = yml["params"]["rho0"]
 dxmin = yml["params"]["dxmin"]
 domainLength = yml["params"]["domainLength"] 
+tEnd  = yml["dumpTimesGen"]["dTimeEnd"]
 delta = domainLength * 0.5
 utau  = 1.0
 inputParams = {"kvisc":kvisc, "rho":rho, "dxmin": dxmin, "domainLength" : domainLength, "delta": delta, "Retau": Retau, "caseN": caseN, "utau": utau} 
@@ -179,7 +180,7 @@ for sim in simulation_list:
 
         # calculate trace -> 2 * (Turbulent kinetic energy)
         Rkk = R11[p] + R22[p] + R33[p]                              # shape: scalar
-        ###TKE = 0.5 * Rkk -> WRONG FORMULA!                        # shape: scalar
+        ###TKE = 0.5 * Rkk -> same formula!                         # shape: scalar
         TKE = 0.5 * (urmsf[p]**2 + vrmsf[p]**2 + wrmsf[p]**2)       # shape: scalar
 
         # omit grid point if reynolds stress tensor trace (2 * TKE) is too small
@@ -214,8 +215,8 @@ for sim in simulation_list:
         # Calculate Barycentric map point
         # where eigenvalues_a_ij[0] >= eigenvalues_a_ij[1] >= eigenvalues_a_ij[2] (eigval in decreasing order)
         bar_map_xy = x1c * (     eigenvalues_a_ij[0] -     eigenvalues_a_ij[1])  \
-                + x2c * ( 2 * eigenvalues_a_ij[1] - 2 * eigenvalues_a_ij[2]) \
-                + x3c * ( 3 * eigenvalues_a_ij[2] + 1)
+                   + x2c * ( 2 * eigenvalues_a_ij[1] - 2 * eigenvalues_a_ij[2]) \
+                   + x3c * ( 3 * eigenvalues_a_ij[2] + 1)
         bar_map_x.append(bar_map_xy[0])
         bar_map_y.append(bar_map_xy[1])
         bar_map_color.append(yplus[p])
@@ -274,6 +275,8 @@ for sim in simulation_list:
     plt.plot( [x3c[0], x1c[0]],[x3c[1], x1c[1]], zorder = 1, color = 'black', linestyle = '-', linewidth = 2 )
 
     # Configure plot
+    plt.xlim([-0.1,1.1])
+    plt.ylim([-0.1,1.1])
     plt.axis( 'off' )
     ax = plt.gca()
     ax.set_aspect('equal', adjustable='box')
@@ -282,7 +285,7 @@ for sim in simulation_list:
     plt.text( 0.4850, 0.9000, r'$\textbf{x}_{3_{c}}$' )
     cbar = plt.colorbar()
     cbar.set_label( r'$y^{+}$' )
-    ###plt.clim( 0.0, 20.0 )
+    plt.title(f"averaging time = {tEnd:.1f}")
 
     # save figure
     filename = f"../../data/{caseN}/post/anisotropy_tensor_barycentric_map_{sim}.jpg"
