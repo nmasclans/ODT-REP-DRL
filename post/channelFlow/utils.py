@@ -72,7 +72,7 @@ def get_odt_instantaneous(input_params):
     return (uvel, vvel, wvel)
 
 
-def compute_odt_statistics(odt_statistics_filepath, input_params):
+def compute_odt_statistics(odt_statistics_filepath, input_params, plot_reynolds_stress_terms=False):
     """
     Compute ODT statistics from multiple .dat files with instantaneous data
     at increasing simulation time
@@ -287,6 +287,56 @@ def compute_odt_statistics(odt_statistics_filepath, input_params):
     print("(ODT) kvisc :", kvisc)
     print("(ODT) dumdy|y0 :", dudy, "    du: ", um[1]-um[0], "    dy: ", yu[1]-yu[0], "\n")
 
+    # ---------- non-diagonal terms of reynolds stress tensor --------
+    if plot_reynolds_stress_terms:
+        fs=20
+        fs_leg=20
+        fig, ax = plt.subplots(3, figsize=(10,10))
+        ax[0].plot(yuplus, ufvfm,'o',label=r"$R_{01}=<u'v'>$")
+        ax[0].plot(yuplus, ufwfm,    label=r"$R_{02}=<u'w'>$")
+        ax[0].plot(yuplus, vfwfm,    label=r"$R_{12}=<v'w'>$")
+        ax[0].legend(loc="upper right", fontsize=fs_leg)
+        ax[0].set_title(r"$R_{ij}=<u_i'u_j'> = <u_iu_j> - <u_i><u_j>$ vs. $y^{+}$", fontsize=fs)
+        ##
+        ax[1].plot(yuplus, uvm,'o',label=r"$<uv>$")
+        ax[1].plot(yuplus, uwm,    label=r"$<uw>$")
+        ax[1].plot(yuplus, vwm,    label=r"$<vw>$")
+        ax[1].legend(loc="upper right", fontsize=fs_leg)
+        ax[1].set_title(r"$<u_iu_j>$ vs. $y^{+}$", fontsize=fs)
+        ##
+        ax[2].plot(yuplus, um*vm,'o',label=r"$<u><v>$")
+        ax[2].plot(yuplus, um*wm,    label=r"$<u><w>$")
+        ax[2].plot(yuplus, vm*wm,    label=r"$<v><w>$")
+        ax[2].legend(loc="upper right", fontsize=fs_leg)
+        ax[2].set_title(r"$<u_i><u_j>$ vs. $y^{+}$", fontsize=fs)
+        ##
+        plt.tight_layout()
+        plt.savefig('reynStressTens_nonDiag_odt.jpg', dpi=600)
+        plt.close()
+        # ---------- non-diagonal terms of reynolds stress tensor --------
+        fig, ax = plt.subplots(3, figsize=(10,10))
+        ax[0].plot(yuplus, ufufm,    label=r"$R_{00}=<u'u'>$")
+        ax[0].plot(yuplus, vfvfm,'o',label=r"$R_{11}=<v'v'>$")
+        ax[0].plot(yuplus, wfwfm,    label=r"$R_{22}=<w'w'>$")
+        ax[0].legend(loc="upper right", fontsize=fs_leg)
+        ax[0].set_title(r"$R_{ii}=<u_i'u_i'> = <u_iu_i> - <u_i><u_i>$ vs. $y^{+}$", fontsize=fs)
+        ##
+        ax[1].plot(yuplus, u2m,    label=r"$<uu>$")
+        ax[1].plot(yuplus, v2m,'o',label=r"$<vv>$")
+        ax[1].plot(yuplus, w2m,    label=r"$<ww>$")
+        ax[1].legend(loc="upper right", fontsize=fs_leg)
+        ax[1].set_title(r"$<u_iu_i>$ vs. $y^{+}$", fontsize=fs)
+        ##
+        ax[2].plot(yuplus, um*um,    label=r"$<u><u>$")
+        ax[2].plot(yuplus, vm*vm,'o',label=r"$<v><v>$")
+        ax[2].plot(yuplus, wm*wm,    label=r"$<w><w>$")
+        ax[2].legend(loc="upper right", fontsize=fs_leg)
+        ax[2].set_title(r"$<u_i><u_i>$ vs. $y^{+}$", fontsize=fs)
+        ##
+        plt.tight_layout()
+        plt.savefig("reynStressTens_diag_odt.jpg", dpi=600)
+        plt.close()
+
 
 def get_odt_statistics(odt_statistics_filepath, input_params):
     """
@@ -307,7 +357,10 @@ def get_odt_statistics(odt_statistics_filepath, input_params):
 
     ydelta = odt[:,0]  # y/delta
     yplus  = odt[:,1]  # y+
+
     um     = odt[:,2]  # u+_mean
+    # vm   = odt[:,3]  # v+_mean
+    # wm   = odt[:,4]  # w+_mean
 
     urmsf  = odt[:,5]  # u+_rmsf
     vrmsf  = odt[:,6]  # v+_rmsf
@@ -713,7 +766,6 @@ def compute_odt_statistics_at_chosen_time(input_params, time_end):
 
     nunif  = int(1/dxmin)        # num. points uniform grid (using smallest grid size)   
     nunif2 = int(nunif/2)        # half of num. points (for ploting to domain center, symmetry in y-axis)
-    nfiles = len(flist)          # num. files of instantaneous data, i.e. num. discrete time instants
     yu  = np.linspace(-delta,delta,nunif) # uniform grid in y-axis
     # empty vectors of time-averaged quantities
     um  = np.zeros(nunif)        # mean velocity, calulated in post-processing from instantaneous velocity
@@ -726,6 +778,7 @@ def compute_odt_statistics_at_chosen_time(input_params, time_end):
     uwm = np.zeros(nunif)
     vwm = np.zeros(nunif)
 
+    fcounter = 0
     for ifile in flist :
 
         # ------------------ Check instantaneous time < time_end ------------------
@@ -760,26 +813,28 @@ def compute_odt_statistics_at_chosen_time(input_params, time_end):
         uwm += uu*ww
         vwm += vv*ww
 
+        fcounter += 1
+
     # (computed) means
-    um /= nfiles
-    vm /= nfiles
-    wm /= nfiles
+    um /= fcounter
+    vm /= fcounter
+    wm /= fcounter
     um = 0.5*(um[:nunif2] + np.flipud(um[nunif2:]))  # mirror data (symmetric)
     vm = 0.5*(vm[:nunif2] + np.flipud(vm[nunif2:]))
     wm = 0.5*(wm[:nunif2] + np.flipud(wm[nunif2:]))
 
     # squared means
-    u2m /= nfiles
-    v2m /= nfiles
-    w2m /= nfiles
+    u2m /= fcounter
+    v2m /= fcounter
+    w2m /= fcounter
     u2m = 0.5*(u2m[:nunif2] + np.flipud(u2m[nunif2:]))
     v2m = 0.5*(v2m[:nunif2] + np.flipud(v2m[nunif2:]))
     w2m = 0.5*(w2m[:nunif2] + np.flipud(w2m[nunif2:]))
 
     # velocity correlations
-    uvm /= nfiles
-    uwm /= nfiles
-    vwm /= nfiles
+    uvm /= fcounter
+    uwm /= fcounter
+    vwm /= fcounter
     uvm = 0.5*(uvm[:nunif2] + np.flipud(uvm[nunif2:]))
     uwm = 0.5*(uwm[:nunif2] + np.flipud(uwm[nunif2:]))
     vwm = 0.5*(vwm[:nunif2] + np.flipud(vwm[nunif2:]))
