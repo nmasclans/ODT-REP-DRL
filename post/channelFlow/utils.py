@@ -336,6 +336,20 @@ def compute_odt_statistics(odt_statistics_filepath, input_params, plot_reynolds_
         plt.tight_layout()
         plt.savefig("reynStressTens_diag_odt.jpg", dpi=600)
         plt.close()
+        # ---------- plot all terms of reynolds stress tensor --------
+        fig, ax = plt.subplots(figsize=(6,6))
+        ax.plot(yuplus, ufufm,    linewidth=2, zorder = 3,               label=r"$R_{00}=<u'u'>$")
+        ax.plot(yuplus, vfvfm,'o',linewidth=2, zorder = 2, markersize=5, label=r"$R_{11}=<v'v'>$")
+        ax.plot(yuplus, wfwfm,    linewidth=2, zorder = 3,               label=r"$R_{22}=<w'w'>$")
+        ax.plot(yuplus, ufvfm,'o',linewidth=2, zorder = 2, markersize=5, label=r"$R_{01}=<u'v'>$")
+        ax.plot(yuplus, ufwfm,    linewidth=2, zorder = 3,               label=r"$R_{02}=<u'w'>$")
+        ax.plot(yuplus, vfwfm,'o',linewidth=2, zorder = 1, markersize=10, label=r"$R_{12}=<v'w'>$")
+        ax.set_xlabel(r"$y^{+}$")
+        ax.legend(loc="upper right", fontsize=fs_leg)
+        ax.set_title(r"$R_{ij}=<u_i'u_i'>$, for $i,j=0,1,2$", fontsize=fs)
+        plt.tight_layout()
+        plt.savefig("reynStressTens_allTerms_odt.jpg", dpi=600)
+        plt.close()
 
 
 def get_odt_statistics(odt_statistics_filepath, input_params):
