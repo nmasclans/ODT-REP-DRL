@@ -23,8 +23,7 @@ import sys
 import os
 import math
 
-import matplotlib.cm as cm
-import matplotlib.colors as colors
+import matplotlib
 import numpy as np
 import pandas as pd
 
@@ -40,7 +39,7 @@ plt.rc('text.latex', preamble=r"\usepackage{amsmath} \usepackage{amsmath} \usepa
 tensor_kk_tolerance   = 1.0e-8;	# [-]
 eigenvalues_tolerance = 1.0e-8;	# [-]
 nbins = 50;			            # [-]
-simulation_list = ["odt", "dns"]
+simulation_list = ["odt"]#, "dns"]
 
 # --- Location of Barycentric map corners ---
 x1c = np.array( [ 1.0 , 0.0 ] )
@@ -89,12 +88,12 @@ for sim in simulation_list:
     # ----------- Get data of interest -----------------
     if sim == "odt":
         print("\n----------------- ODT simulation data -----------------")
-        R11   = ufufm_odt
-        R12   = ufvfm_odt
-        R13   = ufwfm_odt
-        R22   = vfvfm_odt
-        R23   = vfwfm_odt
-        R33   = wfwfm_odt
+        R00   = ufufm_odt
+        R01   = ufvfm_odt
+        R02   = ufwfm_odt
+        R11   = vfvfm_odt
+        R12   = vfwfm_odt
+        R22   = wfwfm_odt
         urmsf = urmsf_odt 
         vrmsf = vrmsf_odt 
         wrmsf = wrmsf_odt 
@@ -102,12 +101,12 @@ for sim in simulation_list:
         yplus_max = np.max(yplus)
     elif sim == "dns":
         print("\n----------------- DNS simulation data -----------------")
-        R11   = ufufm_dns
-        R12   = ufvfm_dns
-        R13   = ufwfm_dns
-        R22   = vfvfm_dns
-        R23   = vfwfm_dns
-        R33   = wfwfm_dns
+        R00   = ufufm_dns
+        R01   = ufvfm_dns
+        R02   = ufwfm_dns
+        R11   = vfvfm_dns
+        R12   = vfwfm_dns
+        R22   = wfwfm_dns
         urmsf = urmsf_dns 
         vrmsf = vrmsf_dns 
         wrmsf = wrmsf_dns 
@@ -121,15 +120,15 @@ for sim in simulation_list:
     # Build tensor (for each grid point)
     num_points  = len(R11)
     R_ij        = np.zeros([num_points, 3, 3])
-    R_ij[:,0,0] = R11
-    R_ij[:,0,1] = R12
-    R_ij[:,0,2] = R13
-    R_ij[:,1,0] = R12
-    R_ij[:,1,1] = R22
-    R_ij[:,1,2] = R23
-    R_ij[:,2,0] = R13
-    R_ij[:,2,1] = R23
-    R_ij[:,2,2] = R33
+    R_ij[:,0,0] = R00
+    R_ij[:,0,1] = R01
+    R_ij[:,0,2] = R02
+    R_ij[:,1,0] = R01
+    R_ij[:,1,1] = R11
+    R_ij[:,1,2] = R12
+    R_ij[:,2,0] = R02
+    R_ij[:,2,1] = R12
+    R_ij[:,2,2] = R22
 
     #------------ Realizability conditions ---------------
 
@@ -137,24 +136,24 @@ for sim in simulation_list:
 
     # COND 1: Rii >= 0, for i = 1,2,3
 
-    cond1_1 = ( R11 >= 0 ).all()    # i = 1
-    cond1_2 = ( R22 >= 0 ).all()    # i = 2
-    cond1_3 = ( R33 >= 0 ).all()    # i = 3
-    cond1   = cond1_1 and cond1_2 and cond1_3
+    cond0_0 = ( R00 >= 0 ).all()    # i = 1
+    cond0_1 = ( R11 >= 0 ).all()    # i = 2
+    cond0_2 = ( R22 >= 0 ).all()    # i = 3
+    cond0   = cond0_0 and cond0_1 and cond0_2
 
     # COND 2: Rij^2 <= Rii*Rjj, for i!=j
 
-    cond2_1 = ( R12**2 <= R11 * R22 ).all()     # i = 1, j = 2
-    cond2_2 = ( R13**2 <= R11 * R33 ).all()     # i = 1, j = 3
-    cond2_3 = ( R23**2 <= R22 * R33 ).all()     # i = 1, j = 3
-    cond2   = cond2_1 and cond2_2 and cond2_3
+    cond1_0 = ( R01**2 <= R00 * R11 ).all()     # i = 0, j = 1
+    cond1_1 = ( R02**2 <= R00 * R22 ).all()     # i = 0, j = 2
+    cond1_2 = ( R12**2 <= R11 * R22 ).all()     # i = 1, j = 2
+    cond1   = cond1_0 and cond1_1 and cond1_2
 
     # COND 3: det(Rij) >= 0
 
     detR  = np.linalg.det(R_ij)    # length(detR) = num_points
-    cond3 = ( detR >= 0 ).all()
+    cond2 = ( detR >= 0 ).all()
 
-    if cond1 and cond2 and cond3:
+    if cond0 and cond1 and cond2:
         print("\nCONGRATULATIONS, the reynolds stress tensor satisfies REALIZABILITY CONDITIONS.")
     else:
         raise Exception("The reynolds stress tensor does not satisfy REALIZABILITY CONDITIONS")
@@ -179,9 +178,9 @@ for sim in simulation_list:
         delta_ij = np.eye(3)                                        # shape: [3,3]
 
         # calculate trace -> 2 * (Turbulent kinetic energy)
-        Rkk = R11[p] + R22[p] + R33[p]                              # shape: scalar
-        ###TKE = 0.5 * Rkk -> same formula!                         # shape: scalar
-        TKE = 0.5 * (urmsf[p]**2 + vrmsf[p]**2 + wrmsf[p]**2)       # shape: scalar
+        Rkk = R00[p] + R11[p] + R22[p]                              # shape: scalar
+        TKE = 0.5 * Rkk #  -> same formula!                         # shape: scalar
+        ###TKE = 0.5 * (urmsf[p]**2 + vrmsf[p]**2 + wrmsf[p]**2)    # shape: scalar
 
         # omit grid point if reynolds stress tensor trace (2 * TKE) is too small
         if np.abs(Rkk) < tensor_kk_tolerance:
@@ -210,7 +209,13 @@ for sim in simulation_list:
         idx = eigenvalues_a_ij.argsort()[::-1]   
         eigenvalues_a_ij  = eigenvalues_a_ij[idx]
         eigenvectors_a_ij = eigenvectors_a_ij[:,idx]
-        #print(f"EigVal[{p}] = ", eigenvalues_a_ij)
+        print(f"\nPoint p = {p}")
+        print(f"3rd eigenvalue lambda_2 = {eigenvalues_a_ij[2]}")
+        print(f"3rd eigenvector v_2     = {eigenvectors_a_ij[:,2]}")
+        inspected_eigenvalue = (-R00[p]+R11[p]-3*R12[p])/(3*R00[p]+6*R11[p])
+        print(f"(expected from equations) \lambda_2 = (-R_00+R_11-3R_12)/(3R_00+6R_11) = {inspected_eigenvalue}")
+        print(f"(expected from equations) v_2 = (0, -1, 1)$, not normalized")
+        print(f"R_11 = {R11[p]:.5f}, R_12 = {R12[p]:.5f}")
 
         # Calculate Barycentric map point
         # where eigenvalues_a_ij[0] >= eigenvalues_a_ij[1] >= eigenvalues_a_ij[2] (eigval in decreasing order)
@@ -262,8 +267,8 @@ for sim in simulation_list:
     plt.figure()
 
     # Plot markers Barycentric map
-    cmap   = cm.get_cmap( 'Greys' )
-    norm   = colors.Normalize(vmin = 0, vmax = yplus_max)
+    cmap   = matplotlib.colormaps["Greys"] # idem. as cm.get_cmap( 'Greys' ), deprecated in Matplotlib 3.7 
+    norm   = matplotlib.colors.Normalize(vmin = 0, vmax = yplus_max)
 
     # Plot data into the barycentric map
     ##plt.scatter( bar_x, bar_y, color='red', zorder = 4, marker = 'o', s = 85, edgecolor = 'black', linewidth = 0.8 )
