@@ -10,12 +10,12 @@
 #include <cmath>
 #include <iostream>
 
-#include "interp_linear.h"
+#include "interp_linear.h" // todo: erase, it shouldn't be used here
 
 using namespace std;
 
 #define _CONSTANT_RHS_CONV_STAT_ 0 // todo: set to 0, or better erase! just for testing RhsStatConv is well implemented
-#define _ENFORCED_F_INST_ 1
+#define _ENFORCED_TAU_PERTURBATION_ 1
 
 ////////////////////////////////////////////////////////////////////////////////
 /*! dv_uvw  constructor function
@@ -29,14 +29,8 @@ dv_uvw::dv_uvw(domain  *line,
                const      string s,
                const bool Lt,
                const bool Lo,
-               const bool Lsc) {
-    
-    domn          = line;
-    var_name      = s;
-    L_transported = Lt;
-    L_output      = Lo;
-    d             = vector<double>(domn->ngrd, 0.0); // variable value along at the grid points of the domain 
-    
+               const bool Lsc) : dv(line, s, Lt, Lo) {
+
     // -> N-S Eq data members 
     rhsSrc        = vector<double>(domn->ngrd, 0.0);
     rhsMix        = vector<double>(domn->ngrd, 0.0);
@@ -44,36 +38,19 @@ dv_uvw::dv_uvw(domain  *line,
     
     // ---------------------------- Statistics calc. during runtime ---------------------------- 
     
-    // storing time
-    tLastAvg      = 0.0;
-    tBeginAvg     = domn->pram->tBeginAvg;
-    
     // corresponding instantaneous value name for the mean velocity component <var_name>
-    if (var_name == "uvel")      {var_name_stat = "uvelmean"; var_name_ddavgdt = "dumeandt"; L_output_stat = true; }
-    else if (var_name == "vvel") {var_name_stat = "vvelmean"; var_name_ddavgdt = "dvmeandt"; L_output_stat = false;}
-    else if (var_name == "wvel") {var_name_stat = "wvelmean"; var_name_ddavgdt = "dwmeandt"; L_output_stat = false;}
+    if      (var_name == "uvel") {var_name_avg = "uvelmean"; var_name_rmsf = "uvelrmsf"; L_output_stat = true; }
+    else if (var_name == "vvel") {var_name_avg = "vvelmean"; var_name_rmsf = "vvelrmsf"; L_output_stat = false;}
+    else if (var_name == "wvel") {var_name_avg = "wvelmean"; var_name_rmsf = "wvelrmsf"; L_output_stat = false;}
     else {cout << endl << "ERROR in dv_uvw initialization, invalid var_name = " << var_name << ", accepted values: uvel, vvel, wvel." << endl; exit(0); }
 
-    // position uniform fine grid
-    nunif        = domn->pram->nunif;              // num. points uniform grid (using smallest grid size)   
-    posUnif      = vector<double>(nunif, 0.0);     // uniform grid in y-axis
-    double delta = domn->pram->domainLength / 2;   // half-channel length 
-    for (int i=0; i<nunif; i++) {
-        posUnif[i] = - delta + i * (2.0 * delta) / (nunif - 1);
-    }
+    // Averaged quantities, defined in the uniform fine grid
+    davg              = vector<double>(nunif, 0.0);
+    drmsf             = vector<double>(nunif, 0.0);
 
-    // statistics uniform fine grid
-    davg         = vector<double>(nunif, 0.0);
-
-    // ------------------------------------------------------------------------------------------
-
-    // -> Statistics convergence
-    L_statConv        = Lsc;
-    ddavgdt           = vector<double>(nunif, 0.0);
-    Favg_statConv     = vector<double>(nunif, 0.0);
-    Favg_statConvLast = vector<double>(nunif, 0.0);
-    F_statConv_nunif  = vector<double>(nunif, 0.0);
+    // Statistics convergence framework
     F_statConv        = vector<double>(domn->ngrd, 0.0);
+    F_statConv_nunif  = vector<double>(nunif, 0.0);
 
 }
 
@@ -279,85 +256,33 @@ void dv_uvw::getRhsStatConv(const double &timeCurrent, const int ipt) {
 
   
     if(ipt==-1) {
-        if(var_name == "uvel" && domn->pram->cCoord != 3.0) {
-
-            // update the rhs term for statistics convergence 'rhsStatConv'
+        // update the rhs term for statistics convergence 'rhsStatConv'
 
 #if _CONSTANT_RHS_CONV_STAT_ // todo: erase this #if, just for initial testing
+        if(var_name == "uvel" && domn->pram->cCoord != 3.0) {
             for(int i=0; i<domn->ngrd; i++)
                 rhsStatConv.at(i) = 0.0; 
-
-#elif _ENFORCED_F_INST_
-            for(int i=0; i<nunif; i++)
-                F_statConv_nunif.at(i) = ddavgdt.at(i);
-            Linear_interp Linterp(posUnif, F_statConv_nunif);    
-            //F_statConv.resize(domn->ngrd);
-            //for(int i=0; i<domn->ngrd; i++)
-            //    F_statConv.at(i)= Linterp.interp(domn->pos->d[i]); // todo: erase this code for compt. efficiency
-            for(int i=0; i<domn->ngrd; i++)
-                rhsStatConv.at(i) = Linterp.interp(domn->pos->d[i]);
+        }
+#elif _ENFORCED_TAU_PERTURBATION_
+            // TODO: IMPLEMENT HERE!
 #else 
-            // Calculate instantaneous value of the RhsStatConv load
-            Favg_statConv  = ddavgdt;
-            time_statConv  = timeCurrent - tBeginAvg; 
-            for(int i=0; i<nunif; i++)
-                F_statConv_nunif.at(i) = (Favg_statConv.at(i) * time_statConv - Favg_statConvLast.at(i) * time_statConvLast) / (time_statConv - time_statConvLast);
-            
-            // interpolate 'F_statConv_nunif' from uniform fine grid to adaptative non-uniform grid
-            // todo: dmb not created, ddavgdt included directly in Linterp, check if this causes problems?
-            vector <double> dmb;
-            dmb = F_statConv_nunif;
-            Linear_interp Linterp(posUnif, F_statConv_nunif); 
-            F_statConv.resize(domn->ngrd);
-            for(int i=0; i<domn->ngrd; i++)
-                F_statConv.at(i)  = Linterp.interp(domn->pos->d[i]);
-            for(int i=0; i<domn->ngrd; i++)
-                rhsStatConv.at(i) = F_statConv.at(i); 
-            // Update Favg and time at timeCurrent instant, for next call of getRhsStatConv
-            Favg_statConvLast = Favg_statConv;
-            time_statConvLast = time_statConv;
+            // todo: nothing here
 #endif
 
-        }
     }
 }
 
+void dv_uvw::updateTimeAveragedQuantities(const double &delta_t, const double &averaging_time) {
 
-void dv_uvw::updateStatistics(const double &timeCurrent) {
-    // improve time & dt input arguments to sth more intuitive
+    // interpolate instantaneous quantity in adaptative grid to uniform fine grid
+    vector<double> dUnif(nunif, 0.0);
+    dUnif = interpolateQuantityVectorToUniformGrid(d);
 
-    double tAvg;
-    double dtAvg;
-    double dLastAvg;
-    
-    // Averaging time and delta time
-    tAvg  = timeCurrent - tBeginAvg;
-    dtAvg = tAvg - tLastAvg;
-
-    // Update statistics if needed
-    // info: tLastAvg initialized as 0, while timeCurrent < tBeginAvg --> tLastAvg = 0 not updated --> dtAvg < 0
-    if (dtAvg > 0){ 
-
-        // interpolate instantaneous velocity to uniform fine grid
-        vector <double> dmb;
-        vector <double> dUnif(nunif, 0.0);
-        dmb     = d; // todo: necessary step? check!
-        Linear_interp Linterp(domn->pos->d, dmb);
-        
-        for (int i=0; i<nunif; i++) {
-            dUnif.at(i) = Linterp.interp(posUnif[i]);
-        }
-
-        // update statistic at each grid point
-        for(int i=0; i<nunif; i++) {
-            dLastAvg       = davg.at(i);
-            davg.at(i)     = ( tLastAvg * dLastAvg + dtAvg * dUnif.at(i) ) / tAvg;
-            ddavgdt.at(i)  = ( dLastAvg - davg.at(i) ) / dtAvg ;
-        }
-
-        // update time and position quantities
-        tLastAvg = tAvg;
-
+    // update time-averaged quantities at each grid point
+    vector<double> davgLast = davg; // todo: ask lluis if this is a necessary step
+    for(int i=0; i<nunif; i++) {
+        davg.at(i)  = updateTimeMeanQuantity(d.at(i), davgLast.at(i), delta_t, averaging_time);
+        drmsf.at(i) = updateTimeRmsfQuantity(d.at(i), davgLast.at(i), drmsf.at(i), delta_t, averaging_time);
     }
 
 }
