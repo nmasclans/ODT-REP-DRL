@@ -234,14 +234,8 @@ void inputoutput::outputProperties(const string fname, const double time) {
                 ofileStat << setw(18-(strLength+1)) << j++ << "_" << strPosUnif;
                 isFirstOutputStat = false;
             }
-            strLength = domn->v.at(i)->var_name_stat.length();
-            ofileStat << setw(18-strLength) << j++ << "_" << domn->v.at(i)->var_name_stat;   
-        }
-    }
-    for(int i=0; i<domn->v.size(); i++){
-        if(domn->v.at(i)->L_output_stat){
-            strLength = domn->v.at(i)->var_name_ddavgdt.length();
-            ofileStat << setw(18-strLength) << j++ << "_" << domn->v.at(i)->var_name_ddavgdt;   
+            strLength = domn->v.at(i)->var_name_avg.length();
+            ofileStat << setw(18-strLength) << j++ << "_" << domn->v.at(i)->var_name_avg;   
         }
     }
     string var_name_dmb = "F_statConv"; 
@@ -277,11 +271,6 @@ void inputoutput::outputProperties(const string fname, const double time) {
                     isFirstColumn = false;
                 }
                 ofileStat << setw(19) << domn->v.at(k)->davg.at(i);
-            }
-        }
-        for(int k=0; k<domn->v.size(); k++){
-            if(domn->v.at(k)->L_output_stat){
-                ofileStat << setw(19) << domn->v.at(k)->ddavgdt.at(i);
             }
         }
         for(int k=0; k<domn->v.size(); k++){
