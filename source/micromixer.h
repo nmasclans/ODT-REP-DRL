@@ -34,6 +34,7 @@ class micromixer {
         double         tend;
         double         dtStepNominal;  ///< nominal step size
         double         dt;             ///< actual step size (shortened based on output or tend)
+        double         tBeginAvg;      ///< averaging time at which to begin calculating statistics
 
         vector<double> dxc;            ///< abs(\Delta(x^cCoord)), is prop. to cell "volume"
         vector<double> dx;             ///< abs(\Delta(x))

@@ -30,7 +30,8 @@ micromixer::micromixer() {
  */
 
 void micromixer::init(domain *p_domn) {
-    domn = p_domn;
+    domn      = p_domn;
+    tBeginAvg = domn->pram->tBeginAvg;
 
     bool LincludeRhsMix = (domn->pram->Lsolver=="SEMI-IMPLICIT") ? true : false;
     cvode->init(domn, LincludeRhsMix);
