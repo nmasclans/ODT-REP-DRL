@@ -188,9 +188,9 @@ void micromixer::advanceOdtSingleStep_Explicit(){
             }
         }
     }
-
+        
     updateGrid();            // update cell sizes due to rho or rho*v variations (continuity)
-    
+
     if(domn->pram->LdoDL) do_DL("set DL_2");
 
     domn->mesher->enforceDomainSize();     // chop the domain
