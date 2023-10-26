@@ -238,12 +238,14 @@ void inputoutput::outputProperties(const string fname, const double time) {
             string var_name_dmb = domn->v.at(i)->var_name;
             string var_name_avg = var_name_dmb + "_mean"; 
             ofileStat << setw(18-var_name_avg.length()) << j++ << "_" << var_name_avg; 
-               
+            // rmsf quantity
+            string var_name_rmsf = var_name_dmb + "_rmsf"; 
+            ofileStat << setw(18-var_name_rmsf.length()) << j++ << "_" << var_name_rmsf; 
+            // F-perturbation for statistics convergence
+            string var_name_F_statConv = var_name_dmb + "_FstatConv";
+            ofileStat << setw(18-var_name_F_statConv.length()) << j++ << "_" << var_name_F_statConv;
         }
-    }
-    string var_name_dmb = "F_statConv"; 
-    strLength = var_name_dmb.length();
-    ofileStat << setw(18-strLength) << j++ << "_" << var_name_dmb;   
+    }  
 
     // Write data
     // -> instantaneous data
@@ -276,10 +278,9 @@ void inputoutput::outputProperties(const string fname, const double time) {
                 }
                 // time-averaged quantity
                 ofileStat << setw(19) << domn->v.at(k)->davg.at(i);
-            }
-        }
-        for(int k=0; k<domn->v.size(); k++){
-            if(domn->v.at(k)->L_output_stat){
+                // rmsf quantity
+                ofileStat << setw(19) << domn->v.at(k)->drmsf.at(i);
+                // F-perturbation for statistics convergence
                 ofileStat << setw(19) << domn->v.at(k)->F_statConv_nunif.at(i);
             }
         }
