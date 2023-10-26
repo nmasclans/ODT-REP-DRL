@@ -41,9 +41,9 @@ dv_uvw::dv_uvw(domain  *line,
     // ---------------------------- Statistics calc. during runtime ---------------------------- 
     
     // corresponding instantaneous value name for the mean velocity component <var_name>
-    if      (var_name == "uvel") {var_name_avg = "uvelmean"; var_name_rmsf = "uvelrmsf"; L_output_stat = true; }
-    else if (var_name == "vvel") {var_name_avg = "vvelmean"; var_name_rmsf = "vvelrmsf"; L_output_stat = false;}
-    else if (var_name == "wvel") {var_name_avg = "wvelmean"; var_name_rmsf = "wvelrmsf"; L_output_stat = false;}
+    if      (var_name == "uvel") {L_output_stat = true;}
+    else if (var_name == "vvel") {L_output_stat = true;}
+    else if (var_name == "wvel") {L_output_stat = true;}
     else {cout << endl << "ERROR in dv_uvw initialization, invalid var_name = " << var_name << ", accepted values: uvel, vvel, wvel." << endl; exit(0); }
 
     // Averaged quantities, defined in the uniform fine grid
@@ -256,7 +256,7 @@ void dv_uvw::getRhsMix(const vector<double> &gf,
 
 void dv_uvw::getRhsStatConv(const double &timeCurrent, const int ipt) {
     
-    if(!L_transported or !L_converge_stat)
+    if(!L_transported)
         *domn->io->ostrm << endl << "ERROR:  dv_uvw::getRhsStatConv can only be called for dv objects with L_transported = true and L_converge_stat = true" << endl;
 
     if(domn->pram->Lspatial)
@@ -264,22 +264,23 @@ void dv_uvw::getRhsStatConv(const double &timeCurrent, const int ipt) {
 
     rhsStatConv.resize(domn->ngrd, 0.0); 
 
-  
-    if(ipt==-1) {
+    if(L_converge_stat){
+        if(ipt==-1) {
         // update the rhs term for statistics convergence 'rhsStatConv'
 
 #if _CONSTANT_RHS_CONV_STAT_ // todo: erase this #if, just for initial testing
-        if(var_name == "uvel" && domn->pram->cCoord != 3.0) {
-            for(int i=0; i<domn->ngrd; i++)
-                rhsStatConv.at(i) = 0.0; 
-        }
+            if(var_name == "uvel" && domn->pram->cCoord != 3.0) {
+                for(int i=0; i<domn->ngrd; i++)
+                    rhsStatConv.at(i) = 0.0; 
+            }
 #elif _ENFORCED_TAU_PERTURBATION_
             // TODO: IMPLEMENT HERE!
 #else 
             // todo: nothing here
 #endif
-
+        }
     }
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////

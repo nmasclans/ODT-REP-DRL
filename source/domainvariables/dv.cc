@@ -195,6 +195,7 @@ void dv::setDvFromRegion(const int i1, const int i2){
 
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
 /*! Resize data
  */
@@ -203,3 +204,18 @@ void dv::resize() {
     d.resize(domn->ngrd);
 }
 
+
+////////////////////////////////////////////////////////////////////////////////
+/*! lv statistics convergence term part of the rhs function. 
+ *  Method implementation for statistics convergence term of the right-hand side (Rhs) 
+ *  @param timeCurrent \input current time.
+ *  @param ipt \input optional point to compute source at.
+ */
+
+void dv::getRhsStatConv(const double &timeCurrent, const int ipt=-1){
+    
+    if(!L_transported) return;
+
+    rhsStatConv.resize(domn->ngrd, 0.0);
+
+}
