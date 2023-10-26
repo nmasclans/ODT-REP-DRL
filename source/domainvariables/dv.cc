@@ -33,14 +33,6 @@ dv::dv(domain    *line,
 
     LagSrc = false;
 
-    // position uniform fine grid
-    nunif        = domn->pram->nunif;              // num. points uniform grid (using smallest grid size)   
-    posUnif      = vector<double>(nunif, 0.0);     // uniform grid in y-axis
-    double delta = domn->pram->domainLength / 2;   // half-channel length 
-    for (int i=0; i<nunif; i++) {
-        posUnif[i] = - delta + i * (2.0 * delta) / (nunif - 1);
-    }
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////

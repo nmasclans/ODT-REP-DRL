@@ -29,14 +29,8 @@ dv_uvw::dv_uvw(domain  *line,
                const      string s,
                const bool Lt,
                const bool Lo,
-               const bool Lsc) {
-    
-    domn          = line;
-    var_name      = s;
-    L_transported = Lt;
-    L_output      = Lo;
-    d             = vector<double>(domn->ngrd, 0.0); // variable value along at the grid points of the domain 
-    
+               const bool Lsc) : dv(line, s, Lt, Lo) {
+
     // -> N-S Eq data members 
     rhsSrc        = vector<double>(domn->ngrd, 0.0);
     rhsMix        = vector<double>(domn->ngrd, 0.0);
