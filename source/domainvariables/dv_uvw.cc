@@ -251,35 +251,33 @@ void dv_uvw::getRhsMix(const vector<double> &gf,
 /*! lv statistics convergence term part of the rhs function. 
  *  Method implementation for statistics convergence term of the right-hand side (Rhs) 
  *  @param timeCurrent \input current time.
- *  @param ipt \input optional point to compute source at.
  */
 
-void dv_uvw::getRhsStatConv(const double &timeCurrent, const int ipt) {
+void dv_uvw::getRhsStatConv(const double &timeCurrent) {
     
-    if(!L_transported or !L_converge_stat)
+    if(!L_transported)
         *domn->io->ostrm << endl << "ERROR:  dv_uvw::getRhsStatConv can only be called for dv objects with L_transported = true and L_converge_stat = true" << endl;
 
     if(domn->pram->Lspatial)
-        *domn->io->ostrm << endl << "ERROR: Lspatial = true not implemented for method dv_uvw::getRhsStatConv; set Lspatial = false or L_converge_stat = false" << endl;
+        *domn->io->ostrm << endl << "ERROR: Lspatial = true not implemented for method dv_uvw::getRhsStatConv; set Lspatial = false or LstatConv = false" << endl;
 
     rhsStatConv.resize(domn->ngrd, 0.0); 
 
-  
-    if(ipt==-1) {
-        // update the rhs term for statistics convergence 'rhsStatConv'
+    // update the rhs term for statistics convergence 'rhsStatConv'
+    if(L_converge_stat){
 
 #if _CONSTANT_RHS_CONV_STAT_ // todo: erase this #if, just for initial testing
-        if(var_name == "uvel" && domn->pram->cCoord != 3.0) {
-            for(int i=0; i<domn->ngrd; i++)
-                rhsStatConv.at(i) = 0.0; 
-        }
+            if(var_name == "uvel" && domn->pram->cCoord != 3.0) {
+                for(int i=0; i<domn->ngrd; i++)
+                    rhsStatConv.at(i) = 0.0; 
+            }
 #elif _ENFORCED_TAU_PERTURBATION_
             // TODO: IMPLEMENT HERE!
 #else 
             // todo: nothing here
 #endif
-
     }
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////

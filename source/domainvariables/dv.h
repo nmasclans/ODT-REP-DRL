@@ -69,13 +69,14 @@ class dv {
         virtual void   getRhsSrc(const int ipt=-1){if(!L_transported) return;}
         virtual void   getRhsMix(const vector<double> &gf,
                                  const vector<double> &dxc){if(!L_transported) return;}
-        virtual void   getRhsStatConv(const double &timeCurrent, const int ipt=-1){return;}
+        virtual void   getRhsStatConv(const double &timeCurrent);
 
         virtual void   interpVarToFacesHarmonic(const vector<double> &cvar, vector<double> &fvar);
         virtual double linearInterpToFace(const int &iface, const vector<double> &vec);
         virtual void   setDvFromRegion(const int i1, const int i2);
         virtual void   resize();
         virtual void   updateTimeAveragedQuantities(const double &delta_t, const double &averaging_time){};
+        
 
     //////////////////// CONSTRUCTOR FUNCTIONS /////////////////
 

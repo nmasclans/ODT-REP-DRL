@@ -203,3 +203,17 @@ void dv::resize() {
 }
 
 
+////////////////////////////////////////////////////////////////////////////////
+/*! lv statistics convergence term part of the rhs function. 
+ *  Method implementation for statistics convergence term of the right-hand side (Rhs) 
+ *  @param timeCurrent \input current time.
+ *  @param ipt \input optional point to compute source at.
+ */
+
+void dv::getRhsStatConv(const double &timeCurrent){
+    
+    if(!L_transported) return;
+
+    rhsStatConv.resize(domn->ngrd, 0.0);
+
+}
