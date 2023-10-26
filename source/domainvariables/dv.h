@@ -42,6 +42,7 @@ class dv {
         vector<double>                flux;
 
         // statistics calculation
+        int                           nunif;                  ///< todo: add description
         bool                          L_output_stat;          ///< todo: add data members description
         string                        var_name_stat;          ///< todo: add description
         vector<double>                davg;                   ///< todo: add description
@@ -76,7 +77,11 @@ class dv {
         virtual double linearInterpToFace(const int &iface, const vector<double> &vec);
         virtual void   setDvFromRegion(const int i1, const int i2);
         virtual void   resize();
-        virtual void   updateStatistics(const double &timeCurrent){};
+        // todo: in rhea updateTimeMeanQuantity and updateTimeRmsfQuantity are 'static' not 'virtual'... what should i do?
+        virtual void   updateTimeAveragedQuantities(const double &delta_t, const double &averaging_time){};
+        virtual double updateTimeMeanQuantity(const double &quantity, const double &mean_quantity, const double &delta_t, const double &averaging_time);
+        virtual double updateTimeRmsfQuantity(const double &quantity, const double &mean_quantity, const double &rmsf_quantity, const double &delta_t, const double &averaging_time);
+        virtual vector<double> interpolateQuantityVectorToUniformGrid(const vector<double> &quantity_adaptativeGrid);
 
     //////////////////// CONSTRUCTOR FUNCTIONS /////////////////
 

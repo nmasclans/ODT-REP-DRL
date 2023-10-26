@@ -58,7 +58,7 @@ class micromixer {
 
         void check_balance(int io);
 
-        void updateStatisticsIfNeeded(const double &timeCurrent);
+        void updateTimeAveragedQuantitiesIfNeeded(const double &delta_t, const double &time);
 
     protected:
 

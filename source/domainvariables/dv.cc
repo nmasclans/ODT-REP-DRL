@@ -7,6 +7,8 @@
 #include "domain.h"
 #include <iostream>
 
+#include "interp_linear.h"
+
 using namespace std;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -28,6 +30,14 @@ dv::dv(domain    *line,
     d             = vector<double>(domn->ngrd, 0.0);
 
     LagSrc = false;
+
+    // position uniform fine grid
+    nunif        = domn->pram->nunif;              // num. points uniform grid (using smallest grid size)   
+    posUnif      = vector<double>(nunif, 0.0);     // uniform grid in y-axis
+    double delta = domn->pram->domainLength / 2;   // half-channel length 
+    for (int i=0; i<nunif; i++) {
+        posUnif[i] = - delta + i * (2.0 * delta) / (nunif - 1);
+    }
 
 }
 
@@ -196,3 +206,35 @@ void dv::setDvFromRegion(const int i1, const int i2){
 void dv::resize() {
     d.resize(domn->ngrd);
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/*! Update statistics quantities
+ */
+
+double dv::updateTimeMeanQuantity(const double &quantity, const double &mean_quantity, const double &delta_t, const double &averaging_time) {
+
+    double updated_mean_quantity = ( averaging_time * mean_quantity + delta_t * quantity ) / averaging_time;
+
+    return( updated_mean_quantity );
+
+}
+
+double dv::updateTimeRmsfQuantity(const double &quantity, const double &mean_quantity, const double &rmsf_quantity, const double &delta_t, const double &averaging_time) {
+
+    double updated_rmsf_quantity = sqrt( ( pow( rmsf_quantity, 2.0 )*averaging_time + pow( quantity - mean_quantity, 2.0 )*delta_t )/( averaging_time + delta_t ) ); 
+
+    return( updated_rmsf_quantity );
+
+};
+
+vector<double> dv::interpolateQuantityVectorToUniformGrid(const vector<double> &quantity_adaptativeGrid) {
+    vector<double> quantity_uniformGrid(nunif, 0.0);
+    vector<double> dmb;
+    dmb = quantity_adaptativeGrid;
+    Linear_interp Linterp(domn->pos->d, dmb);
+    for (int i=0; i<nunif; i++) {
+        quantity_uniformGrid.at(i) = Linterp.interp(posUnif[i]);
+    }
+    return( quantity_uniformGrid );
+}
+

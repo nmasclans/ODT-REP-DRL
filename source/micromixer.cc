@@ -62,7 +62,7 @@ void micromixer::advanceOdt(const double p_tstart, const double p_tend, const in
         else if(domn->pram->Lsolver=="STRANG")
             advanceOdtSingleStep_StrangSplit();
 
-        updateStatisticsIfNeeded(time+dt);
+        updateTimeAveragedQuantitiesIfNeeded(dt, time);
         
         domn->io->dumpDomainIfNeeded();
 
@@ -150,6 +150,7 @@ void micromixer::advanceOdtSingleStep_Explicit(){
     domn->domc->setCaseSpecificVars();
 
     set_oldrho_or_rhov();
+
     if(domn->pram->Lspatial) transform(oldrho_or_rhov.begin(), oldrho_or_rhov.end(), domn->uvel->d.begin(), oldrho_or_rhov.begin(), multiplies<double>());
 
     // --> Get right-hand-side terms of the NS governing equation for the transported variables
@@ -187,7 +188,7 @@ void micromixer::advanceOdtSingleStep_Explicit(){
             }
         }
     }
-        
+
     updateGrid();            // update cell sizes due to rho or rho*v variations (continuity)
     
     if(domn->pram->LdoDL) do_DL("set DL_2");
@@ -422,11 +423,16 @@ bool micromixer::adaptGridIfNeeded() {
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-// todo: add description
+/** Update statistics of domain variables 
+ */
 
-void micromixer::updateStatisticsIfNeeded(const double &timeCurrent) {
-    for(int k=0; k<domn->v.size(); k++)
-        domn->v.at(k)->updateStatistics(timeCurrent); // todo: revisar si 'time' is the proper input
+void micromixer::updateTimeAveragedQuantitiesIfNeeded(const double &delta_t, const double &time) {
+    double averaging_time = time - tBeginAvg;
+    if (averaging_time > 0.0) {
+        for(int k=0; k<domn->v.size(); k++) {
+            domn->v.at(k)->updateTimeAveragedQuantities(delta_t, averaging_time); // todo: revisar si 'time' is the proper input
+        }
+    } 
 }
 
 ///////////////////////////////////////////////////////////////////////////////
