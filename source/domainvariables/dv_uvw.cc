@@ -29,7 +29,7 @@ dv_uvw::dv_uvw(domain  *line,
                const      string s,
                const bool Lt,
                const bool Lo,
-               const bool Lsc) : dv(line, s, Lt, Lo) {
+               const bool Lcs) : dv(line, s, Lt, Lo) {
 
     // -> N-S Eq data members 
     rhsSrc        = vector<double>(domn->ngrd, 0.0);
@@ -57,7 +57,7 @@ dv_uvw::dv_uvw(domain  *line,
     drmsf             = vector<double>(nunif, 0.0);
 
     // Statistics convergence framework
-    L_statConv        = Lsc;
+    L_statConv        = Lcs;
     F_statConv        = vector<double>(domn->ngrd, 0.0);
     F_statConv_nunif  = vector<double>(nunif, 0.0);
 

@@ -50,7 +50,7 @@ class dv_uvw : public dv {
                const string s,
                const bool   Lt,
                const bool   Lo=true,
-               const bool   Lsc=false);
+               const bool   Lcs=false);
 
         virtual ~dv_uvw(){}
 

@@ -242,7 +242,7 @@ void inputoutput::outputProperties(const string fname, const double time) {
             string var_name_rmsf = var_name_dmb + "_rmsf"; 
             ofileStat << setw(18-var_name_rmsf.length()) << j++ << "_" << var_name_rmsf; 
             // F-perturbation for statistics convergence
-            string var_name_F_statConv = var_name_dmb + "_FstatConv";
+            string var_name_F_statConv = var_name_dmb + "_Fpert";
             ofileStat << setw(18-var_name_F_statConv.length()) << j++ << "_" << var_name_F_statConv;
         }
     }  
