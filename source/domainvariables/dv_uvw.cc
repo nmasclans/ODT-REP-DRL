@@ -31,7 +31,9 @@ dv_uvw::dv_uvw(domain  *line,
                const bool Lo,
                const bool Lcs) : dv(line, s, Lt, Lo) {
 
-    L_converge_stat   = Lcs;
+    d = vector<double>(domn->ngrd, 0.0);
+
+    L_converge_stat = Lcs;
     
     // -> N-S Eq data members 
     rhsSrc        = vector<double>(domn->ngrd, 0.0);
@@ -46,14 +48,6 @@ dv_uvw::dv_uvw(domain  *line,
     else if (var_name == "wvel") {L_output_stat = true;}
     else {cout << endl << "ERROR in dv_uvw initialization, invalid var_name = " << var_name << ", accepted values: uvel, vvel, wvel." << endl; exit(0); }
 
-    // Averaged quantities, defined in the uniform fine grid
-    davg              = vector<double>(nunif, 0.0);
-    drmsf             = vector<double>(nunif, 0.0);
-
-    // Statistics convergence framework
-    F_statConv        = vector<double>(domn->ngrd, 0.0);
-    F_statConv_nunif  = vector<double>(nunif, 0.0);
-
     // position uniform fine grid
     nunif        = domn->pram->nunif;              // num. points uniform grid (using smallest grid size)   
     posUnif      = vector<double>(nunif, 0.0);     // uniform grid in y-axis
@@ -61,6 +55,14 @@ dv_uvw::dv_uvw(domain  *line,
     for (int i=0; i<nunif; i++) {
         posUnif[i] = - delta + i * (2.0 * delta) / (nunif - 1);
     }
+
+    // Averaged quantities, defined in the uniform fine grid
+    davg              = vector<double>(nunif, 0.0);
+    drmsf             = vector<double>(nunif, 0.0);
+
+    // Statistics convergence framework
+    F_statConv        = vector<double>(domn->ngrd, 0.0);
+    F_statConv_nunif  = vector<double>(nunif, 0.0);
 
 }
 
@@ -251,7 +253,6 @@ void dv_uvw::getRhsMix(const vector<double> &gf,
 /*! lv statistics convergence term part of the rhs function. 
  *  Method implementation for statistics convergence term of the right-hand side (Rhs) 
  *  @param timeCurrent \input current time.
- *  @param ipt \input optional point to compute source at.
  */
 
 void dv_uvw::getRhsStatConv(const double &timeCurrent) {
@@ -289,13 +290,17 @@ void dv_uvw::updateTimeAveragedQuantities(const double &delta_t, const double &a
 
     // interpolate instantaneous quantity in adaptative grid to uniform fine grid
     vector<double> dUnif(nunif, 0.0);
-    dUnif = interpolateQuantityVectorToUniformGrid(d);
+    vector<double> dmb = d;
+    Linear_interp Linterp(domn->pos->d, dmb);
+    for (int i=0; i<nunif; i++) {
+        dUnif.at(i) = Linterp.interp(posUnif.at(i));
+    } // todo: ask lluis if this is correct: are the next lines using the correct values of dUnif updated here?
 
     // update time-averaged quantities at each grid point
     vector<double> davgLast = davg; // todo: ask lluis if this is a necessary step
     for(int i=0; i<nunif; i++) {
-        davg.at(i)  = updateTimeMeanQuantity(d.at(i), davgLast.at(i), delta_t, averaging_time);
-        drmsf.at(i) = updateTimeRmsfQuantity(d.at(i), davgLast.at(i), drmsf.at(i), delta_t, averaging_time);
+        davg.at(i)  = updateTimeMeanQuantity(dUnif.at(i), davgLast.at(i), delta_t, averaging_time);
+        drmsf.at(i) = updateTimeRmsfQuantity(dUnif.at(i), davgLast.at(i), drmsf.at(i), delta_t, averaging_time);
     }
 
 }
@@ -315,14 +320,3 @@ double dv_uvw::updateTimeRmsfQuantity(const double &quantity, const double &mean
     return( updated_rmsf_quantity );
 
 };
-
-vector<double> dv_uvw::interpolateQuantityVectorToUniformGrid(const vector<double> &quantity_adaptativeGrid) {
-    vector<double> quantity_uniformGrid(nunif, 0.0);
-    vector<double> dmb;
-    dmb = quantity_adaptativeGrid;
-    Linear_interp Linterp(domn->pos->d, dmb);
-    for (int i=0; i<nunif; i++) {
-        quantity_uniformGrid.at(i) = Linterp.interp(posUnif[i]);
-    }
-    return( quantity_uniformGrid );
-}

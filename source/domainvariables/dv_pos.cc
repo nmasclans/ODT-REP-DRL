@@ -19,6 +19,7 @@ dv_pos::dv_pos(domain    *line,
                const bool Lt,
                const bool Lo) : dv(line, s, Lt, Lo) {
 
+    d = vector<double>(domn->ngrd, 0.0);
 
     double dx = domn->pram->domainLength / domn->ngrd;
     d.at(0) = domn->pram->xDomainCenter + 0.5*(-domn->pram->domainLength + dx);

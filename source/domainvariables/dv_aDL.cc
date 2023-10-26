@@ -19,7 +19,9 @@ dv_aDL::dv_aDL(domain     *line,
                const      string s,
                const bool Lt,
                const bool Lo) : dv(line, s, Lt, Lo) {
-    
+
+    d = vector<double>(domn->ngrd, 0.0);
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -24,7 +24,9 @@ dv_enth::dv_enth(domain    *line,
                  const bool Lt,
                  const bool Lo) : dv(line, s, Lt, Lo) {
 
-    nspc          = domn->gas->nSpecies();
+    d    = vector<double>(domn->ngrd, 0.0);   
+    
+    nspc = domn->gas->nSpecies();
 
     LdoSpeciesFlux = domn->io->dvParams["LdoSpeciesFlux"] ? domn->io->dvParams["LdoSpeciesFlux"].as<bool>() : true;
 

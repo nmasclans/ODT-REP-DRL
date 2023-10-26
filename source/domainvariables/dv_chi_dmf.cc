@@ -21,6 +21,8 @@ dv_chi_dmf::dv_chi_dmf(domain  *line,
                  const bool    Lt,
                  const bool    Lo)  : dv(line, s, Lt, Lo) {
 
+    d = vector<double>(domn->ngrd, 0.0);
+
     Dmf           = domn->io->streamProps["Dmf"] ? domn->io->streamProps["Dmf"].as<double>() : 0.0;
     if(Dmf == 0.0) {
         cout << endl << "ERROR: if you are defining dv_chi_dmf for chi, you need to set Dmf";

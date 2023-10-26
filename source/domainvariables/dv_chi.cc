@@ -21,6 +21,8 @@ dv_chi::dv_chi(domain   *line,
                  const bool Lt,
                  const bool Lo)  : dv(line, s, Lt, Lo) {
 
+    d = vector<double>(domn->ngrd, 0.0);
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////

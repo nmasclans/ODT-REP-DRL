@@ -21,6 +21,8 @@ dv_sca::dv_sca(domain  *line,
                  const bool Lt,
                  const bool Lo) : dv(line, s, Lt, Lo) {
 
+    d = vector<double>(domn->ngrd, 0.0);
+
     constantSource = domn->io->dvParams["scalarSource"] ? domn->io->dvParams["scalarSource"].as<double>() : 0.0;
 
 }

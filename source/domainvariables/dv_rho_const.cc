@@ -20,6 +20,7 @@ dv_rho_const::dv_rho_const(domain    *line,
                            const bool Lo) : dv(line, s, Lt, Lo) {
 
     d = vector<double>(domn->ngrd, domn->pram->rho0);
+    
 }
 
 ////////////////////////////////////////////////////////////////////////////////

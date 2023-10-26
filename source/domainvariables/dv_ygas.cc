@@ -31,6 +31,8 @@ dv_ygas::dv_ygas(domain  *line,
                  const bool Lt,
                  const bool Lo) : dv(line, s, Lt, Lo) {
 
+    d = vector<double>(domn->ngrd, 0.0);
+
     nspc = domn->gas->nSpecies();
 
     string spName(var_name.begin()+2, var_name.end());        // var_name is like y_O2. Just want the O2 part.

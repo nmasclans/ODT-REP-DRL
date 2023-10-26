@@ -19,7 +19,7 @@ dv_dvisc_const::dv_dvisc_const(domain    *line,
                                const bool Lt,
                                const bool Lo) : dv(line, s, Lt, Lo) {
 
-    d             = vector<double>(domn->ngrd, domn->pram->kvisc0 * domn->pram->rho0);
+    d = vector<double>(domn->ngrd, domn->pram->kvisc0 * domn->pram->rho0);
 
     if(Lt){
         *domn->io->ostrm << endl << "ERROR, you set dvisc to be transported. Resetting L_transported to false" << endl;
