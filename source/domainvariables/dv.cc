@@ -28,8 +28,8 @@ dv::dv(domain    *line,
     d             = vector<double>(domn->ngrd, 0.0);
 
     // additional setup - only used in dv_uvw
-    L_converge_stat = false;
     L_output_stat   = false;
+    L_converge_stat = false;
 
     LagSrc = false;
 
@@ -193,6 +193,7 @@ void dv::setDvFromRegion(const int i1, const int i2){
 
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
 /*! Resize data
  */
@@ -201,22 +202,4 @@ void dv::resize() {
     d.resize(domn->ngrd);
 }
 
-////////////////////////////////////////////////////////////////////////////////
-/*! Update statistics quantities
- */
 
-double dv::updateTimeMeanQuantity(const double &quantity, const double &mean_quantity, const double &delta_t, const double &averaging_time) {
-
-    double updated_mean_quantity = ( averaging_time * mean_quantity + delta_t * quantity ) / averaging_time;
-
-    return( updated_mean_quantity );
-
-}
-
-double dv::updateTimeRmsfQuantity(const double &quantity, const double &mean_quantity, const double &rmsf_quantity, const double &delta_t, const double &averaging_time) {
-
-    double updated_rmsf_quantity = sqrt( ( pow( rmsf_quantity, 2.0 )*averaging_time + pow( quantity - mean_quantity, 2.0 )*delta_t )/( averaging_time + delta_t ) ); 
-
-    return( updated_rmsf_quantity );
-
-};

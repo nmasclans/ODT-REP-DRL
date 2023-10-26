@@ -282,6 +282,10 @@ void dv_uvw::getRhsStatConv(const double &timeCurrent, const int ipt) {
     }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/*! Update statistics quantities
+ */
+
 void dv_uvw::updateTimeAveragedQuantities(const double &delta_t, const double &averaging_time) {
 
     // interpolate instantaneous quantity in adaptative grid to uniform fine grid
@@ -300,3 +304,19 @@ void dv_uvw::updateTimeAveragedQuantities(const double &delta_t, const double &a
     }
 
 }
+
+double dv_uvw::updateTimeMeanQuantity(const double &quantity, const double &mean_quantity, const double &delta_t, const double &averaging_time) {
+
+    double updated_mean_quantity = ( averaging_time * mean_quantity + delta_t * quantity ) / averaging_time;
+
+    return( updated_mean_quantity );
+
+}
+
+double dv_uvw::updateTimeRmsfQuantity(const double &quantity, const double &mean_quantity, const double &rmsf_quantity, const double &delta_t, const double &averaging_time) {
+
+    double updated_rmsf_quantity = sqrt( ( pow( rmsf_quantity, 2.0 )*averaging_time + pow( quantity - mean_quantity, 2.0 )*delta_t )/( averaging_time + delta_t ) ); 
+
+    return( updated_rmsf_quantity );
+
+};

@@ -45,8 +45,8 @@ class dv {
         // statistics calculation
         int                           nunif;                  ///< todo: add description
         vector<double>                posUnif;                ///< todo: add description
-        vector<double>                davg;                  ///< todo: add description
-        vector<double>                drmsf;                 ///< todo: add description
+        vector<double>                davg;                   ///< todo: add description
+        vector<double>                drmsf;                  ///< todo: add description
 
         // statistics convergence framework
         vector<double>                F_statConv;             ///< todo: add description      
@@ -75,10 +75,7 @@ class dv {
         virtual double linearInterpToFace(const int &iface, const vector<double> &vec);
         virtual void   setDvFromRegion(const int i1, const int i2);
         virtual void   resize();
-        // todo: in rhea updateTimeMeanQuantity and updateTimeRmsfQuantity are 'static' not 'virtual'... what should i do?
         virtual void   updateTimeAveragedQuantities(const double &delta_t, const double &averaging_time){};
-        virtual double updateTimeMeanQuantity(const double &quantity, const double &mean_quantity, const double &delta_t, const double &averaging_time);
-        virtual double updateTimeRmsfQuantity(const double &quantity, const double &mean_quantity, const double &rmsf_quantity, const double &delta_t, const double &averaging_time);
 
     //////////////////// CONSTRUCTOR FUNCTIONS /////////////////
 
