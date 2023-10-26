@@ -166,7 +166,7 @@ void micromixer::advanceOdtSingleStep_Explicit(){
         if(domn->v.at(k)->L_transported) {
             domn->v.at(k)->getRhsMix(gf, dxc);
             domn->v.at(k)->getRhsSrc();
-            if(domn->v.at(k)->L_statConv) {
+            if(domn->v.at(k)->L_converge_stat) {
                 domn->v.at(k)->getRhsStatConv(time+dt);
             }
         }
@@ -176,7 +176,7 @@ void micromixer::advanceOdtSingleStep_Explicit(){
     // update transported variables value
     for(int k=0; k<domn->v.size(); k++){
         if(domn->v.at(k)->L_transported) {
-            if(domn->v.at(k)->L_statConv){
+            if(domn->v.at(k)->L_converge_stat){
                 for(int i=0; i < domn->ngrd; i++) {
                     domn->v.at(k)->d.at(i) = domn->v.at(k)->d.at(i) + dt*( domn->v.at(k)->rhsMix.at(i) + domn->v.at(k)->rhsSrc.at(i) + domn->v.at(k)->rhsStatConv.at(i) ); 
                 }

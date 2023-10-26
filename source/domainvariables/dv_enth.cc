@@ -22,15 +22,8 @@
 dv_enth::dv_enth(domain    *line,
                  const      string s,
                  const bool Lt,
-                 const bool Lo) {
+                 const bool Lo) : dv(line, s, Lt, Lo) {
 
-
-    domn          = line;
-    var_name      = s;
-    L_transported = Lt;
-    L_output      = Lo;
-    L_output_stat = false;
-    d             = vector<double>(domn->ngrd, 0.0);
     nspc          = domn->gas->nSpecies();
 
     LdoSpeciesFlux = domn->io->dvParams["LdoSpeciesFlux"] ? domn->io->dvParams["LdoSpeciesFlux"].as<bool>() : true;

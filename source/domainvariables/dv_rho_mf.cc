@@ -17,14 +17,9 @@
 dv_rho_mf::dv_rho_mf(domain    *line,
         const      string s,
         const bool Lt,
-        const bool Lo) {
+        const bool Lo) : dv(line, s, Lt, Lo) {
 
-    domn          = line;
-    var_name      = s;
-    L_transported = Lt;
-    L_output      = Lo;
-    L_output_stat = false;
-    d             = vector<double>(domn->ngrd, domn->pram->rho0);
+    d         = vector<double>(domn->ngrd, domn->pram->rho0);
 
     rho0      = domn->io->streamProps["rho0"]     ?   domn->io->streamProps["rho0"].as<double>()  :  1.0;    //errMsg<double>("rho0");
     rho1      = domn->io->streamProps["rho1"]     ?   domn->io->streamProps["rho1"].as<double>()  :  1.0;    //errMsg<double>("rho1");

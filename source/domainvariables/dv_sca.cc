@@ -19,14 +19,7 @@
 dv_sca::dv_sca(domain  *line,
                  const      string s,
                  const bool Lt,
-                 const bool Lo) {
-
-    domn          = line;
-    var_name      = s;
-    L_transported = Lt;
-    L_output      = Lo;
-    L_output_stat = false;
-    d             = vector<double>(domn->ngrd, 0.0);
+                 const bool Lo) : dv(line, s, Lt, Lo) {
 
     constantSource = domn->io->dvParams["scalarSource"] ? domn->io->dvParams["scalarSource"].as<double>() : 0.0;
 

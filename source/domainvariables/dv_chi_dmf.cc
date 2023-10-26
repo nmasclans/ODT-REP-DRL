@@ -19,14 +19,7 @@
 dv_chi_dmf::dv_chi_dmf(domain  *line,
                  const         string s,
                  const bool    Lt,
-                 const bool    Lo) {
-
-    domn          = line;
-    var_name      = s;
-    L_transported = Lt;
-    L_output      = Lo;
-    L_output_stat = false;
-    d             = vector<double>(domn->ngrd, 0.0);
+                 const bool    Lo)  : dv(line, s, Lt, Lo) {
 
     Dmf           = domn->io->streamProps["Dmf"] ? domn->io->streamProps["Dmf"].as<double>() : 0.0;
     if(Dmf == 0.0) {

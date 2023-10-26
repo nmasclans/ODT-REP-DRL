@@ -29,13 +29,15 @@ dv_uvw::dv_uvw(domain  *line,
                const      string s,
                const bool Lt,
                const bool Lo,
-               const bool Lsc) : dv(line, s, Lt, Lo) {
+               const bool Lcs) : dv(line, s, Lt, Lo) {
 
+    L_converge_stat   = Lcs;
+    
     // -> N-S Eq data members 
     rhsSrc        = vector<double>(domn->ngrd, 0.0);
     rhsMix        = vector<double>(domn->ngrd, 0.0);
     rhsStatConv   = vector<double>(domn->ngrd, 0.0);
-    
+
     // ---------------------------- Statistics calc. during runtime ---------------------------- 
     
     // corresponding instantaneous value name for the mean velocity component <var_name>
@@ -51,6 +53,14 @@ dv_uvw::dv_uvw(domain  *line,
     // Statistics convergence framework
     F_statConv        = vector<double>(domn->ngrd, 0.0);
     F_statConv_nunif  = vector<double>(nunif, 0.0);
+
+    // position uniform fine grid
+    nunif        = domn->pram->nunif;              // num. points uniform grid (using smallest grid size)   
+    posUnif      = vector<double>(nunif, 0.0);     // uniform grid in y-axis
+    double delta = domn->pram->domainLength / 2;   // half-channel length 
+    for (int i=0; i<nunif; i++) {
+        posUnif[i] = - delta + i * (2.0 * delta) / (nunif - 1);
+    }
 
 }
 
@@ -246,8 +256,8 @@ void dv_uvw::getRhsMix(const vector<double> &gf,
 
 void dv_uvw::getRhsStatConv(const double &timeCurrent, const int ipt) {
     
-    if(!L_transported or !L_statConv)
-        *domn->io->ostrm << endl << "ERROR:  dv_uvw::getRhsStatConv can only be called for dv objects with L_transported = true and L_statConv = true" << endl;
+    if(!L_transported or !L_converge_stat)
+        *domn->io->ostrm << endl << "ERROR:  dv_uvw::getRhsStatConv can only be called for dv objects with L_transported = true and L_converge_stat = true" << endl;
 
     if(domn->pram->Lspatial)
         *domn->io->ostrm << endl << "ERROR: Lspatial = true not implemented for method dv_uvw::getRhsStatConv; set Lspatial = false or LstatConv = false" << endl;
@@ -272,6 +282,10 @@ void dv_uvw::getRhsStatConv(const double &timeCurrent, const int ipt) {
     }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/*! Update statistics quantities
+ */
+
 void dv_uvw::updateTimeAveragedQuantities(const double &delta_t, const double &averaging_time) {
 
     // interpolate instantaneous quantity in adaptative grid to uniform fine grid
@@ -285,4 +299,31 @@ void dv_uvw::updateTimeAveragedQuantities(const double &delta_t, const double &a
         drmsf.at(i) = updateTimeRmsfQuantity(d.at(i), davgLast.at(i), drmsf.at(i), delta_t, averaging_time);
     }
 
+}
+
+double dv_uvw::updateTimeMeanQuantity(const double &quantity, const double &mean_quantity, const double &delta_t, const double &averaging_time) {
+
+    double updated_mean_quantity = ( averaging_time * mean_quantity + delta_t * quantity ) / averaging_time;
+
+    return( updated_mean_quantity );
+
+}
+
+double dv_uvw::updateTimeRmsfQuantity(const double &quantity, const double &mean_quantity, const double &rmsf_quantity, const double &delta_t, const double &averaging_time) {
+
+    double updated_rmsf_quantity = sqrt( ( pow( rmsf_quantity, 2.0 )*averaging_time + pow( quantity - mean_quantity, 2.0 )*delta_t )/( averaging_time + delta_t ) ); 
+
+    return( updated_rmsf_quantity );
+
+};
+
+vector<double> dv_uvw::interpolateQuantityVectorToUniformGrid(const vector<double> &quantity_adaptativeGrid) {
+    vector<double> quantity_uniformGrid(nunif, 0.0);
+    vector<double> dmb;
+    dmb = quantity_adaptativeGrid;
+    Linear_interp Linterp(domn->pos->d, dmb);
+    for (int i=0; i<nunif; i++) {
+        quantity_uniformGrid.at(i) = Linterp.interp(posUnif[i]);
+    }
+    return( quantity_uniformGrid );
 }

@@ -38,6 +38,10 @@ class dv_uvw : public dv {
                                const vector<double> &dxc);
         virtual void getRhsStatConv(const double &timeCurrent, const int ipt=-1);
         virtual void updateTimeAveragedQuantities(const double &delta_t, const double &averaging_time);
+        virtual double updateTimeMeanQuantity(const double &quantity, const double &mean_quantity, const double &delta_t, const double &averaging_time);
+        virtual double updateTimeRmsfQuantity(const double &quantity, const double &mean_quantity, const double &rmsf_quantity, const double &delta_t, const double &averaging_time);
+        virtual vector<double> interpolateQuantityVectorToUniformGrid(const vector<double> &quantity_adaptativeGrid);
+        // todo: in rhea updateTimeMeanQuantity and updateTimeRmsfQuantity are 'static' not 'virtual'... what should i do?
 
     private:
 
@@ -50,7 +54,7 @@ class dv_uvw : public dv {
                const string s,
                const bool   Lt,
                const bool   Lo=true,
-               const bool   Lsc=false);
+               const bool   Lcs=false);
 
         virtual ~dv_uvw(){}
 
