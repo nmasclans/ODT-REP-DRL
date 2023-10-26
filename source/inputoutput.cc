@@ -234,8 +234,11 @@ void inputoutput::outputProperties(const string fname, const double time) {
                 ofileStat << setw(18-(strLength+1)) << j++ << "_" << strPosUnif;
                 isFirstOutputStat = false;
             }
-            strLength = domn->v.at(i)->var_name_avg.length();
-            ofileStat << setw(18-strLength) << j++ << "_" << domn->v.at(i)->var_name_avg;   
+            // time-averaged quantity
+            string var_name_dmb = domn->v.at(i)->var_name;
+            string var_name_avg = var_name_dmb + "_mean"; 
+            ofileStat << setw(18-var_name_avg.length()) << j++ << "_" << var_name_avg; 
+               
         }
     }
     string var_name_dmb = "F_statConv"; 
@@ -266,10 +269,12 @@ void inputoutput::outputProperties(const string fname, const double time) {
         isFirstColumn = true;
         for(int k=0; k<domn->v.size(); k++){
             if(domn->v.at(k)->L_output_stat){
+                // position
                 if (isFirstColumn) {
                     ofileStat << setw(19) << domn->v.at(k)->posUnif.at(i);
                     isFirstColumn = false;
                 }
+                // time-averaged quantity
                 ofileStat << setw(19) << domn->v.at(k)->davg.at(i);
             }
         }

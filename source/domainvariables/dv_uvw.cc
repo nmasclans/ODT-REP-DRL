@@ -39,9 +39,9 @@ dv_uvw::dv_uvw(domain  *line,
     // ---------------------------- Statistics calc. during runtime ---------------------------- 
     
     // corresponding instantaneous value name for the mean velocity component <var_name>
-    if      (var_name == "uvel") {var_name_avg = "uvelmean"; var_name_rmsf = "uvelrmsf"; L_output_stat = true; }
-    else if (var_name == "vvel") {var_name_avg = "vvelmean"; var_name_rmsf = "vvelrmsf"; L_output_stat = false;}
-    else if (var_name == "wvel") {var_name_avg = "wvelmean"; var_name_rmsf = "wvelrmsf"; L_output_stat = false;}
+    if      (var_name == "uvel") {L_output_stat = true; }
+    else if (var_name == "vvel") {L_output_stat = true;}
+    else if (var_name == "wvel") {L_output_stat = true;}
     else {cout << endl << "ERROR in dv_uvw initialization, invalid var_name = " << var_name << ", accepted values: uvel, vvel, wvel." << endl; exit(0); }
 
     // position uniform fine grid
