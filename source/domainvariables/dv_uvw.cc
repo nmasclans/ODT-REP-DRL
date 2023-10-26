@@ -15,7 +15,7 @@
 using namespace std;
 
 #define _CONSTANT_RHS_CONV_STAT_ 0 // todo: set to 0, or better erase! just for testing RhsStatConv is well implemented
-#define _ENFORCED_F_INST_ 1
+#define _ENFORCED_TAU_PERTURBATION_ 1
 
 ////////////////////////////////////////////////////////////////////////////////
 /*! dv_uvw  constructor function
@@ -49,9 +49,9 @@ dv_uvw::dv_uvw(domain  *line,
     tBeginAvg     = domn->pram->tBeginAvg;
     
     // corresponding instantaneous value name for the mean velocity component <var_name>
-    if (var_name == "uvel")      {var_name_stat = "uvelmean"; var_name_ddavgdt = "dumeandt"; L_output_stat = true; }
-    else if (var_name == "vvel") {var_name_stat = "vvelmean"; var_name_ddavgdt = "dvmeandt"; L_output_stat = false;}
-    else if (var_name == "wvel") {var_name_stat = "wvelmean"; var_name_ddavgdt = "dwmeandt"; L_output_stat = false;}
+    if (var_name == "uvel")      {var_name_stat = "uvelmean"; L_output_stat = true; }
+    else if (var_name == "vvel") {var_name_stat = "vvelmean"; L_output_stat = false;}
+    else if (var_name == "wvel") {var_name_stat = "wvelmean"; L_output_stat = false;}
     else {cout << endl << "ERROR in dv_uvw initialization, invalid var_name = " << var_name << ", accepted values: uvel, vvel, wvel." << endl; exit(0); }
 
     // position uniform fine grid
@@ -70,7 +70,6 @@ dv_uvw::dv_uvw(domain  *line,
 
     // -> Statistics convergence
     L_statConv        = Lsc;
-    ddavgdt           = vector<double>(nunif, 0.0);
     Favg_statConv     = vector<double>(nunif, 0.0);
     Favg_statConvLast = vector<double>(nunif, 0.0);
     F_statConv_nunif  = vector<double>(nunif, 0.0);
@@ -288,35 +287,10 @@ void dv_uvw::getRhsStatConv(const double &timeCurrent, const int ipt) {
             for(int i=0; i<domn->ngrd; i++)
                 rhsStatConv.at(i) = 0.0; 
 
-#elif _ENFORCED_F_INST_
-            for(int i=0; i<nunif; i++)
-                F_statConv_nunif.at(i) = ddavgdt.at(i);
-            Linear_interp Linterp(posUnif, F_statConv_nunif);    
-            //F_statConv.resize(domn->ngrd);
-            //for(int i=0; i<domn->ngrd; i++)
-            //    F_statConv.at(i)= Linterp.interp(domn->pos->d[i]); // todo: erase this code for compt. efficiency
-            for(int i=0; i<domn->ngrd; i++)
-                rhsStatConv.at(i) = Linterp.interp(domn->pos->d[i]);
+#elif _ENFORCED_TAU_PERTURBATION_
+            // TODO: IMPLEMENT HERE!
 #else 
-            // Calculate instantaneous value of the RhsStatConv load
-            Favg_statConv  = ddavgdt;
-            time_statConv  = timeCurrent - tBeginAvg; 
-            for(int i=0; i<nunif; i++)
-                F_statConv_nunif.at(i) = (Favg_statConv.at(i) * time_statConv - Favg_statConvLast.at(i) * time_statConvLast) / (time_statConv - time_statConvLast);
-            
-            // interpolate 'F_statConv_nunif' from uniform fine grid to adaptative non-uniform grid
-            // todo: dmb not created, ddavgdt included directly in Linterp, check if this causes problems?
-            vector <double> dmb;
-            dmb = F_statConv_nunif;
-            Linear_interp Linterp(posUnif, F_statConv_nunif); 
-            F_statConv.resize(domn->ngrd);
-            for(int i=0; i<domn->ngrd; i++)
-                F_statConv.at(i)  = Linterp.interp(domn->pos->d[i]);
-            for(int i=0; i<domn->ngrd; i++)
-                rhsStatConv.at(i) = F_statConv.at(i); 
-            // Update Favg and time at timeCurrent instant, for next call of getRhsStatConv
-            Favg_statConvLast = Favg_statConv;
-            time_statConvLast = time_statConv;
+            // todo: nothing here
 #endif
 
         }

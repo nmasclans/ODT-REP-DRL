@@ -44,14 +44,12 @@ class dv {
         // statistics calculation
         int                           nunif;                  ///< todo: add description
         vector<double>                posUnif;                ///< todo: add description
-        bool                          L_output_stat;          ///< todo: add data members description
         string                        var_name_stat;          ///< todo: add description
         vector<double>                davg;                  ///< todo: add description
         vector<double>                drmsf;                 ///< todo: add description
 
-        // statistics convergence
-        vector<double>                ddavgdt;                ///< todo: add description
-        string                        var_name_ddavgdt;       ///< todo: add description
+        // statistics convergence framework
+        bool                          L_output_stat;          ///< todo: add data members description
         vector<double>                F_statConv;             ///< todo: add description      
         vector<double>                F_statConv_nunif;       ///< todo: add description      
 
