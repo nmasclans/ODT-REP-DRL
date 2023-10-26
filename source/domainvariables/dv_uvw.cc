@@ -44,14 +44,10 @@ dv_uvw::dv_uvw(domain  *line,
     
     // ---------------------------- Statistics calc. during runtime ---------------------------- 
     
-    // storing time
-    tLastAvg      = 0.0;
-    tBeginAvg     = domn->pram->tBeginAvg;
-    
     // corresponding instantaneous value name for the mean velocity component <var_name>
-    if (var_name == "uvel")      {var_name_stat = "uvelmean"; L_output_stat = true; }
-    else if (var_name == "vvel") {var_name_stat = "vvelmean"; L_output_stat = false;}
-    else if (var_name == "wvel") {var_name_stat = "wvelmean"; L_output_stat = false;}
+    if      (var_name == "uvel") {var_name_avg = "uvelmean"; var_name_rmsf = "uvelrmsf"; L_output_stat = true; }
+    else if (var_name == "vvel") {var_name_avg = "vvelmean"; var_name_rmsf = "vvelrmsf"; L_output_stat = false;}
+    else if (var_name == "wvel") {var_name_avg = "wvelmean"; var_name_rmsf = "wvelrmsf"; L_output_stat = false;}
     else {cout << endl << "ERROR in dv_uvw initialization, invalid var_name = " << var_name << ", accepted values: uvel, vvel, wvel." << endl; exit(0); }
 
     // position uniform fine grid
@@ -66,14 +62,10 @@ dv_uvw::dv_uvw(domain  *line,
     davg              = vector<double>(nunif, 0.0);
     drmsf             = vector<double>(nunif, 0.0);
 
-    // ------------------------------------------------------------------------------------------
-
-    // -> Statistics convergence
+    // Statistics convergence framework
     L_statConv        = Lsc;
-    Favg_statConv     = vector<double>(nunif, 0.0);
-    Favg_statConvLast = vector<double>(nunif, 0.0);
-    F_statConv_nunif  = vector<double>(nunif, 0.0);
     F_statConv        = vector<double>(domn->ngrd, 0.0);
+    F_statConv_nunif  = vector<double>(nunif, 0.0);
 
 }
 
@@ -279,21 +271,19 @@ void dv_uvw::getRhsStatConv(const double &timeCurrent, const int ipt) {
 
   
     if(ipt==-1) {
-        if(var_name == "uvel" && domn->pram->cCoord != 3.0) {
-
-            // update the rhs term for statistics convergence 'rhsStatConv'
+        // update the rhs term for statistics convergence 'rhsStatConv'
 
 #if _CONSTANT_RHS_CONV_STAT_ // todo: erase this #if, just for initial testing
+        if(var_name == "uvel" && domn->pram->cCoord != 3.0) {
             for(int i=0; i<domn->ngrd; i++)
                 rhsStatConv.at(i) = 0.0; 
-
+        }
 #elif _ENFORCED_TAU_PERTURBATION_
             // TODO: IMPLEMENT HERE!
 #else 
             // todo: nothing here
 #endif
 
-        }
     }
 }
 

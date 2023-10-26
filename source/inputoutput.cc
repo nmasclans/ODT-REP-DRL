@@ -234,8 +234,8 @@ void inputoutput::outputProperties(const string fname, const double time) {
                 ofileStat << setw(18-(strLength+1)) << j++ << "_" << strPosUnif;
                 isFirstOutputStat = false;
             }
-            strLength = domn->v.at(i)->var_name_stat.length();
-            ofileStat << setw(18-strLength) << j++ << "_" << domn->v.at(i)->var_name_stat;   
+            strLength = domn->v.at(i)->var_name_avg.length();
+            ofileStat << setw(18-strLength) << j++ << "_" << domn->v.at(i)->var_name_avg;   
         }
     }
     string var_name_dmb = "F_statConv"; 

@@ -27,6 +27,8 @@ dv::dv(domain    *line,
     var_name      = s;
     L_transported = Lt;
     L_output      = Lo;
+    L_statConv    = false;
+    L_output_stat = false;
     d             = vector<double>(domn->ngrd, 0.0);
 
     LagSrc = false;

@@ -28,14 +28,6 @@ class dv_uvw : public dv {
 
     private: 
 
-        double                   tLastAvg;                    ///< time of last statistics update
-        double                   tBeginAvg;                   ///< averaging time at which to begin calculating statistics
-        bool                     gridStatisticsEverUpdated;   ///< todo: add description
-        int                      nunif;                       ///< todo: add description
-        double                   time_statConv;
-        double                   time_statConvLast;
-        vector<double>           Favg_statConv;
-        vector<double>           Favg_statConvLast;
 
     //////////////////// MEMBER FUNCTIONS /////////////////
 

@@ -16,6 +16,8 @@
  * @param p_phi   \input set vector pointer with.
  */
 
+// todo: change this constructor and all constructor of dv_ subclasses to construct the parent class dv (as done in dv_uvw)
+// this would lead to eliminate all the superfluous definitions of domn, var_name, L_... which are already defined in the dv parent class
 dv_temp::dv_temp(domain  *line,
                  const      string s,
                  const bool Lt,
