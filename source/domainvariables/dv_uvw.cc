@@ -254,7 +254,7 @@ void dv_uvw::getRhsMix(const vector<double> &gf,
  *  @param ipt \input optional point to compute source at.
  */
 
-void dv_uvw::getRhsStatConv(const double &timeCurrent, const int ipt) {
+void dv_uvw::getRhsStatConv(const double &timeCurrent) {
     
     if(!L_transported)
         *domn->io->ostrm << endl << "ERROR:  dv_uvw::getRhsStatConv can only be called for dv objects with L_transported = true and L_converge_stat = true" << endl;
@@ -264,9 +264,8 @@ void dv_uvw::getRhsStatConv(const double &timeCurrent, const int ipt) {
 
     rhsStatConv.resize(domn->ngrd, 0.0); 
 
+    // update the rhs term for statistics convergence 'rhsStatConv'
     if(L_converge_stat){
-        if(ipt==-1) {
-        // update the rhs term for statistics convergence 'rhsStatConv'
 
 #if _CONSTANT_RHS_CONV_STAT_ // todo: erase this #if, just for initial testing
             if(var_name == "uvel" && domn->pram->cCoord != 3.0) {
@@ -278,7 +277,6 @@ void dv_uvw::getRhsStatConv(const double &timeCurrent, const int ipt) {
 #else 
             // todo: nothing here
 #endif
-        }
     }
 
 }
