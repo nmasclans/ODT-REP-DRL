@@ -18,16 +18,11 @@
 dv_mixf::dv_mixf(domain     *line,
                  const      string s,
                  const bool Lt,
-                 const bool Lo) {
+                 const bool Lo) : dv(line, s, Lt, Lo) {
 
-    domn          = line;
-    var_name      = s;
-    L_transported = Lt;
-    L_output      = Lo;
-    L_output_stat = false;
-    d             = vector<double>(domn->ngrd, 0.0);
+    d = vector<double>(domn->ngrd, 0.0);
 
-    Dmf           = domn->io->streamProps["Dmf"] ? domn->io->streamProps["Dmf"].as<double>() : 0.0;
+    Dmf = domn->io->streamProps["Dmf"] ? domn->io->streamProps["Dmf"].as<double>() : 0.0;
     if(L_transported && Dmf == 0.0) {
         cout << endl << "ERROR: if you are transporting mixture fraction, you need to set Dmf";
         exit(0);

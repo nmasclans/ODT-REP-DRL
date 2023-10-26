@@ -31,7 +31,9 @@ dv_uvw::dv_uvw(domain  *line,
                const bool Lo,
                const bool Lcs) : dv(line, s, Lt, Lo) {
 
-    L_converge_stat   = Lcs;
+    d = vector<double>(domn->ngrd, 0.0);
+
+    L_converge_stat = Lcs;
     
     // -> N-S Eq data members 
     rhsSrc        = vector<double>(domn->ngrd, 0.0);
