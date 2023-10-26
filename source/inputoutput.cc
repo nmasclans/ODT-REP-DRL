@@ -245,7 +245,7 @@ void inputoutput::outputProperties(const string fname, const double time) {
             string var_name_F_statConv = var_name_dmb + "_Fpert";
             ofileStat << setw(18-var_name_F_statConv.length()) << j++ << "_" << var_name_F_statConv;
         }
-    }  
+    }
 
     // Write data
     // -> instantaneous data

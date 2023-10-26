@@ -30,7 +30,8 @@ class dv {
         vector<double>                d;                      ///< the data
         bool                          L_transported;          ///< flag true if var is transported
         bool                          L_output;               ///< flag true if included in output
-        bool                          L_statConv;             ///< flag true if statistics convergence is activated
+        bool                          L_converge_stat;        ///< flag true if statistics convergence is activated
+        bool                          L_output_stat;          ///< todo: add data members description
         bool                          LagSrc;                 ///< flag to lag source term in implicit solve (initially put in for enthalpy radiation)
 
         domain                        *domn;                  ///< pointer to domain object (parent)
@@ -44,13 +45,10 @@ class dv {
         // statistics calculation
         int                           nunif;                  ///< todo: add description
         vector<double>                posUnif;                ///< todo: add description
-        string                        var_name_avg;           ///< todo: add description
-        string                        var_name_rmsf;          ///< todo: add description
         vector<double>                davg;                  ///< todo: add description
         vector<double>                drmsf;                 ///< todo: add description
 
         // statistics convergence framework
-        bool                          L_output_stat;          ///< todo: add data members description
         vector<double>                F_statConv;             ///< todo: add description      
         vector<double>                F_statConv_nunif;       ///< todo: add description      
 
