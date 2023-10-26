@@ -43,10 +43,11 @@ class dv {
 
         // statistics calculation
         int                           nunif;                  ///< todo: add description
+        vector<double>                posUnif;                ///< todo: add description
         bool                          L_output_stat;          ///< todo: add data members description
         string                        var_name_stat;          ///< todo: add description
-        vector<double>                davg;                   ///< todo: add description
-        vector<double>                posUnif;                ///< todo: add description
+        vector<double>                davg;                  ///< todo: add description
+        vector<double>                drmsf;                 ///< todo: add description
 
         // statistics convergence
         vector<double>                ddavgdt;                ///< todo: add description
@@ -81,7 +82,6 @@ class dv {
         virtual void   updateTimeAveragedQuantities(const double &delta_t, const double &averaging_time){};
         virtual double updateTimeMeanQuantity(const double &quantity, const double &mean_quantity, const double &delta_t, const double &averaging_time);
         virtual double updateTimeRmsfQuantity(const double &quantity, const double &mean_quantity, const double &rmsf_quantity, const double &delta_t, const double &averaging_time);
-        virtual vector<double> interpolateQuantityVectorToUniformGrid(const vector<double> &quantity_adaptativeGrid);
 
     //////////////////// CONSTRUCTOR FUNCTIONS /////////////////
 

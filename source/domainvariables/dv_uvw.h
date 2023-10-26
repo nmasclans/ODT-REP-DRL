@@ -45,7 +45,7 @@ class dv_uvw : public dv {
         virtual void getRhsMix(const vector<double> &gf,
                                const vector<double> &dxc);
         virtual void getRhsStatConv(const double &timeCurrent, const int ipt=-1);
-        virtual void updateStatistics(const double &timeCurrent);
+        virtual void updateTimeAveragedQuantities(const double &delta_t, const double &averaging_time);
 
     private:
 

@@ -226,15 +226,3 @@ double dv::updateTimeRmsfQuantity(const double &quantity, const double &mean_qua
     return( updated_rmsf_quantity );
 
 };
-
-vector<double> dv::interpolateQuantityVectorToUniformGrid(const vector<double> &quantity_adaptativeGrid) {
-    vector<double> quantity_uniformGrid(nunif, 0.0);
-    vector<double> dmb;
-    dmb = quantity_adaptativeGrid;
-    Linear_interp Linterp(domn->pos->d, dmb);
-    for (int i=0; i<nunif; i++) {
-        quantity_uniformGrid.at(i) = Linterp.interp(posUnif[i]);
-    }
-    return( quantity_uniformGrid );
-}
-

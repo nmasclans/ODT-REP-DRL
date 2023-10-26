@@ -62,8 +62,9 @@ dv_uvw::dv_uvw(domain  *line,
         posUnif[i] = - delta + i * (2.0 * delta) / (nunif - 1);
     }
 
-    // statistics uniform fine grid
-    davg         = vector<double>(nunif, 0.0);
+    // Averaged quantities, defined in the uniform fine grid
+    davg              = vector<double>(nunif, 0.0);
+    drmsf             = vector<double>(nunif, 0.0);
 
     // ------------------------------------------------------------------------------------------
 
@@ -322,42 +323,21 @@ void dv_uvw::getRhsStatConv(const double &timeCurrent, const int ipt) {
     }
 }
 
+void dv_uvw::updateTimeAveragedQuantities(const double &delta_t, const double &averaging_time) {
 
-void dv_uvw::updateStatistics(const double &timeCurrent) {
-    // improve time & dt input arguments to sth more intuitive
+    // interpolate instantaneous quantity in adaptative grid to uniform fine grid
+    vector<double> dUnif(nunif, 0.0);
+    vector<double> dmb = d;
+    Linear_interp Linterp(domn->pos->d, dmb);
+    for (int i=0; i<nunif; i++) {
+        dUnif.at(i) = Linterp.interp(posUnif.at(i));
+    } // todo: ask lluis if this is correct: are the next lines using the correct values of dUnif updated here?
 
-    double tAvg;
-    double dtAvg;
-    double dLastAvg;
-    
-    // Averaging time and delta time
-    tAvg  = timeCurrent - tBeginAvg;
-    dtAvg = tAvg - tLastAvg;
-
-    // Update statistics if needed
-    // info: tLastAvg initialized as 0, while timeCurrent < tBeginAvg --> tLastAvg = 0 not updated --> dtAvg < 0
-    if (dtAvg > 0){ 
-
-        // interpolate instantaneous velocity to uniform fine grid
-        vector <double> dmb;
-        vector <double> dUnif(nunif, 0.0);
-        dmb     = d; // todo: necessary step? check!
-        Linear_interp Linterp(domn->pos->d, dmb);
-        
-        for (int i=0; i<nunif; i++) {
-            dUnif.at(i) = Linterp.interp(posUnif[i]);
-        }
-
-        // update statistic at each grid point
-        for(int i=0; i<nunif; i++) {
-            dLastAvg       = davg.at(i);
-            davg.at(i)     = ( tLastAvg * dLastAvg + dtAvg * dUnif.at(i) ) / tAvg;
-            ddavgdt.at(i)  = ( dLastAvg - davg.at(i) ) / dtAvg ;
-        }
-
-        // update time and position quantities
-        tLastAvg = tAvg;
-
+    // update time-averaged quantities at each grid point
+    vector<double> davgLast = davg; // todo: ask lluis if this is a necessary step
+    for(int i=0; i<nunif; i++) {
+        davg.at(i)  = updateTimeMeanQuantity(dUnif.at(i), davgLast.at(i), delta_t, averaging_time);
+        drmsf.at(i) = updateTimeRmsfQuantity(dUnif.at(i), davgLast.at(i), drmsf.at(i), delta_t, averaging_time);
     }
 
 }
