@@ -53,15 +53,16 @@ int main(int argc, char*argv[]) {
     ss1 >> nShiftFileNumbers;
 
     // Objects creation
-    inputoutput io(caseName, nShiftFileNumbers);
-    param       pram(&io);
-    streams     strm;
-    IdealGasPhase gas("../input/gas_mechanisms/"+pram.chemMechFile);
-    Transport   *tran = newTransportMgr("Mix", &gas);
-    eddy        ed;
-    meshManager mesher;
-    solver      *solv;
-    micromixer  *mimx;
+    inputoutput        io(caseName, nShiftFileNumbers);
+    param              pram(&io);
+    streams            strm;
+    IdealGasPhase      gas("../input/gas_mechanisms/"+pram.chemMechFile);
+    Transport          *tran = newTransportMgr("Mix", &gas);
+    eddy               ed;
+    meshManager        mesher;
+    solver             *solv;
+    micromixer         *mimx;
+    eigenDecomposition eigdec;
     solv = new solver();
     mimx = new micromixer();
 
@@ -73,8 +74,8 @@ int main(int argc, char*argv[]) {
     randomGenerator rand(pram.seed);
 
     // Domain and eddy domain initialization
-    domn.init(&io,  &mesher, &strm, &gas, tran, mimx, &ed, &eddl, solv, &rand);
-    eddl.init(NULL, NULL,    NULL,  NULL, NULL, NULL,  NULL,NULL,  NULL,  NULL, true);
+    domn.init(&io,  &mesher, &strm, &gas, tran, mimx, &ed, &eddl, solv, &rand, &eigdec);
+    eddl.init(NULL, NULL,    NULL,  NULL, NULL, NULL,  NULL,NULL,  NULL,  NULL, NULL, true);
     
     //-------------------
 

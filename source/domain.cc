@@ -43,17 +43,18 @@ domain::domain(domain *p_domn, param *p_pram) {
 /** Initializer
  */
 
-void domain::init(inputoutput     *p_io,
-                  meshManager     *p_mesher,
-                  streams         *p_strm,
-                  IdealGasPhase   *p_gas,
-                  Transport       *p_tran,
-                  micromixer      *p_mimx,
-                  eddy            *p_ed,
-                  domain          *p_eddl,
-                  solver          *p_solv,
-                  randomGenerator *p_rand,
-                  bool             LisEddyDomain) {
+void domain::init(inputoutput        *p_io,
+                  meshManager        *p_mesher,
+                  streams            *p_strm,
+                  IdealGasPhase      *p_gas,
+                  Transport          *p_tran,
+                  micromixer         *p_mimx,
+                  eddy               *p_ed,
+                  domain             *p_eddl,
+                  solver             *p_solv,
+                  randomGenerator    *p_rand,
+                  eigenDecomposition *p_eigdec,
+                  bool               LisEddyDomain) {
 
     //----------------------
 
@@ -67,6 +68,7 @@ void domain::init(inputoutput     *p_io,
     eddl   = p_eddl;
     solv   = p_solv;
     rand   = p_rand;
+    eigdec = p_eigdec;
 
     //----------------------
 
@@ -85,6 +87,7 @@ void domain::init(inputoutput     *p_io,
     pram->init(this);
     ed->init(this, eddl);
     solv->init(this);
+    eigdec->init(this);
     // mesher is init below in caseinit for phi
     // strm is init below in caseinit  (domc), (if needed)
     // mimx is init below since it needs v[] set for cvode
