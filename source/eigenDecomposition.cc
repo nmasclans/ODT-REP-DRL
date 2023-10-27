@@ -10,16 +10,6 @@
 using namespace std;
 
 ///////////////////////////////////////////////////////////////////////////////
-/** eigenDecomposition constructor function
- */
-
-eigenDecomposition::eigenDecomposition() {
-
-    // nothing here
-
-}
-
-///////////////////////////////////////////////////////////////////////////////
 /** eigenDecomposition initialization function
  *
  * @param p_domn  \input set domain pointer with.

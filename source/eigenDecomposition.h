@@ -39,7 +39,7 @@ class eigenDecomposition {
 
     public:
 
-        eigenDecomposition();
+        eigenDecomposition(){};
         void init(domain *p_domn);
         ~eigenDecomposition(){};
 
