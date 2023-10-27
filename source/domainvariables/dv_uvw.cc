@@ -299,6 +299,9 @@ void dv_uvw::updateTimeAveragedQuantities(const double &delta_t, const double &a
     // update time-averaged quantities at each grid point
     vector<double> davgLast = davg; // todo: ask lluis if this is a necessary step
     for(int i=0; i<nunif; i++) {
+        //if (var_name == "uvel") {
+        //    cout << "dUnif(" << i << ") = " << dUnif.at(i) << endl;
+        //}
         davg.at(i)  = updateTimeMeanQuantity(dUnif.at(i), davgLast.at(i), delta_t, averaging_time);
         drmsf.at(i) = updateTimeRmsfQuantity(dUnif.at(i), davgLast.at(i), drmsf.at(i), delta_t, averaging_time);
     }
@@ -307,7 +310,7 @@ void dv_uvw::updateTimeAveragedQuantities(const double &delta_t, const double &a
 
 double dv_uvw::updateTimeMeanQuantity(const double &quantity, const double &mean_quantity, const double &delta_t, const double &averaging_time) {
 
-    double updated_mean_quantity = ( averaging_time * mean_quantity + delta_t * quantity ) / averaging_time;
+    double updated_mean_quantity = ( averaging_time * mean_quantity + delta_t * quantity ) / (averaging_time + delta_t);
 
     return( updated_mean_quantity );
 
