@@ -41,7 +41,7 @@ class eigenDecomposition {
 
         eigenDecomposition();
         void init(domain *p_domn);
-        ~eigenDecomposition();
+        ~eigenDecomposition(){};
 
 };
 
