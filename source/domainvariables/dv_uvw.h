@@ -40,8 +40,6 @@ class dv_uvw : public dv {
         virtual void updateTimeAveragedQuantities(const double &delta_t, const double &averaging_time);
         virtual double updateTimeMeanQuantity(const double &quantity, const double &mean_quantity, const double &delta_t, const double &averaging_time);
         virtual double updateTimeRmsfQuantity(const double &quantity, const double &mean_quantity, const double &rmsf_quantity, const double &delta_t, const double &averaging_time);
-        // todo: in rhea updateTimeMeanQuantity and updateTimeRmsfQuantity are 'static' not 'virtual'... what should i do?
-        // todo: there is a problem in the updating of the statistics, the calculated statistics keep increasing!
         
     private:
 

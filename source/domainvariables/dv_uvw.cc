@@ -294,16 +294,12 @@ void dv_uvw::updateTimeAveragedQuantities(const double &delta_t, const double &a
     Linear_interp Linterp(domn->pos->d, dmb);
     for (int i=0; i<nunif; i++) {
         dUnif.at(i) = Linterp.interp(posUnif.at(i));
-    } // todo: ask lluis if this is correct: are the next lines using the correct values of dUnif updated here?
+    } 
 
     // update time-averaged quantities at each grid point
-    vector<double> davgLast = davg; // todo: ask lluis if this is a necessary step
     for(int i=0; i<nunif; i++) {
-        //if (var_name == "uvel") {
-        //    cout << "dUnif(" << i << ") = " << dUnif.at(i) << endl;
-        //}
-        davg.at(i)  = updateTimeMeanQuantity(dUnif.at(i), davgLast.at(i), delta_t, averaging_time);
-        drmsf.at(i) = updateTimeRmsfQuantity(dUnif.at(i), davgLast.at(i), drmsf.at(i), delta_t, averaging_time);
+        davg.at(i)  = updateTimeMeanQuantity(dUnif.at(i), davg.at(i), delta_t, averaging_time);
+        drmsf.at(i) = updateTimeRmsfQuantity(dUnif.at(i), davg.at(i), drmsf.at(i), delta_t, averaging_time); // note that davg is the updated value in the previous line!
     }
 
 }
