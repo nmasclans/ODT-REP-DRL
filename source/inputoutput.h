@@ -60,17 +60,17 @@ class inputoutput {
 
     //////////////////// MEMBER FUNCTIONS /////////////////
 
-    void outputProperties(const string fname,
-                          const double time);    ///< actually write the data file
-    void dumpDomainIfNeeded();                     ///< calls outputProperties for dumpTimes
-    void writeDataFile(const string fnameRaw,
-                       const double time);       ///< writes the gnuplot file and calls outputProperties
-    void outputHeader();                         ///< output header info during odt solution
-    void outputProgress();                       ///< output data going with the header info
+        void outputProperties(const string fname,
+                            const double time);    ///< actually write the data file
+        void dumpDomainIfNeeded();                   ///< calls outputProperties for dumpTimes
+        void writeDataFile(const string fnameRaw,
+                        const double time);       ///< writes the gnuplot file and calls outputProperties
+        void outputHeader();                         ///< output header info during odt solution
+        void outputProgress();                       ///< output data going with the header info
 
-    void loadVarsFromRestartFile();
+        void loadVarsFromRestartFile();
 
-    void set_iNextDumpTime(double time);
+        void set_iNextDumpTime(double time);
 
     private:
 
