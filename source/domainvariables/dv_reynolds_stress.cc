@@ -19,34 +19,27 @@ using namespace std;
  * channelFlow: sets L_transported = true, L_output = true
  */
 
-dv_reynolds_stress::dv_reynolds_stress(
-    domain    *line,
-    const      string s,
-    const bool Lt,
-    const bool Lo,
-    const bool Lcs) : dv(line, s, Lt, Lo) {
-
-    // Reynolds stress terms
-    Rxx = vector<double>(nunif, 0.0); 
-    Ryy = vector<double>(nunif, 0.0); 
-    Rzz = vector<double>(nunif, 0.0); 
-    Rxy = vector<double>(nunif, 0.0); 
-    Rxz = vector<double>(nunif, 0.0); 
-    Ryz = vector<double>(nunif, 0.0); 
+dv_reynolds_stress::dv_reynolds_stress(domain    *line,
+                                       const      string s,
+                                       const bool Lt,
+                                       const bool Lo) : dv(line, s, Lt, Lo) {
 
     // num. points uniform fine grid
-    nunif        = domn->pram->nunif;
+    nunif = domn->pram->nunif;
+
+    // Reynolds stress terms
+    Rxx   = vector<double>(nunif, 0.0); 
+    Ryy   = vector<double>(nunif, 0.0); 
+    Rzz   = vector<double>(nunif, 0.0); 
+    Rxy   = vector<double>(nunif, 0.0); 
+    Rxz   = vector<double>(nunif, 0.0); 
+    Ryz   = vector<double>(nunif, 0.0); 
 
 }
 
-void dv_reynolds_stress::updateReynoldsStress(const double &delta_t, const double &averaging_time) {
+void dv_reynolds_stress::updateTimeAveragedQuantities(const double &delta_t, const double &averaging_time) {
 
-    double Rxx_inst = 0.0;
-    double Ryy_inst = 0.0;
-    double Rzz_inst = 0.0;
-    double Rxy_inst = 0.0;
-    double Rxz_inst = 0.0;
-    double Ryz_inst = 0.0;
+    double Rxx_inst, Ryy_inst, Rzz_inst, Rxy_inst, Rxz_inst, Ryz_inst;
 
     for(int i=0; i<nunif; i++) {
         Rxx_inst = pow(domn->uvel->drmsf.at(i),2);

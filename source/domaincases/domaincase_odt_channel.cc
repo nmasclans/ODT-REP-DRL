@@ -11,6 +11,7 @@
 #include "dv_rho_const.h"
 #include "dv_dvisc_const.h"
 #include "dv_uvw.h"
+#include "dv_reynolds_stress.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 /** Initialization
@@ -43,6 +44,7 @@ void domaincase_odt_channel::init(domain *p_domn){
     domn->uvel     = domn->v.at(j++);
     domn->vvel     = domn->v.at(j++);
     domn->wvel     = domn->v.at(j++);
+    domn->Rij      = new dv_reynolds_stress(domn, "Rij", false, true);
 
     //------------------- set variables used for mesh adaption
 

@@ -15,9 +15,9 @@ using namespace std;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-/** Class implementing child dv_uvw of parent lv object.
+/** Class implementing child dv_reynolds_stress of parent lv object.
  *
- *  @author David O. Lignell
+ *  @author Nuria Masclans
  */
 
 class dv_reynolds_stress : public dv {
@@ -26,13 +26,6 @@ class dv_reynolds_stress : public dv {
 
     public:
 
-        vector<double>                Rxx;                    ///< todo: add description
-        vector<double>                Rxy;                    ///< todo: add description
-        vector<double>                Rxz;                    ///< todo: add description
-        vector<double>                Ryy;                    ///< todo: add description
-        vector<double>                Ryz;                    ///< todo: add description
-        vector<double>                Rzz;                    ///< todo: add description
-
     private: 
 
 
@@ -40,8 +33,8 @@ class dv_reynolds_stress : public dv {
 
     public:
 
-        virtual void updateReynoldsStress(const double &delta_t, const double &averaging_time);
-        
+        virtual void updateTimeAveragedQuantities(const double &delta_t, const double &averaging_time);
+
     private:
 
     //////////////////// CONSTRUCTOR FUNCTIONS /////////////////
@@ -52,8 +45,7 @@ class dv_reynolds_stress : public dv {
         dv_reynolds_stress(domain      *line,
                            const string s,
                            const bool   Lt,
-                           const bool   Lo=true,
-                           const bool   Lcs=false);
+                           const bool   Lo=true);
 
         virtual ~dv_reynolds_stress(){};
 

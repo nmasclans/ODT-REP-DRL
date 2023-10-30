@@ -420,9 +420,12 @@ bool micromixer::adaptGridIfNeeded() {
 void micromixer::updateTimeAveragedQuantitiesIfNeeded(const double &delta_t, const double &time) {
     double averaging_time = time - tBeginAvg;
     if (averaging_time > 0.0) {
+        // update velocity time-average and rmsf
         for(int k=0; k<domn->v.size(); k++) {
             domn->v.at(k)->updateTimeAveragedQuantities(delta_t, averaging_time); // todo: revisar si 'time' is the proper input
         }
+        // update reynolds stress tensor
+        domn->Rij->updateTimeAveragedQuantities(delta_t, averaging_time);
     } 
 }
 

@@ -5,6 +5,7 @@ target_sources(odt.x
         ${CMAKE_CURRENT_SOURCE_DIR}/dv.cc                 ${CMAKE_CURRENT_SOURCE_DIR}/dv.h
         ${CMAKE_CURRENT_SOURCE_DIR}/dv_pos.cc             ${CMAKE_CURRENT_SOURCE_DIR}/dv_pos.h
         ${CMAKE_CURRENT_SOURCE_DIR}/dv_posf.cc            ${CMAKE_CURRENT_SOURCE_DIR}/dv_posf.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/dv_reynolds_stress.cc ${CMAKE_CURRENT_SOURCE_DIR}/dv_reynolds_stress.h
         ${CMAKE_CURRENT_SOURCE_DIR}/dv_rho.cc             ${CMAKE_CURRENT_SOURCE_DIR}/dv_rho.h
         ${CMAKE_CURRENT_SOURCE_DIR}/dv_rho_const.cc       ${CMAKE_CURRENT_SOURCE_DIR}/dv_rho_const.h
         ${CMAKE_CURRENT_SOURCE_DIR}/dv_rho_mf.cc          ${CMAKE_CURRENT_SOURCE_DIR}/dv_rho_mf.h

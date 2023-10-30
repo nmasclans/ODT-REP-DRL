@@ -246,6 +246,15 @@ void inputoutput::outputProperties(const string fname, const double time) {
             ofileStat << setw(18-var_name_F_statConv.length()) << j++ << "_" << var_name_F_statConv;
         }
     }
+    // Reynolds stress tensor
+    if (domn->Rij->L_output) {
+        ofileStat << setw(15) << j++ << "_Rxx";
+        ofileStat << setw(15) << j++ << "_Ryy";
+        ofileStat << setw(15) << j++ << "_Rzz";
+        ofileStat << setw(15) << j++ << "_Rxy";
+        ofileStat << setw(15) << j++ << "_Rxz";
+        ofileStat << setw(15) << j++ << "_Ryz";
+    }
 
     // Write data
     // -> instantaneous data
@@ -283,6 +292,15 @@ void inputoutput::outputProperties(const string fname, const double time) {
                 // F-perturbation for statistics convergence
                 ofileStat << setw(19) << domn->v.at(k)->F_statConv_nunif.at(i);
             }
+        }
+        // Reynolds stress tensor
+        if (domn->Rij->L_output) {
+            ofileStat << setw(19) << domn->Rij->Rxx.at(i);
+            ofileStat << setw(19) << domn->Rij->Ryy.at(i);
+            ofileStat << setw(19) << domn->Rij->Rzz.at(i);
+            ofileStat << setw(19) << domn->Rij->Rxy.at(i);
+            ofileStat << setw(19) << domn->Rij->Rxz.at(i);
+            ofileStat << setw(19) << domn->Rij->Ryz.at(i);
         }
     }
     ofileStat.close();

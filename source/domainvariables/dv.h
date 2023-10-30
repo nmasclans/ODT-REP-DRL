@@ -52,6 +52,14 @@ class dv {
         vector<double>                F_statConv;             ///< todo: add description      
         vector<double>                F_statConv_nunif;       ///< todo: add description      
 
+        // reynolds stress tensor
+        vector<double>                Rxx;                    ///< todo: add description
+        vector<double>                Rxy;                    ///< todo: add description
+        vector<double>                Rxz;                    ///< todo: add description
+        vector<double>                Ryy;                    ///< todo: add description
+        vector<double>                Ryz;                    ///< todo: add description
+        vector<double>                Rzz;                    ///< todo: add description
+
 
     //////////////////// MEMBER FUNCTIONS /////////////////
 
