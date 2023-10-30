@@ -34,6 +34,7 @@ dv_uvw::dv_uvw(domain  *line,
     d = vector<double>(domn->ngrd, 0.0);
 
     L_converge_stat = Lcs;
+    L_output_stat = true;
     
     // -> N-S Eq data members 
     rhsSrc        = vector<double>(domn->ngrd, 0.0);
@@ -42,11 +43,6 @@ dv_uvw::dv_uvw(domain  *line,
 
     // ---------------------------- Statistics calc. during runtime ---------------------------- 
     
-    // corresponding instantaneous value name for the mean velocity component <var_name>
-    if      (var_name == "uvel") {L_output_stat = true;}
-    else if (var_name == "vvel") {L_output_stat = true;}
-    else if (var_name == "wvel") {L_output_stat = true;}
-    else {cout << endl << "ERROR in dv_uvw initialization, invalid var_name = " << var_name << ", accepted values: uvel, vvel, wvel." << endl; exit(0); }
 
     // position uniform fine grid
     nunif        = domn->pram->nunif;              // num. points uniform grid (using smallest grid size)   
@@ -298,24 +294,10 @@ void dv_uvw::updateTimeAveragedQuantities(const double &delta_t, const double &a
 
     // update time-averaged quantities at each grid point
     for(int i=0; i<nunif; i++) {
+        // velocity time-average
         davg.at(i)  = updateTimeMeanQuantity(dUnif.at(i), davg.at(i), delta_t, averaging_time);
+        // velocity rmsf 
         drmsf.at(i) = updateTimeRmsfQuantity(dUnif.at(i), davg.at(i), drmsf.at(i), delta_t, averaging_time); // note that davg is the updated value in the previous line!
     }
 
 }
-
-double dv_uvw::updateTimeMeanQuantity(const double &quantity, const double &mean_quantity, const double &delta_t, const double &averaging_time) {
-
-    double updated_mean_quantity = ( averaging_time * mean_quantity + delta_t * quantity ) / (averaging_time + delta_t);
-
-    return( updated_mean_quantity );
-
-}
-
-double dv_uvw::updateTimeRmsfQuantity(const double &quantity, const double &mean_quantity, const double &rmsf_quantity, const double &delta_t, const double &averaging_time) {
-
-    double updated_rmsf_quantity = sqrt( ( pow( rmsf_quantity, 2.0 )*averaging_time + pow( quantity - mean_quantity, 2.0 )*delta_t )/( averaging_time + delta_t ) ); 
-
-    return( updated_rmsf_quantity );
-
-};

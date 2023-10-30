@@ -76,6 +76,8 @@ class dv {
         virtual void   setDvFromRegion(const int i1, const int i2);
         virtual void   resize();
         virtual void   updateTimeAveragedQuantities(const double &delta_t, const double &averaging_time){};
+        virtual double updateTimeMeanQuantity(const double &quantity, const double &mean_quantity, const double &delta_t, const double &averaging_time);
+        virtual double updateTimeRmsfQuantity(const double &quantity, const double &mean_quantity, const double &rmsf_quantity, const double &delta_t, const double &averaging_time);
         
 
     //////////////////// CONSTRUCTOR FUNCTIONS /////////////////

@@ -38,8 +38,6 @@ class dv_uvw : public dv {
                                const vector<double> &dxc);
         virtual void getRhsStatConv(const double &timeCurrent);
         virtual void updateTimeAveragedQuantities(const double &delta_t, const double &averaging_time);
-        virtual double updateTimeMeanQuantity(const double &quantity, const double &mean_quantity, const double &delta_t, const double &averaging_time);
-        virtual double updateTimeRmsfQuantity(const double &quantity, const double &mean_quantity, const double &rmsf_quantity, const double &delta_t, const double &averaging_time);
         
     private:
 

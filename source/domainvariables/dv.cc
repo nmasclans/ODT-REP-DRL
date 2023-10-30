@@ -217,3 +217,23 @@ void dv::getRhsStatConv(const double &timeCurrent){
     rhsStatConv.resize(domn->ngrd, 0.0);
 
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/*! Update time-average and rmsf statistics quantities
+ */
+
+double dv::updateTimeMeanQuantity(const double &quantity, const double &mean_quantity, const double &delta_t, const double &averaging_time) {
+
+    double updated_mean_quantity = ( averaging_time * mean_quantity + delta_t * quantity ) / (averaging_time + delta_t);
+
+    return( updated_mean_quantity );
+
+}
+
+double dv::updateTimeRmsfQuantity(const double &quantity, const double &mean_quantity, const double &rmsf_quantity, const double &delta_t, const double &averaging_time) {
+
+    double updated_rmsf_quantity = sqrt( ( pow( rmsf_quantity, 2.0 )*averaging_time + pow( quantity - mean_quantity, 2.0 )*delta_t )/( averaging_time + delta_t ) ); 
+
+    return( updated_rmsf_quantity );
+
+}
