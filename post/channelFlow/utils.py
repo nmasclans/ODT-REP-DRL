@@ -414,10 +414,12 @@ def get_odt_statistics_rt(input_params):
     # 2_uvel_mean, 3_uvel_rmsf, 4_uvel_Fpert, 
     # 5_vvel_mean, 6_vvel_rmsf, 7_vvel_Fpert,
     # 8_wvel_mean, 9_wvel_rmsf, 10_wvel_Fpert
+    # 11_Rxx, 12_Ryy, 13_Rzz, 14_Rxy, 15_Rxz, 16_Ryz
+
     # -> check the file rows correspond to the expected variables:
     with open(flast,'r') as f:
         rows_info = f.readlines()[3] # 4th line of the file
-    rows_info_expected = '#         1_posUnif        2_uvel_mean        3_uvel_rmsf       4_uvel_Fpert        5_vvel_mean        6_vvel_rmsf       7_vvel_Fpert        8_wvel_mean        9_wvel_rmsf      10_wvel_Fpert\n' 
+    rows_info_expected = '#         1_posUnif        2_uvel_mean        3_uvel_rmsf       4_uvel_Fpert        5_vvel_mean        6_vvel_rmsf       7_vvel_Fpert        8_wvel_mean        9_wvel_rmsf      10_wvel_Fpert             11_Rxx             12_Ryy             13_Rzz             14_Rxy             15_Rxz             16_Ryz\n'
     if rows_info != rows_info_expected:
         print("statistic files rows do not correspond to the expected variables")
         print("rows variables (expected):\n",rows_info_expected,"\n")
@@ -437,6 +439,13 @@ def get_odt_statistics_rt(input_params):
     wm_data     = data_stat[:,7] 
     wrmsf_data  = data_stat[:,8] 
     wFpert_data = data_stat[:,9]  
+    #
+    ufufm_data  = data_stat[:,10]
+    vfvfm_data  = data_stat[:,11]
+    wfwfm_data  = data_stat[:,12]
+    ufvfm_data  = data_stat[:,13]
+    ufwfm_data  = data_stat[:,14]
+    vfwfm_data  = data_stat[:,15]
 
     # mirror data (symmetric in the y-direction from the channel center)
     nunif       = len(um_data)
@@ -451,11 +460,18 @@ def get_odt_statistics_rt(input_params):
     wm_data     = 0.5*(wm_data[:nunif2]     + np.flipud(wm_data[nunif2:])    )
     wrmsf_data  = 0.5*(wrmsf_data[:nunif2]  + np.flipud(wrmsf_data[nunif2:]) )
     wFpert_data = 0.5*(wFpert_data[:nunif2] + np.flipud(wFpert_data[nunif2:]))
+    ufufm_data  = 0.5*(ufufm_data[:nunif2]  + np.flipud(ufufm_data[nunif2:]) )
+    vfvfm_data  = 0.5*(vfvfm_data[:nunif2]  + np.flipud(vfvfm_data[nunif2:]) )
+    wfwfm_data  = 0.5*(wfwfm_data[:nunif2]  + np.flipud(wfwfm_data[nunif2:]) )
+    ufvfm_data  = 0.5*(ufvfm_data[:nunif2]  + np.flipud(ufvfm_data[nunif2:]) )
+    ufwfm_data  = 0.5*(ufwfm_data[:nunif2]  + np.flipud(ufwfm_data[nunif2:]) )
+    vfwfm_data  = 0.5*(vfwfm_data[:nunif2]  + np.flipud(vfwfm_data[nunif2:]) )
 
     return (yu/delta, 
             um_data, urmsf_data, uFpert_data,
             vm_data, vrmsf_data, vFpert_data,
-            wm_data, wrmsf_data, wFpert_data)
+            wm_data, wrmsf_data, wFpert_data,
+            ufufm_data, vfvfm_data, wfwfm_data, ufvfm_data, ufwfm_data, vfwfm_data)
 
 def get_dns_statistics(Re_tau, input_params):
 

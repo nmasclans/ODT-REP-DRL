@@ -74,20 +74,20 @@ class ChannelVisualizer():
 
     def build_runtime_vs_post_statistics(self, yplus_odt, um_odt, vm_odt, wm_odt, urmsf_odt, vrmsf_odt, wrmsf_odt, um_odt_rt, vm_odt_rt, wm_odt_rt, urmsf_odt_rt, vrmsf_odt_rt, wrmsf_odt_rt):
 
-        filename = f"../../data/{self.caseN}/post/vel_stat_runtime_vs_postprocessed.jpg"
+        filename = f"../../data/{self.caseN}/post/runtime_vs_postprocessed_velocity_stats.jpg"
         print(f"\nMAKING PLOT OF AVERAGED AND RMSF VEL PROFILES calculated at RUNTIME vs. POST-PROCESSED (ODT) in {filename}")
 
         fig, ax = plt.subplots(3, figsize=(8,10))
 
-        ms = 3; s = 10
+        ms = 5; s = 10
         ax[0].plot(yplus_odt,      um_odt,         'k-',  label=r'$<u>^{+}$ (post)')
         ax[0].plot(yplus_odt[::s], um_odt_rt[::s], 'ko',  label=r'$<u>^{+}$ (runtime)', markersize=ms)
         ax[0].set_xlabel(r'$y^+$')
         ax[0].set_ylabel(r'$u^+$')
 
         ax[1].plot(yplus_odt,      vm_odt,         'b--', label=r'$<v>^{+}$ (post)')
-        ax[1].plot(yplus_odt,      wm_odt,         'r:',  label=r'$<v>^{+}$ (post)')
-        ax[1].plot(yplus_odt[::s], vm_odt_rt[::s], 'bo',  label=r'$<w>^{+}$ (runtime)', markersize=ms)
+        ax[1].plot(yplus_odt,      wm_odt,         'r:',  label=r'$<w>^{+}$ (post)')
+        ax[1].plot(yplus_odt[::s], vm_odt_rt[::s], 'b^',  label=r'$<v>^{+}$ (runtime)', markersize=ms*2)
         ax[1].plot(yplus_odt[::s], wm_odt_rt[::s], 'ro',  label=r'$<w>^{+}$ (runtime)', markersize=ms)
         ax[1].set_xlabel(r'$y^+$')
         ax[1].set_ylabel(r'$v^+$, $w^+$')
@@ -95,8 +95,8 @@ class ChannelVisualizer():
         ax[2].plot(yplus_odt,      urmsf_odt,      'k-',  label=r'$u_{rmsf}^{+}$ (post)')
         ax[2].plot(yplus_odt,      vrmsf_odt,      'b--', label=r'$v_{rmsf}^{+}$ (post)')
         ax[2].plot(yplus_odt,      wrmsf_odt,      'r:',  label=r'$w_{rmsf}^{+}$ (post)')
-        ax[2].plot(yplus_odt[::s], urmsf_odt[::s], 'ko',  label=r'$u_{rmsf}^{+}$ (runtime)', markersize=ms)
-        ax[2].plot(yplus_odt[::s], vrmsf_odt[::s], 'bo',  label=r'$v_{rmsf}^{+}$ (runtime)', markersize=ms)
+        ax[2].plot(yplus_odt[::s], urmsf_odt[::s], 'kv',  label=r'$u_{rmsf}^{+}$ (runtime)', markersize=ms)
+        ax[2].plot(yplus_odt[::s], vrmsf_odt[::s], 'b^',  label=r'$v_{rmsf}^{+}$ (runtime)', markersize=ms*2)
         ax[2].plot(yplus_odt[::s], wrmsf_odt[::s], 'ro',  label=r'$w_{rmsf}^{+}$ (runtime)', markersize=ms)
         ax[2].set_ylabel(r'$u_{rmsf}^{+},v_{rmsf}^{+},w_{rmsf}^{+}$')
 
@@ -167,6 +167,48 @@ class ChannelVisualizer():
 
         plt.tight_layout()
         plt.savefig(filename, dpi=600)
+
+    
+    def build_runtime_vs_post_reynolds_stress(self, yplus_odt, ufufm_odt, vfvfm_odt, wfwfm_odt, ufvfm_odt, ufwfm_odt, vfwfm_odt, ufufm_odt_rt, vfvfm_odt_rt, wfwfm_odt_rt, ufvfm_odt_rt, ufwfm_odt_rt, vfwfm_odt_rt):
+
+        filename = f"../../data/{self.caseN}/post/runtime_vs_postprocessed_reynolds_stress.jpg"
+        print(f"\nMAKING PLOT OF REYNOLDS STRESSES PROFILES calculated at RUNTIME vs. POST-PROCESSED (ODT) in {filename}" )
+
+        fig, ax = plt.subplots(3,2,figsize=(10,10))
+
+        ms = 3; s = 10
+        ax[0,0].plot(yplus_odt,      ufufm_odt,         'k-', label="post")
+        ax[0,0].plot(yplus_odt[::s], ufufm_odt_rt[::s], 'bo', label="runtime", markersize=ms)
+        ax[0,0].set_ylabel("$<u'u'>^{+}$")
+
+        ax[1,0].plot(yplus_odt,      vfvfm_odt,         'k-', label="post")
+        ax[1,0].plot(yplus_odt[::s], vfvfm_odt_rt[::s], 'bo', label="runtime", markersize=ms)
+        ax[1,0].set_ylabel("$<v'v'>^{+}$")
+
+        ax[2,0].plot(yplus_odt,      wfwfm_odt,         'k-', label="post")
+        ax[2,0].plot(yplus_odt[::s], wfwfm_odt_rt[::s], 'bo', label="runtime", markersize=ms)
+        ax[2,0].set_ylabel("$<w'w'>^{+}$")
+
+        ax[0,1].plot(yplus_odt,      ufvfm_odt,         'k-', label="post")
+        ax[0,1].plot(yplus_odt[::s], ufvfm_odt_rt[::s], 'bo', label="runtime", markersize=ms)
+        ax[0,1].set_ylabel("$<u'v'>^{+}$")
+
+        ax[1,1].plot(yplus_odt,      ufwfm_odt,         'k-', label="post")
+        ax[1,1].plot(yplus_odt[::s], ufwfm_odt_rt[::s], 'bo', label="runtime", markersize=ms)
+        ax[1,1].set_ylabel("$<u'w'>^{+}$")
+
+        ax[2,1].plot(yplus_odt,      vfwfm_odt,         'k-', label="post")
+        ax[2,1].plot(yplus_odt[::s], vfwfm_odt_rt[::s], 'bo', label="runtime", markersize=ms)
+        ax[2,1].set_ylabel("$<v'w'>^{+}$")
+
+        for axis1 in range(3):
+            for axis2 in range(2):
+                ax[axis1,axis2].set_xlabel(r"$y^{+}$")
+                ax[axis1,axis2].legend(loc="upper right", fontsize="small")
+
+        plt.tight_layout()
+        plt.savefig(filename, dpi=600)
+
 
 
     #--------------------------------------------------------------------------------------------
