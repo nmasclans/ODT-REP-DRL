@@ -207,23 +207,6 @@ def compute_odt_statistics(odt_statistics_filepath, input_params, plot_reynolds_
     # averaged terms for calculating TKE budgets
     dudy2m /= nfiles 
 
-    # ------------------ (get) Velocity statistics computed during odt simulation ------------------
-    # the mean velocities are taken from the last discrete time datafile from odt execution
-    # todo: this will lead to error, run-time statistics data is now stored in a subfolder
-    data_stat = np.loadtxt(flist_stat[-1])
-    yum      = data_stat[:,0]
-    um_data_ = data_stat[:,1] 
-    data2_   = data_stat[:,2] 
-    data3_   = data_stat[:,3]
-    
-    um_data  = interp1d(yum, um_data_, fill_value='extrapolate')(yu)  
-    data2    = interp1d(yum, data2_,   fill_value='extrapolate')(yu)  
-    data3    = interp1d(yum, data3_,   fill_value='extrapolate')(yu)  
-
-    um_data  = 0.5*(um_data[:nunif2] + np.flipud(um_data[nunif2:]))  # mirror data (symmetric)
-    data2    = 0.5*(data2[:nunif2] + np.flipud(data2[nunif2:]))
-    data3    = 0.5*(data3[:nunif2] + np.flipud(data3[nunif2:]))
-
     # --- y-coordinate, y+ ---
     yu += delta         # domain center is at 0; shift so left side is zero
     yu = yu[:nunif2]    # plotting to domain center
@@ -270,8 +253,7 @@ def compute_odt_statistics(odt_statistics_filepath, input_params, plot_reynolds_
     odt_data = np.vstack([yu/delta,yuplus,um,vm,wm,urmsf,vrmsf,wrmsf,
                           ufufm,vfvfm,wfwfm,ufvfm,ufwfm,vfwfm,
                           viscous_stress,reynolds_stress,total_stress, # -> stress decomposition
-                          vt_u_plus, d_u_plus,                         # -> TKE budgets for u-component
-                          um_data, data2, data3]).T            
+                          vt_u_plus, d_u_plus]).T                      # -> TKE budgets for u-component
     np.savetxt(odt_statistics_filepath, odt_data, 
             header= "y/delta,    y+,          u+_mean,     v+_mean,     w+_mean,     u+_rmsf,     v+_rmsf,     w+_rmsf,     "\
                     "<u'u'>+,     <v'v'>+,     <w'w'>+,     <u'v'>+,     <u'w'>+,     <v'w'>+,     " \
@@ -338,11 +320,11 @@ def compute_odt_statistics(odt_statistics_filepath, input_params, plot_reynolds_
         plt.close()
         # ---------- plot all terms of reynolds stress tensor --------
         fig, ax = plt.subplots(figsize=(6,6))
-        ax.plot(yuplus, ufufm,    linewidth=2, zorder = 3,               label=r"$R_{00}=<u'u'>$")
-        ax.plot(yuplus, vfvfm,'o',linewidth=2, zorder = 2, markersize=5, label=r"$R_{11}=<v'v'>$")
-        ax.plot(yuplus, wfwfm,    linewidth=2, zorder = 3,               label=r"$R_{22}=<w'w'>$")
-        ax.plot(yuplus, ufvfm,'o',linewidth=2, zorder = 2, markersize=5, label=r"$R_{01}=<u'v'>$")
-        ax.plot(yuplus, ufwfm,    linewidth=2, zorder = 3,               label=r"$R_{02}=<u'w'>$")
+        ax.plot(yuplus, ufufm,    linewidth=2, zorder = 3,                label=r"$R_{00}=<u'u'>$")
+        ax.plot(yuplus, vfvfm,'o',linewidth=2, zorder = 2, markersize=5,  label=r"$R_{11}=<v'v'>$")
+        ax.plot(yuplus, wfwfm,    linewidth=2, zorder = 3,                label=r"$R_{22}=<w'w'>$")
+        ax.plot(yuplus, ufvfm,'o',linewidth=2, zorder = 2, markersize=5,  label=r"$R_{01}=<u'v'>$")
+        ax.plot(yuplus, ufwfm,    linewidth=2, zorder = 3,                label=r"$R_{02}=<u'w'>$")
         ax.plot(yuplus, vfwfm,'o',linewidth=2, zorder = 1, markersize=10, label=r"$R_{12}=<v'w'>$")
         ax.set_xlabel(r"$y^{+}$")
         ax.legend(loc="upper right", fontsize=fs_leg)
@@ -362,7 +344,7 @@ def get_odt_statistics(odt_statistics_filepath, input_params):
 
     Returns:
         ODT statistics calculated over statistic time by 'compute_odt_statistics'
-        ydelta, yplus, um, urmsf, vrmsf, wrmsf, ufufm, vfvfm, wfwfm, ufvfm, ufwfm, vfwfm, viscous_stress, reynolds_stress, total_stress (np.ndarrays)
+        ydelta, yplus, um, vm, wm, urmsf, vrmsf, wrmsf, ufufm, vfvfm, wfwfm, ufvfm, ufwfm, vfwfm, viscous_stress, reynolds_stress, total_stress (np.ndarrays)
     """
     # --- Get ODT statistics ---
 
@@ -373,8 +355,8 @@ def get_odt_statistics(odt_statistics_filepath, input_params):
     yplus  = odt[:,1]  # y+
 
     um     = odt[:,2]  # u+_mean
-    # vm   = odt[:,3]  # v+_mean
-    # wm   = odt[:,4]  # w+_mean
+    vm     = odt[:,3]  # v+_mean
+    wm     = odt[:,4]  # w+_mean
 
     urmsf  = odt[:,5]  # u+_rmsf
     vrmsf  = odt[:,6]  # v+_rmsf
@@ -395,16 +377,85 @@ def get_odt_statistics(odt_statistics_filepath, input_params):
     vt_u = odt[:,17]  # Viscous transport 
     d_u  = odt[:,18]  # Dissipation
 
-    # velocity statistics calculated during odt execution
-    
-    um_rt = odt[:,19]  # u+_mean_data
-
-    return (ydelta, yplus, um, urmsf, vrmsf, wrmsf, 
+    return (ydelta, yplus, um, vm, wm, urmsf, vrmsf, wrmsf, 
             ufufm, vfvfm, wfwfm, ufvfm, ufwfm, vfwfm, 
             viscous_stress, reynolds_stress, total_stress, 
-            vt_u, d_u,
-            um_rt)
+            vt_u, d_u)
 
+
+def get_odt_statistics_rt(input_params):
+    """
+    Get ODT statistics calculated during runtime, stored in data/case_name/data/data_xxxxx/statistics/
+
+    Parameters:
+        input_params (dict): ODT input parameters dictionary
+
+    Returns:
+        ODT statistics calculated during runtime
+        ( ydelta, 
+          um_data, urmsf_data, uFpert_data, 
+          vm_data, vrmsf_data, vFpert_data,
+          wm_data, wrmsf_data, wFpert_data )
+    """
+
+    # --- Get ODT input parameters ---
+    
+    delta = input_params["delta"]
+    case_name = input_params["caseN"]
+
+    # --- Get vel. statistics computed during runtime at last time increment ---
+
+    flist_stat = sorted(gb.glob('../../data/' + case_name + '/data/data_00000/statistics/dmp_*_stat.dat'))
+    flast      = flist_stat[-1]
+    data_stat  = np.loadtxt(flast)
+
+    # statistics file rows (expected):
+    # 1_posUnif, 
+    # 2_uvel_mean, 3_uvel_rmsf, 4_uvel_Fpert, 
+    # 5_vvel_mean, 6_vvel_rmsf, 7_vvel_Fpert,
+    # 8_wvel_mean, 9_wvel_rmsf, 10_wvel_Fpert
+    # -> check the file rows correspond to the expected variables:
+    with open(flast,'r') as f:
+        rows_info = f.readlines()[3] # 4th line of the file
+    rows_info_expected = '#         1_posUnif        2_uvel_mean        3_uvel_rmsf       4_uvel_Fpert        5_vvel_mean        6_vvel_rmsf       7_vvel_Fpert        8_wvel_mean        9_wvel_rmsf      10_wvel_Fpert\n' 
+    if rows_info != rows_info_expected:
+        print("statistic files rows do not correspond to the expected variables")
+        print("rows variables (expected):\n",rows_info_expected,"\n")
+        print("rows variables (current):\n", rows_info)
+        exit(0)
+    # -> get data
+    yu          = data_stat[:,0]
+    #
+    um_data     = data_stat[:,1] 
+    urmsf_data  = data_stat[:,2] 
+    uFpert_data = data_stat[:,3]
+    #
+    vm_data     = data_stat[:,4] 
+    vrmsf_data  = data_stat[:,5] 
+    vFpert_data = data_stat[:,6] 
+    #
+    wm_data     = data_stat[:,7] 
+    wrmsf_data  = data_stat[:,8] 
+    wFpert_data = data_stat[:,9]  
+
+    # mirror data (symmetric in the y-direction from the channel center)
+    nunif       = len(um_data)
+    nunif2      = int(nunif/2)
+    yu          = yu[:nunif2] + delta
+    um_data     = 0.5*(um_data[:nunif2]     + np.flipud(um_data[nunif2:])    )
+    urmsf_data  = 0.5*(urmsf_data[:nunif2]  + np.flipud(urmsf_data[nunif2:]) )
+    uFpert_data = 0.5*(uFpert_data[:nunif2] + np.flipud(uFpert_data[nunif2:]))
+    vm_data     = 0.5*(vm_data[:nunif2]     + np.flipud(vm_data[nunif2:])    )
+    vrmsf_data  = 0.5*(vrmsf_data[:nunif2]  + np.flipud(vrmsf_data[nunif2:]) )
+    vFpert_data = 0.5*(vFpert_data[:nunif2] + np.flipud(vFpert_data[nunif2:]))
+    wm_data     = 0.5*(wm_data[:nunif2]     + np.flipud(wm_data[nunif2:])    )
+    wrmsf_data  = 0.5*(wrmsf_data[:nunif2]  + np.flipud(wrmsf_data[nunif2:]) )
+    wFpert_data = 0.5*(wFpert_data[:nunif2] + np.flipud(wFpert_data[nunif2:]))
+
+    return (yu/delta, 
+            um_data, urmsf_data, uFpert_data,
+            vm_data, vrmsf_data, vFpert_data,
+            wm_data, wrmsf_data, wFpert_data)
 
 def get_dns_statistics(Re_tau, input_params):
 

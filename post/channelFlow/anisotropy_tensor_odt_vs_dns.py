@@ -75,7 +75,7 @@ inputParams = {"kvisc":kvisc, "rho":rho, "dxmin": dxmin, "domainLength" : domain
 
 odtStatisticsFilepath = "../../data/" + caseN + "/post/ODTstat.dat"
 compute_odt_statistics(odtStatisticsFilepath, inputParams)
-(ydelta_odt, yplus_odt, um_odt, urmsf_odt, vrmsf_odt, wrmsf_odt, ufufm_odt, vfvfm_odt, wfwfm_odt, ufvfm_odt, ufwfm_odt, vfwfm_odt, viscous_stress_odt, reynolds_stress_odt, total_stress_odt, vt_u_plus_odt, d_u_plus_odt, um_rt_odt) \
+(ydelta_odt, yplus_odt, um_odt, vm_odt, wm_odt, urmsf_odt, vrmsf_odt, wrmsf_odt, ufufm_odt, vfvfm_odt, wfwfm_odt, ufvfm_odt, ufwfm_odt, vfwfm_odt, viscous_stress_odt, reynolds_stress_odt, total_stress_odt, vt_u_plus_odt, d_u_plus_odt) \
     = get_odt_statistics(odtStatisticsFilepath, inputParams)
 
 #------------ Get DNS statistics ---------------

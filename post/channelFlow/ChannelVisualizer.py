@@ -72,6 +72,41 @@ class ChannelVisualizer():
         plt.savefig(filename, dpi=600)
 
 
+    def build_runtime_vs_post_statistics(self, yplus_odt, um_odt, vm_odt, wm_odt, urmsf_odt, vrmsf_odt, wrmsf_odt, um_odt_rt, vm_odt_rt, wm_odt_rt, urmsf_odt_rt, vrmsf_odt_rt, wrmsf_odt_rt):
+
+        filename = f"../../data/{self.caseN}/post/vel_stat_runtime_vs_postprocessed.jpg"
+        print(f"\nMAKING PLOT OF AVERAGED AND RMSF VEL PROFILES calculated at RUNTIME vs. POST-PROCESSED (ODT) in {filename}")
+
+        fig, ax = plt.subplots(3, figsize=(8,10))
+
+        ms = 3; s = 10
+        ax[0].plot(yplus_odt,      um_odt,         'k-',  label=r'$<u>^{+}$ (post)')
+        ax[0].plot(yplus_odt[::s], um_odt_rt[::s], 'ko',  label=r'$<u>^{+}$ (runtime)', markersize=ms)
+        ax[0].set_xlabel(r'$y^+$')
+        ax[0].set_ylabel(r'$u^+$')
+
+        ax[1].plot(yplus_odt,      vm_odt,         'b--', label=r'$<v>^{+}$ (post)')
+        ax[1].plot(yplus_odt,      wm_odt,         'r:',  label=r'$<v>^{+}$ (post)')
+        ax[1].plot(yplus_odt[::s], vm_odt_rt[::s], 'bo',  label=r'$<w>^{+}$ (runtime)', markersize=ms)
+        ax[1].plot(yplus_odt[::s], wm_odt_rt[::s], 'ro',  label=r'$<w>^{+}$ (runtime)', markersize=ms)
+        ax[1].set_xlabel(r'$y^+$')
+        ax[1].set_ylabel(r'$v^+$, $w^+$')
+
+        ax[2].plot(yplus_odt,      urmsf_odt,      'k-',  label=r'$u_{rmsf}^{+}$ (post)')
+        ax[2].plot(yplus_odt,      vrmsf_odt,      'b--', label=r'$v_{rmsf}^{+}$ (post)')
+        ax[2].plot(yplus_odt,      wrmsf_odt,      'r:',  label=r'$w_{rmsf}^{+}$ (post)')
+        ax[2].plot(yplus_odt[::s], urmsf_odt[::s], 'ko',  label=r'$u_{rmsf}^{+}$ (runtime)', markersize=ms)
+        ax[2].plot(yplus_odt[::s], vrmsf_odt[::s], 'bo',  label=r'$v_{rmsf}^{+}$ (runtime)', markersize=ms)
+        ax[2].plot(yplus_odt[::s], wrmsf_odt[::s], 'ro',  label=r'$w_{rmsf}^{+}$ (runtime)', markersize=ms)
+        ax[2].set_ylabel(r'$u_{rmsf}^{+},v_{rmsf}^{+},w_{rmsf}^{+}$')
+
+        for axis in range(3):
+            ax[axis].legend(loc="upper right", fontsize="small")
+
+        plt.tight_layout()
+        plt.savefig(filename, dpi=600)
+
+
     def build_reynolds_stress_diagonal_profile(self, y_odt, y_dns, Rxx_odt, Ryy_odt, Rzz_odt, Rxx_dns, Ryy_dns, Rzz_dns):
 
         filename = f"../../data/{self.caseN}/post/reynolds_stress_diagonal.jpg"

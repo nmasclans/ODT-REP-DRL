@@ -56,8 +56,11 @@ inputParams = {"kvisc":kvisc, "rho":rho, "dxmin": dxmin, "domainLength" : domain
 
 odtStatisticsFilepath = "../../data/" + caseN + "/post/ODTstat.dat"
 compute_odt_statistics(odtStatisticsFilepath, inputParams, plot_reynolds_stress_terms=False)
-(ydelta_odt, yplus_odt, um_odt, urmsf_odt, vrmsf_odt, wrmsf_odt, ufufm_odt, vfvfm_odt, wfwfm_odt, ufvfm_odt, ufwfm_odt, vfwfm_odt, viscous_stress_odt, reynolds_stress_odt, total_stress_odt, vt_u_plus_odt, d_u_plus_odt, um_rt_odt) \
+(ydelta_odt, yplus_odt, um_odt, vm_odt, wm_odt, urmsf_odt, vrmsf_odt, wrmsf_odt, ufufm_odt, vfvfm_odt, wfwfm_odt, ufvfm_odt, ufwfm_odt, vfwfm_odt, viscous_stress_odt, reynolds_stress_odt, total_stress_odt, vt_u_plus_odt, d_u_plus_odt) \
     = get_odt_statistics(odtStatisticsFilepath, inputParams)
+(ydelta_odt_rt, um_odt_rt, urmsf_odt_rt, uFpert_odt_rt, vm_odt_rt, vrmsf_odt_rt, vFpert_odt_rt, wm_odt_rt, wrmsf_odt_rt, wFpert_odt_rt) \
+    = get_odt_statistics_rt(inputParams) 
+assert (abs(ydelta_odt - ydelta_odt_rt) < 1e-6).all(), "yu/delta from get_odt_statistics != yu/delta from get_odt_statistics_rt"
 
 #------------ Get DNS statistics ---------------
 
@@ -75,8 +78,9 @@ compute_odt_statistics(odtStatisticsFilepath, inputParams, plot_reynolds_stress_
 
 visualizer = ChannelVisualizer(caseN)
 
-visualizer.build_u_mean_profile(yplus_odt, yplus_dns, um_odt, um_rt_odt, um_dns)
+visualizer.build_u_mean_profile(yplus_odt, yplus_dns, um_odt, um_odt_rt, um_dns)
 visualizer.build_u_rmsf_profile(yplus_odt, yplus_dns, urmsf_odt, vrmsf_odt, wrmsf_odt, urmsf_dns, vrmsf_dns, wrmsf_dns)
+visualizer.build_runtime_vs_post_statistics(yplus_odt, um_odt, vm_odt, wm_odt, urmsf_odt, vrmsf_odt, wrmsf_odt, um_odt_rt, vm_odt_rt, wm_odt_rt, urmsf_odt_rt, vrmsf_odt_rt, wrmsf_odt_rt)
 visualizer.build_reynolds_stress_not_diagonal_profile(yplus_odt, yplus_dns, ufvfm_odt, ufwfm_odt, vfwfm_odt, ufvfm_dns, ufwfm_dns, vfwfm_dns)
 visualizer.build_reynolds_stress_diagonal_profile(yplus_odt, yplus_dns, ufufm_odt, vfvfm_odt, wfwfm_odt, ufufm_dns, vfvfm_dns, wfwfm_dns)
 visualizer.build_stress_decomposition(ydelta_odt, ydelta_dns, viscous_stress_odt, reynolds_stress_odt, total_stress_odt, viscous_stress_dns, reynolds_stress_dns, total_stress_dns)
