@@ -1,4 +1,4 @@
-#include "eigenDecomposition"
+#include "eigenDecomposition.h"
 #include <iostream>
 #include <cmath>
 

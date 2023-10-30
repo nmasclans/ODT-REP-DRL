@@ -9,6 +9,8 @@
 
 using namespace std;
 
+// todo: include these methods to dv:dv_stress_tensor class
+
 ///////////////////////////////////////////////////////////////////////////////
 /** eigenDecomposition initialization function
  *
