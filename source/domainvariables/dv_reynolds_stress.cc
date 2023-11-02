@@ -52,6 +52,7 @@ void dv_reynolds_stress::updateTimeAveragedQuantities(const double &delta_t, con
 
     double Rxx_inst, Ryy_inst, Rzz_inst, Rxy_inst, Rxz_inst, Ryz_inst;
     double Rkk_inv;
+    double Akk;
     double Aij[3][3] = {};
     double Dij[3][3] = {};
     double Qij[3][3] = {};
@@ -86,6 +87,12 @@ void dv_reynolds_stress::updateTimeAveragedQuantities(const double &delta_t, con
         Aij[0][1] = Rkk_inv * Rxy.at(i);                Aij[1][0] = Aij[0][1];
         Aij[0][2] = Rkk_inv * Rxz.at(i);                Aij[2][0] = Aij[0][2];
         Aij[1][2] = Rkk_inv * Ryz.at(i);                Aij[2][1] = Aij[1][2];
+
+        // ensure a_ij is trace-free (previous calc. introduce computational errors)
+        Akk = Aij[0][0] + Aij[1][1] + Aij[2][2];
+        Aij[0][0] -= Akk/3.0;
+        Aij[1][1] -= Akk/3.0;
+        Aij[2][2] -= Akk/3.0;
 
         // ----------------- update eigenvalues of anisotropy tensor  -----------------
 

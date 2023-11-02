@@ -254,7 +254,10 @@ void inputoutput::outputProperties(const string fname, const double time) {
         ofileStat << setw(15) << j++ << "_Rxy";
         ofileStat << setw(15) << j++ << "_Rxz";
         ofileStat << setw(15) << j++ << "_Ryz";
-        // Anisotropy stress - eigenvalues barycentric map
+        // Anisotropy stress - eigenvalues & barycentric map
+        ofileStat << setw(11) << j++ << "_lambda0";
+        ofileStat << setw(11) << j++ << "_lambda1";
+        ofileStat << setw(11) << j++ << "_lambda2";
         ofileStat << setw(13) << j++ << "_xmap1";
         ofileStat << setw(13) << j++ << "_xmap2";
     }
@@ -304,7 +307,10 @@ void inputoutput::outputProperties(const string fname, const double time) {
             ofileStat << setw(19) << domn->Rij->Rxy.at(i);
             ofileStat << setw(19) << domn->Rij->Rxz.at(i);
             ofileStat << setw(19) << domn->Rij->Ryz.at(i);
-            // Anisotropy stress - eigenvalues barycentric map
+            // Anisotropy stress - eigenvalues & barycentric map
+            ofileStat << setw(19) << domn->Rij->lambda0.at(i);
+            ofileStat << setw(19) << domn->Rij->lambda1.at(i);
+            ofileStat << setw(19) << domn->Rij->lambda2.at(i);
             ofileStat << setw(19) << domn->Rij->xmap.at(i).at(0);
             ofileStat << setw(19) << domn->Rij->xmap.at(i).at(1);
         }

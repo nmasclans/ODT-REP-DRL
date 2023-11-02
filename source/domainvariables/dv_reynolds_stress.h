@@ -26,9 +26,6 @@ class dv_reynolds_stress : public dv {
 
     public:
 
-        vector<double> lambda0;                ///< todo: add description
-        vector<double> lambda1;
-        vector<double> lambda2;
         vector<double> x1c;
         vector<double> x2c;
         vector<double> x3c;
