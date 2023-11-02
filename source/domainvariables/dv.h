@@ -59,6 +59,9 @@ class dv {
         vector<double>                Ryy;                    ///< todo: add description
         vector<double>                Ryz;                    ///< todo: add description
         vector<double>                Rzz;                    ///< todo: add description
+        
+        // anisotropy tensor eigenvalues - barycentric map coordinates
+        vector<vector<double>>        xmap;
 
 
     //////////////////// MEMBER FUNCTIONS /////////////////
