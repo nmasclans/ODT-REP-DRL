@@ -73,10 +73,15 @@ inputParams = {"kvisc":kvisc, "rho":rho, "dxmin": dxmin, "domainLength" : domain
 
 #------------ Get ODT data ---------------
 
+# post-processed statistics
 odtStatisticsFilepath = "../../data/" + caseN + "/post/ODTstat.dat"
 compute_odt_statistics(odtStatisticsFilepath, inputParams)
 (ydelta_odt, yplus_odt, um_odt, vm_odt, wm_odt, urmsf_odt, vrmsf_odt, wrmsf_odt, ufufm_odt, vfvfm_odt, wfwfm_odt, ufvfm_odt, ufwfm_odt, vfwfm_odt, viscous_stress_odt, reynolds_stress_odt, total_stress_odt, vt_u_plus_odt, d_u_plus_odt) \
     = get_odt_statistics(odtStatisticsFilepath, inputParams)
+# calculated-at-runtime statistics
+(_, _,_,_, _,_,_, _,_,_, _,_,_,_,_,_, \
+    lambda0_odt_rt, lambda1_odt_rt, lambda2_odt_rt, xmap1_odt_rt, xmap2_odt_rt) \
+    = get_odt_statistics_rt(inputParams)
 
 #------------ Get DNS statistics ---------------
 
@@ -226,43 +231,7 @@ for sim in simulation_list:
         bar_map_y.append(bar_map_xy[1])
         bar_map_color.append(yplus[p])
 
-
-    ### ---------------------- Plot histogram ---------------------- 
-    ##
-    ### Prepare data
-    ##num_points_bar = len(bar_map_x)
-    ##bar_map_data = np.zeros([num_points_bar, 2])
-    ##bar_map_data[:,0] = bar_map_x
-    ##bar_map_data[:,1] = bar_map_y
-    ##bar_map_df = pd.DataFrame( bar_map_data, columns = ['x','y'])
-    #####print("\n(x,y) barycentric map positions:")
-    #####print(bar_map_df)
-    ##
-    ### bins
-    ##xbins = np.linspace( 0.0, 1.0, nbins )
-    ##ybins = np.linspace( 0.0, 1.0, nbins )
-    ##bar_h, bar_xedges, bar_yedges = np.histogram2d( bar_map_df.x, bar_map_df.y, bins = [ xbins, ybins ], normed = True )
-    ##bar_h = bar_h + 1.0e-12
-    ##bar_h = bar_h.T
-    ##bar_xcenters = ( bar_xedges[:-1] + bar_xedges[1:] )/2
-    ##bar_ycenters = ( bar_yedges[:-1] + bar_yedges[1:] )/2
-    ##
-    ### find maximum number of occurencies in the barycentric map, but only within the realizability triangle area
-    ##max_x = -1.0
-    ##max_y = -1.0
-    ##max_z = -1.0
-    ##for i in range( 0, len( bar_xcenters ) ):
-    ##    for j in range( 0, len( bar_ycenters ) ):
-    ##        if ( ( bar_ycenters[j] - bar_xcenters[i]*math.sqrt(3.0) ) < 0.0 ) and ( bar_ycenters[j] > 0.0 ) and ( ( bar_ycenters[j] + math.sqrt(3.0)*(bar_xcenters[i]-1.0) ) < 0.0 ): 
-    ##            if bar_h[i,j] > max_z:
-    ##                max_z = bar_h[i,j]
-    ##                max_x = bar_xcenters[j] # in histogram the axis are flipped
-    ##                max_y = bar_ycenters[i] # in histogram the axis are flipped	
-    ##bar_x = max_x
-    ##bar_y = max_y
-    ##print(f"\nMaximum number of occurencies in the barycentric map point (x,y) = ({bar_x:.2f},{bar_y:.2f}) with # occurencies = {max_z:.2f}")
-
-    # ---------------------- Plot Barycentric Map ---------------------- 
+    # ---------------------- Plot Barycentric Map (post-processing & runtime calculations)---------------------- 
 
     plt.figure()
 
@@ -293,6 +262,42 @@ for sim in simulation_list:
     plt.title(f"averaging time = {tEnd:.1f}")
 
     # save figure
-    filename = f"../../data/{caseN}/post/anisotropy_tensor_barycentric_map_{sim}.jpg"
-    print(f"\nMAKING PLOT OF BARYCENTRIC MAP OF ANISOTROPY TENSOR from {sim} data in {filename}" )
+    filename = f"../../data/{caseN}/post/anisotropy_tensor_barycentric_map_{sim}_postproc.jpg"
+    print(f"\nMAKING PLOT OF BARYCENTRIC MAP OF ANISOTROPY TENSOR from {sim} data for POST-PROCESSING calculations in {filename}" )
+    plt.savefig(filename, dpi=600)
+
+
+    # ---------------------- Plot Barycentric Map (runtime calculations)---------------------- 
+
+    plt.figure()
+
+    # Plot markers Barycentric map
+    cmap   = matplotlib.colormaps["Greys"] # idem. as cm.get_cmap( 'Greys' ), deprecated in Matplotlib 3.7 
+    norm   = matplotlib.colors.Normalize(vmin = 0, vmax = yplus_max)
+
+    # Plot data into the barycentric map
+    ##plt.scatter( bar_x, bar_y, color='red', zorder = 4, marker = 'o', s = 85, edgecolor = 'black', linewidth = 0.8 )
+    plt.scatter( xmap1_odt_rt, xmap2_odt_rt, c = bar_map_color, cmap = cmap, norm=norm, zorder = 3, marker = 'o', s = 85, edgecolor = 'black', linewidth = 0.8 )
+
+    # Plot barycentric map lines
+    plt.plot( [x1c[0], x2c[0]],[x1c[1], x2c[1]], zorder = 1, color = 'black', linestyle = '-', linewidth = 2 )
+    plt.plot( [x2c[0], x3c[0]],[x2c[1], x3c[1]], zorder = 1, color = 'black', linestyle = '-', linewidth = 2 )
+    plt.plot( [x3c[0], x1c[0]],[x3c[1], x1c[1]], zorder = 1, color = 'black', linestyle = '-', linewidth = 2 )
+
+    # Configure plot
+    plt.xlim([-0.1,1.1])
+    plt.ylim([-0.1,1.1])
+    plt.axis( 'off' )
+    ax = plt.gca()
+    ax.set_aspect('equal', adjustable='box')
+    plt.text( 1.0047, -0.025, r'$\textbf{x}_{1_{c}}$' )
+    plt.text( -0.037, -0.025, r'$\textbf{x}_{2_{c}}$' )
+    plt.text( 0.4850, 0.9000, r'$\textbf{x}_{3_{c}}$' )
+    cbar = plt.colorbar()
+    cbar.set_label( r'$y^{+}$' )
+    plt.title(f"averaging time = {tEnd:.1f}")
+
+    # save figure
+    filename = f"../../data/{caseN}/post/anisotropy_tensor_barycentric_map_{sim}_runtime.jpg"
+    print(f"\nMAKING PLOT OF BARYCENTRIC MAP OF ANISOTROPY TENSOR from {sim} data for RUNTIME calculations in {filename}" )
     plt.savefig(filename, dpi=600)

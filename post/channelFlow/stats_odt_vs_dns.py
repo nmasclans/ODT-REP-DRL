@@ -55,12 +55,17 @@ inputParams = {"kvisc":kvisc, "rho":rho, "dxmin": dxmin, "domainLength" : domain
 #------------ Get ODT data ---------------
 
 odtStatisticsFilepath = "../../data/" + caseN + "/post/ODTstat.dat"
+
+# post-processed statistics
 compute_odt_statistics(odtStatisticsFilepath, inputParams, plot_reynolds_stress_terms=True)
 (ydelta_odt, yplus_odt, um_odt, vm_odt, wm_odt, urmsf_odt, vrmsf_odt, wrmsf_odt, ufufm_odt, vfvfm_odt, wfwfm_odt, ufvfm_odt, ufwfm_odt, vfwfm_odt, viscous_stress_odt, reynolds_stress_odt, total_stress_odt, vt_u_plus_odt, d_u_plus_odt) \
     = get_odt_statistics(odtStatisticsFilepath, inputParams)
+# calculated-at-runtime statistics
 (ydelta_odt_rt, um_odt_rt, urmsf_odt_rt, uFpert_odt_rt, vm_odt_rt, vrmsf_odt_rt, vFpert_odt_rt, wm_odt_rt, wrmsf_odt_rt, wFpert_odt_rt,
- ufufm_odt_rt, vfvfm_odt_rt, wfwfm_odt_rt, ufvfm_odt_rt, ufwfm_odt_rt, vfwfm_odt_rt) \
-    = get_odt_statistics_rt(inputParams) 
+ ufufm_odt_rt, vfvfm_odt_rt, wfwfm_odt_rt, ufvfm_odt_rt, ufwfm_odt_rt, vfwfm_odt_rt, \
+ _, _, _, _, _) \
+    = get_odt_statistics_rt(inputParams)
+# check y/delta coordinates coincide for both statistics calculations 
 assert (abs(ydelta_odt - ydelta_odt_rt) < 1e-6).all(), "yu/delta from get_odt_statistics != yu/delta from get_odt_statistics_rt"
 
 #------------ Get DNS statistics ---------------
