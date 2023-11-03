@@ -50,6 +50,7 @@ dv_reynolds_stress::dv_reynolds_stress(domain    *line,
 
 void dv_reynolds_stress::updateTimeAveragedQuantities(const double &delta_t, const double &averaging_time) {
 
+    double uvel_fluct, vvel_fluct, wvel_fluct;
     double Rxx_inst, Ryy_inst, Rzz_inst, Rxy_inst, Rxz_inst, Ryz_inst;
     double Rkk_inv;
     double Akk;
@@ -61,12 +62,16 @@ void dv_reynolds_stress::updateTimeAveragedQuantities(const double &delta_t, con
 
         // ----------------- update reynolds stress tensor -----------------
         
-        Rxx_inst = pow(domn->uvel->drmsf.at(i),2);
-        Ryy_inst = pow(domn->vvel->drmsf.at(i),2);
-        Rzz_inst = pow(domn->wvel->drmsf.at(i),2);
-        Rxy_inst = domn->uvel->drmsf.at(i) * domn->vvel->drmsf.at(i);
-        Rxz_inst = domn->uvel->drmsf.at(i) * domn->wvel->drmsf.at(i);
-        Ryz_inst = domn->vvel->drmsf.at(i) * domn->wvel->drmsf.at(i);
+        uvel_fluct = domn->uvel->dunif.at(i) - domn->uvel->davg.at(i);
+        vvel_fluct = domn->vvel->dunif.at(i) - domn->vvel->davg.at(i);
+        wvel_fluct = domn->wvel->dunif.at(i) - domn->wvel->davg.at(i);
+
+        Rxx_inst  = pow(uvel_fluct,2);
+        Ryy_inst  = pow(vvel_fluct,2);
+        Rzz_inst  = pow(wvel_fluct,2);
+        Rxy_inst  = uvel_fluct * vvel_fluct;
+        Rxz_inst  = uvel_fluct * wvel_fluct;
+        Ryz_inst  = vvel_fluct * wvel_fluct;
         
         Rxx.at(i) = updateTimeMeanQuantity(Rxx_inst, Rxx.at(i), delta_t, averaging_time);
         Ryy.at(i) = updateTimeMeanQuantity(Ryy_inst, Ryy.at(i), delta_t, averaging_time);

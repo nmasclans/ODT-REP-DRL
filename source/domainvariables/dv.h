@@ -45,6 +45,7 @@ class dv {
         // statistics calculation
         int                           nunif;                  ///< todo: add description
         vector<double>                posUnif;                ///< todo: add description
+        vector<double>                dunif;                  ///< todo: add description
         vector<double>                davg;                   ///< todo: add description
         vector<double>                drmsf;                  ///< todo: add description
 

@@ -52,7 +52,8 @@ dv_uvw::dv_uvw(domain  *line,
         posUnif[i] = - delta + i * (2.0 * delta) / (nunif - 1);
     }
 
-    // Averaged quantities, defined in the uniform fine grid
+    // Instantaneous and Averaged quantities, defined in the uniform fine grid
+    dunif             = vector<double>(nunif, 0.0);
     davg              = vector<double>(nunif, 0.0);
     drmsf             = vector<double>(nunif, 0.0);
 
@@ -285,19 +286,19 @@ void dv_uvw::getRhsStatConv(const double &timeCurrent) {
 void dv_uvw::updateTimeAveragedQuantities(const double &delta_t, const double &averaging_time) {
 
     // interpolate instantaneous quantity in adaptative grid to uniform fine grid
-    vector<double> dUnif(nunif, 0.0);
     vector<double> dmb = d;
     Linear_interp Linterp(domn->pos->d, dmb);
     for (int i=0; i<nunif; i++) {
-        dUnif.at(i) = Linterp.interp(posUnif.at(i));
+        // velocity instantaneous (fine grid)
+        dunif.at(i) = Linterp.interp(posUnif.at(i));
     } 
 
     // update time-averaged quantities at each grid point
     for(int i=0; i<nunif; i++) {
-        // velocity time-average
-        davg.at(i)  = updateTimeMeanQuantity(dUnif.at(i), davg.at(i), delta_t, averaging_time);
-        // velocity rmsf 
-        drmsf.at(i) = updateTimeRmsfQuantity(dUnif.at(i), davg.at(i), drmsf.at(i), delta_t, averaging_time); // note that davg is the updated value in the previous line!
+        // velocity time-average (fine grid)
+        davg.at(i)  = updateTimeMeanQuantity(dunif.at(i), davg.at(i), delta_t, averaging_time);
+        // velocity rmsf (fine grid)
+        drmsf.at(i) = updateTimeRmsfQuantity(dunif.at(i), davg.at(i), drmsf.at(i), delta_t, averaging_time); // note that davg is the updated value in the previous line!
     }
 
 }
