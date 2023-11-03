@@ -1,6 +1,14 @@
+import copy
 import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
+import matplotlib.cm as cm
+import matplotlib.colors as colors
+
+from matplotlib.ticker import LogFormatter
+from PIL import Image
+from scipy import stats
+
 
 # Latex figures
 plt.rc( 'text',       usetex = True )
@@ -15,6 +23,11 @@ class ChannelVisualizer():
     def __init__(self, caseN):
 
         self.caseN = caseN
+
+        # --- Location of Barycentric map corners ---
+        self.x1c = np.array( [ 1.0 , 0.0 ] )
+        self.x2c = np.array( [ 0.0 , 0.0 ] )
+        self.x3c = np.array( [ 0.5 , np.sqrt(3.0)/2.0 ] )
 
     #--------------------------------------------------------------------------------------------
     #   Methods:                            ODT vs. DNS
@@ -481,4 +494,157 @@ class ChannelVisualizer():
         plt.tight_layout()
         plt.savefig(filename, dpi=600)
 
+    
+    def build_anisotropy_tensor_barycentric_map_frame(self, frames, bar_map_x, bar_map_y, bar_map_color, avg_time):
 
+        plt.figure()
+
+        # Plot markers Barycentric map
+        #cmap = cm.get_cmap( 'Greys' ) ## deprecated from matplotlib 3.7
+        cmap  = matplotlib.colormaps['Greys']
+        norm  = colors.Normalize(vmin = 0, vmax = 1.0)
+
+        # Plot data into the barycentric map
+        plt.scatter( bar_map_x, bar_map_y, c = bar_map_color, cmap = cmap, norm=norm, zorder = 3, marker = 'o', s = 85, edgecolor = 'black', linewidth = 0.8 )
+
+        # Plot barycentric map lines
+        plt.plot( [self.x1c[0], self.x2c[0]],[self.x1c[1], self.x2c[1]], zorder = 1, color = 'black', linestyle = '-', linewidth = 2 )
+        plt.plot( [self.x2c[0], self.x3c[0]],[self.x2c[1], self.x3c[1]], zorder = 1, color = 'black', linestyle = '-', linewidth = 2 )
+        plt.plot( [self.x3c[0], self.x1c[0]],[self.x3c[1], self.x1c[1]], zorder = 1, color = 'black', linestyle = '-', linewidth = 2 )
+
+        # Configure plot
+        plt.xlim([-0.1,1.1])
+        plt.ylim([-0.1,1.1])
+        plt.axis( 'off' )
+        ax = plt.gca()
+        ax.set_aspect('equal', adjustable='box')
+        plt.text( 1.0047, -0.025, r'$\textbf{x}_{1_{c}}$' )
+        plt.text( -0.037, -0.025, r'$\textbf{x}_{2_{c}}$' )
+        plt.text( 0.4850, 0.9000, r'$\textbf{x}_{3_{c}}$' )
+        cbar = plt.colorbar()
+        cbar.set_label( r'$y/\delta$' )
+        plt.title(f"averaging time = {avg_time:.1f}")
+        ###plt.clim( 0.0, 20.0 )
+
+        # ------ save figure ------
+        #filename = f"../../data/{caseN}/post/anisotropy_tensor_barycentric_map_odt_avgTime_{avg_time:.0f}.jpg"
+        #print(f"\nMAKING PLOT OF BARYCENTRIC MAP OF ANISOTROPY TENSOR from ODT data at Averaging Time = {avg_time:.2f}, in filename: {filename}" )
+        #plt.savefig(filename, dpi=600)
+
+        # ------ gif frame by pillow ---------
+        # Save the current figure as an image frame
+        fig = plt.gcf()
+        fig.canvas.draw()
+        img = Image.frombytes("RGB", fig.canvas.get_width_height(), fig.canvas.tostring_rgb())
+        frames.append(img)
+
+        plt.close()
+
+        return frames
+
+
+    def build_anisotropy_tensor_eigenvalues_frame(self, frames, ydelta, eigenvalues, avg_time):
+        
+        plt.figure()
+
+        plt.plot(ydelta, eigenvalues[:,0], label=r"$\lambda_0$")
+        plt.plot(ydelta, eigenvalues[:,1], label=r"$\lambda_1$")
+        plt.plot(ydelta, eigenvalues[:,2], label=r"$\lambda_2$")
+
+        plt.xlim([0.0, 1.0])
+        plt.ylim([-0.5, 1.0])
+        plt.yticks([-2/3, -1/3, 0, 1/3, 2/3], labels = ["-2/3", "-1/3", "0", "1/3", "2/3"])
+        plt.xlabel(r"$y/\delta$")
+        plt.ylabel(r"anisotropy tensor eigenvalues $\lambda_i$")
+        plt.grid(axis="y")
+        plt.title(f"averaging time = {avg_time:.1f}")
+        plt.legend(loc="upper right")
+        plt.tight_layout()
+
+        fig = plt.gcf()
+        fig.canvas.draw()
+        img = Image.frombytes("RGB", fig.canvas.get_width_height(), fig.canvas.tostring_rgb())
+        frames.append(img)
+
+        plt.close()
+
+        return frames
+
+
+    def plot_line(self, xdata, ydata, xlim, ylim, xlabel, ylabel, title):
+
+        filename = f"../../data/{self.caseN}/post/{title}.jpg"
+        print(f"\nMAKING PLOT of {xlabel} vs. {ylabel} in {filename}" )
+
+        fig, ax = plt.subplots()
+
+        plt.plot(xdata, ydata, linewidth=2)
+        plt.xlim(xlim); 
+        plt.xlabel(xlabel)
+        plt.ylim(ylim); #plt.yticks(yticks); 
+        plt.ylabel(ylabel)
+
+        plt.savefig(filename, dpi=600)
+        plt.close()
+
+
+    def plot_pdf(self, xdata, xlim, xlabel, nbins, title):
+
+        filename = f"../../data/{self.caseN}/post/{title}.jpg"
+        print(f"\nMAKING PLOT of PDF of {xlabel} in {filename}" )
+
+        # Compute a histogram of the sample
+        bins = np.linspace(xlim[0], xlim[1], nbins)
+        histogram, bins = np.histogram(xdata, bins=bins, density=True)
+
+        # Compute pdf
+        bin_centers = 0.5*(bins[1:] + bins[:-1])
+        pdf = stats.norm.pdf(bin_centers)
+
+        plt.figure(figsize=(6, 4))
+        plt.plot(bin_centers, pdf)
+        plt.xlabel(xlabel)
+        plt.xlim(xlim)
+        plt.ylim([0,1])
+
+        plt.savefig(filename, dpi=600)
+        plt.close()
+
+
+
+    def plot_join_pdf(self, x_data, y_data, xlim, ylim, xlabel, ylabel, nbins, title):
+
+        filename = f"../../data/{self.caseN}/post/{title}.jpg"
+        print(f"\nMAKING PLOT of JOIN-PDF of {xlabel} vs. {ylabel} in {filename}" )
+
+        fig, ax = plt.subplots()
+
+        # Histogram 2D plot
+        x_bins = np.linspace( x_data.min(), x_data.max(), nbins )
+        y_bins = np.linspace( y_data.min(), y_data.max(), nbins )
+        h, x_edges, y_edges = np.histogram2d( x_data, y_data, bins = [ x_bins, y_bins ], normed = True )
+        h = h + 1.0e-12
+        h = h.T
+        x_centers = ( x_edges[:-1] + x_edges[1:] )/2
+        y_centers = ( y_edges[:-1] + y_edges[1:] )/2
+        
+        # Plot data
+        #my_cmap = copy.copy( cm.get_cmap( 'Greys' ) )
+        my_cmap = copy.copy( cm.get_cmap( 'pink_r' ) )
+        my_cmap.set_under( 'white' )
+        cs = ax.contour( x_centers, y_centers, h, colors = 'black', zorder = 2, norm = colors.LogNorm( vmin = 10.0**( int( np.log10( h.max() ) ) - 4 ), vmax = 10.0**( int( np.log10( h.max() ) ) + 1) ), levels = ( 10.0**( int( np.log10( h.max() ) ) - 4 ), 10.0**( int( np.log10( h.max() ) ) - 3 ), 10.0**( int( np.log10( h.max() ) ) - 2 ), 10.0**( int( np.log10( h.max() ) ) - 1 ), 10.0**( int( np.log10( h.max() ) ) + 0 ), 10.0**( int( np.log10( h.max() ) ) + 1 ) ),  linestyles = '--', linewidths = 1.0 )
+        cs = ax.contourf(x_centers, y_centers, h, cmap = my_cmap,   zorder = 1, norm = colors.LogNorm( vmin = 10.0**( int( np.log10( h.max() ) ) - 4 ), vmax = 10.0**( int( np.log10( h.max() ) ) + 1) ), levels = ( 10.0**( int( np.log10( h.max() ) ) - 4 ), 10.0**( int( np.log10( h.max() ) ) - 3 ), 10.0**( int( np.log10( h.max() ) ) - 2 ), 10.0**( int( np.log10( h.max() ) ) - 1 ), 10.0**( int( np.log10( h.max() ) ) + 0 ), 10.0**( int( np.log10( h.max() ) ) + 1 ) ) )
+        cbar = plt.colorbar(cs, ax=ax, shrink = 0.95, pad = 0.025, format = LogFormatter(10, labelOnlyBase=False))
+        cs.set_clim( 10.0**( int( np.log10( h.max() ) ) - 4 ), 10.0**( int( np.log10( h.max() ) ) + 1 ) )
+        
+        # Configure plot
+        ax.set_xlim(xlim); #ax.set_xticks(xticks); 
+        ax.set_xlabel(xlabel)
+        ax.tick_params( axis = 'x', direction = 'in', bottom = True, top = True, left = True, right = True )
+        ax.set_ylim(ylim); #plt.yticks(yticks); 
+        ax.set_ylabel(ylabel)
+        ax.tick_params( axis = 'y', direction = 'in', bottom = True, top = True, left = True, right = True )
+        ax.tick_params(axis = 'both', pad = 5) 	# add padding to both x and y axes, dist between axis ticks and label
+
+        plt.savefig(filename, dpi=600)
+        plt.close()

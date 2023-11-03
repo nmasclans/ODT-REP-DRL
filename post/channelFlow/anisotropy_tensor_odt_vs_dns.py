@@ -28,6 +28,8 @@ import numpy as np
 import pandas as pd
 
 from utils import *
+from ChannelVisualizer import ChannelVisualizer
+
 
 plt.rc( 'text', usetex = True )
 plt.rc( 'font', size = 14 )
@@ -38,7 +40,6 @@ plt.rc('text.latex', preamble=r"\usepackage{amsmath} \usepackage{amsmath} \usepa
 # --- Define parameters ---
 tensor_kk_tolerance   = 1.0e-8;	# [-]
 eigenvalues_tolerance = 1.0e-8;	# [-]
-nbins = 50;			            # [-]
 simulation_list = ["odt"]#, "dns"]
 
 # --- Location of Barycentric map corners ---
@@ -56,6 +57,11 @@ except :
 
 if not os.path.exists("../../data/"+caseN+"/post") :
     os.mkdir("../../data/"+caseN+"/post")
+
+# --- Visualizer ---
+
+visualizer  = ChannelVisualizer(caseN)
+nbins       = 1000
 
 # --- Get ODT input parameters ---
 
@@ -172,8 +178,9 @@ for sim in simulation_list:
     # datapoint is omitted, because the anisotropy tensor would -> infinity, as its equation
     # contains the multiplier ( 1 / (2*TKE) )
 
-    bar_map_x = []; bar_map_y = []
-    bar_map_color = []
+    bar_map_x     = np.zeros(num_points)
+    bar_map_y     = np.zeros(num_points)
+    bar_map_color = np.zeros(num_points)
 
     for p in range(num_points):
 
@@ -227,11 +234,22 @@ for sim in simulation_list:
         bar_map_xy = x1c * (     eigenvalues_a_ij[0] -     eigenvalues_a_ij[1])  \
                    + x2c * ( 2 * eigenvalues_a_ij[1] - 2 * eigenvalues_a_ij[2]) \
                    + x3c * ( 3 * eigenvalues_a_ij[2] + 1)
-        bar_map_x.append(bar_map_xy[0])
-        bar_map_y.append(bar_map_xy[1])
-        bar_map_color.append(yplus[p])
+        bar_map_x[p]     = bar_map_xy[0]
+        bar_map_y[p]     = bar_map_xy[1]
+        bar_map_color[p] = yplus[p]
 
-    # ---------------------- Plot Barycentric Map (post-processing & runtime calculations)---------------------- 
+
+    # ---------------------- Plot xmap_x 1st-coordinate vs. y (post-processing & runtime calculations) ---------------------- 
+    
+    # pdf plot of barycentric map 1st coordinate
+    visualizer.plot_pdf(bar_map_x, [0.0, 1.0], "1st coord barycentric map", nbins, "pdf_barmapx_post")
+    
+    # plot of barycentric map 1st coordinate vs yplus
+    visualizer.plot_line(yplus, bar_map_x,    [0.0, yplus.max()], [0.0, 1.0], r"$y^{+}$", "1st coord barycentric map", "anisotropy_tensor_yplus_vs_barmapx_vs_yplus_post")
+    visualizer.plot_line(yplus, xmap1_odt_rt, [0.0, yplus.max()], [0.0, 1.0], r"$y^{+}$", "1st coord barycentric map", "anisotropy_tensor_yplus_vs_barmapx_vs_yplus_rt")
+
+
+    # ---------------------- Plot Barycentric Map (post-processing calculations)---------------------- 
 
     plt.figure()
 
@@ -262,7 +280,7 @@ for sim in simulation_list:
     plt.title(f"averaging time = {tEnd:.1f}")
 
     # save figure
-    filename = f"../../data/{caseN}/post/anisotropy_tensor_barycentric_map_{sim}_postproc.jpg"
+    filename = f"../../data/{caseN}/post/anisotropy_tensor_barycentric_map_{sim}_post.jpg"
     print(f"\nMAKING PLOT OF BARYCENTRIC MAP OF ANISOTROPY TENSOR from {sim} data for POST-PROCESSING calculations in {filename}" )
     plt.savefig(filename, dpi=600)
 
@@ -298,6 +316,6 @@ for sim in simulation_list:
     plt.title(f"averaging time = {tEnd:.1f}")
 
     # save figure
-    filename = f"../../data/{caseN}/post/anisotropy_tensor_barycentric_map_{sim}_runtime.jpg"
+    filename = f"../../data/{caseN}/post/anisotropy_tensor_barycentric_map_{sim}_rt.jpg"
     print(f"\nMAKING PLOT OF BARYCENTRIC MAP OF ANISOTROPY TENSOR from {sim} data for RUNTIME calculations in {filename}" )
     plt.savefig(filename, dpi=600)

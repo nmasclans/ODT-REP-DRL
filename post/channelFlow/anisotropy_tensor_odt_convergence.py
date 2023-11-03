@@ -6,17 +6,12 @@
 import yaml
 import sys
 import os
-import math
-
-import matplotlib
-import matplotlib.cm as cm
-import matplotlib.colors as colors
-#from matplotlib.animation import FuncAnimation
 import numpy as np
 import pandas as pd
 
-from PIL import Image
 from utils import *
+from ChannelVisualizer import ChannelVisualizer
+
 plt.rc( 'text', usetex = True )
 plt.rc( 'font', size = 14 )
 plt.rc('text.latex', preamble=r"\usepackage{amsmath} \usepackage{amsmath} \usepackage{amssymb} \usepackage{color}")
@@ -27,14 +22,6 @@ plt.rc('text.latex', preamble=r"\usepackage{amsmath} \usepackage{amsmath} \usepa
 tensor_kk_tolerance   = 1.0e-8;	# [-]
 eigenvalues_tolerance = 1.0e-8;	# [-]
 nbins = 50;			            # [-]
-
-# --- Location of Barycentric map corners ---
-x1c = np.array( [ 1.0 , 0.0 ] )
-x2c = np.array( [ 0.0 , 0.0 ] )
-x3c = np.array( [ 0.5 , math.sqrt(3.0)/2.0 ] )
-
-# --- Animation frames (gif) ---
-frames = []
 
 # --- Get CASE parameters ---
 
@@ -48,6 +35,16 @@ except :
 if not os.path.exists("../../data/"+caseN+"/post") :
     os.mkdir("../../data/"+caseN+"/post")
 
+# --- Location of Barycentric map corners ---
+x1c = np.array( [ 1.0 , 0.0 ] )
+x2c = np.array( [ 0.0 , 0.0 ] )
+x3c = np.array( [ 0.5 , np.sqrt(3.0)/2.0 ] )
+
+# --- Animation frames (gif) ---
+visualizer      = ChannelVisualizer(caseN)
+frames_eig_post = [];   frames_bar_post = []
+frames_eig_rt   = [];   frames_bar_rt   = []
+
 # --- Get ODT input parameters ---
 
 odtInputDataFilepath  = "../../data/" + caseN + "/input/input.yaml"
@@ -59,18 +56,24 @@ dxmin = yml["params"]["dxmin"]
 domainLength = yml["params"]["domainLength"] 
 delta = domainLength * 0.5
 utau  = 1.0
-tEnd   = yml["params"]["tEnd"]              # = 150.0
-tStart = yml["dumpTimesGen"]["dTimeStart"]  # = 50.0
-inputParams = {"kvisc":kvisc, "rho":rho, "dxmin": dxmin, "domainLength" : domainLength, "delta": delta, "Retau": Retau, "caseN": caseN, "utau": utau} 
-
+dTimeStart = yml["dumpTimesGen"]["dTimeStart"]
+dTimeEnd   = yml["dumpTimesGen"]["dTimeEnd"]
+dTimeStep  = yml["dumpTimesGen"]["dTimeStep"]
+inputParams = {"kvisc":kvisc, "rho":rho, "dxmin": dxmin, "domainLength" : domainLength, "delta": delta, "Retau": Retau, "caseN": caseN, "utau": utau, 'dTimeStart':dTimeStart, 'dTimeEnd':dTimeEnd, 'dTimeStep':dTimeStep} 
 
 #------------ Averaging times ---------------
 
-averaging_times = np.arange(tStart, tEnd+0.1, delta_aver_time)
+averaging_times = np.arange(dTimeStart, dTimeEnd+0.1, delta_aver_time)
 # remove first time, as only 1 file is used to calculate the statistics, therefore 
 # they are just instantaneous, and make the reynolds stress tensor not satisfy realizability conditions
 averaging_times = averaging_times[1:] 
 num_aver_times  = len(averaging_times)
+
+# -------------------------------------------------------------------------
+# -------------------------------------------------------------------------
+# ----------------------- Post-processed statistics ----------------------- 
+# -------------------------------------------------------------------------
+# -------------------------------------------------------------------------
 
 for avg_time in averaging_times:
 
@@ -78,7 +81,7 @@ for avg_time in averaging_times:
     
     print(f"\n\n------------ Averaging Time = {avg_time:.2f} ---------------")
     (ydelta, _, _, urmsf, vrmsf, wrmsf, R11, R22, R33, R12, R13, R23) \
-        = compute_odt_statistics_at_chosen_time(inputParams,avg_time)
+        = compute_odt_statistics_at_chosen_time(inputParams, avg_time)
 
     #------------ Reynolds stress tensor ---------------
 
@@ -121,10 +124,11 @@ for avg_time in averaging_times:
     if cond1 and cond2 and cond3:
         print("\nCONGRATULATIONS, the reynolds stress tensor satisfies REALIZABILITY CONDITIONS.")
     else:
+        print(f"\nREALIZABILITY ERROR in AVERAGING TIME t_avg = {avg_time:.2f}")
         print("\nERROR: The reynolds stress tensor does not satisfy REALIZABILITY CONDITIONS")
         print("\nERROR: Cond 1 is ", cond1," - Cond 2 is ", cond2, "- Cond 3 is ", cond3)
-        print("EXECUTION TERMINATED")
-        exit(0)
+        #print("EXECUTION TERMINATED")
+        #exit(0)
 
     #-----------------------------------------------------------------------------------------
     #           Anisotropy tensor, eigen-decomposition, mapping to barycentric map 
@@ -135,8 +139,11 @@ for avg_time in averaging_times:
     # datapoint is omitted, because the anisotropy tensor would -> infinity, as its equation
     # contains the multiplier ( 1 / (2*TKE) )
 
-    bar_map_x = []; bar_map_y = []
-    bar_map_color = []
+    # initialize quantities
+    eigenvalues   = np.zeros([num_points, 3])
+    bar_map_x     = np.zeros(num_points)
+    bar_map_y     = np.zeros(num_points)
+    bar_map_color = np.zeros(num_points)
 
     for p in range(num_points):
 
@@ -184,57 +191,48 @@ for avg_time in averaging_times:
         bar_map_xy = x1c * (     eigenvalues_a_ij[0] -     eigenvalues_a_ij[1])  \
                 + x2c * ( 2 * eigenvalues_a_ij[1] - 2 * eigenvalues_a_ij[2]) \
                 + x3c * ( 3 * eigenvalues_a_ij[2] + 1)
-        bar_map_x.append(bar_map_xy[0])
-        bar_map_y.append(bar_map_xy[1])
-        bar_map_color.append(ydelta[p])
+        
+        # Store quantities
+        eigenvalues[p,:] = eigenvalues_a_ij[:]
+        bar_map_x[p]     = bar_map_xy[0]
+        bar_map_y[p]     = bar_map_xy[1]
+        bar_map_color[p] = ydelta[p]
 
-    # ---------------------- Plot Barycentric Map ---------------------- 
+    # ---------------------- Build frame at averaging time ---------------------- 
+    
+    frames_eig_post = visualizer.build_anisotropy_tensor_eigenvalues_frame(frames_eig_post, ydelta, eigenvalues, avg_time)
+    frames_bar_post = visualizer.build_anisotropy_tensor_barycentric_map_frame(frames_bar_post, bar_map_x, bar_map_y, bar_map_color, avg_time)
 
-    plt.figure()
 
-    # Plot markers Barycentric map
-    #cmap = cm.get_cmap( 'Greys' ) ## deprecated from matplotlib 3.7
-    cmap  = matplotlib.colormaps['Greys']
-    norm  = colors.Normalize(vmin = 0, vmax = 1.0)
+# -------------------------------------------------------------------------
+# -------------------------------------------------------------------------
+# --------------------------- Runtime statistics --------------------------
+# -------------------------------------------------------------------------
+# -------------------------------------------------------------------------
 
-    # Plot data into the barycentric map
-    plt.scatter( bar_map_x, bar_map_y, c = bar_map_color, cmap = cmap, norm=norm, zorder = 3, marker = 'o', s = 85, edgecolor = 'black', linewidth = 0.8 )
+(ydelta_rt, _,_,_, _,_,_, _,_,_, _,_,_,_,_,_, lambda0_rt, lambda1_rt, lambda2_rt, bar_map_x_rt, bar_map_y_rt) \
+    = get_odt_statistics_rt_at_chosen_averaging_times(inputParams, averaging_times)
 
-    # Plot barycentric map lines
-    plt.plot( [x1c[0], x2c[0]],[x1c[1], x2c[1]], zorder = 1, color = 'black', linestyle = '-', linewidth = 2 )
-    plt.plot( [x2c[0], x3c[0]],[x2c[1], x3c[1]], zorder = 1, color = 'black', linestyle = '-', linewidth = 2 )
-    plt.plot( [x3c[0], x1c[0]],[x3c[1], x1c[1]], zorder = 1, color = 'black', linestyle = '-', linewidth = 2 )
+for i in range(num_aver_times): 
 
-    # Configure plot
-    plt.xlim([-0.1,1.1])
-    plt.ylim([-0.1,1.1])
-    plt.axis( 'off' )
-    ax = plt.gca()
-    ax.set_aspect('equal', adjustable='box')
-    plt.text( 1.0047, -0.025, r'$\textbf{x}_{1_{c}}$' )
-    plt.text( -0.037, -0.025, r'$\textbf{x}_{2_{c}}$' )
-    plt.text( 0.4850, 0.9000, r'$\textbf{x}_{3_{c}}$' )
-    cbar = plt.colorbar()
-    cbar.set_label( r'$y/\delta$' )
-    plt.title(f"averaging time = {avg_time:.1f}")
-    ###plt.clim( 0.0, 20.0 )
+    eigenvalues_rt = np.array([lambda0_rt[:,i], lambda1_rt[:,i], lambda2_rt[:,i]]).transpose()
+    frames_eig_rt  = visualizer.build_anisotropy_tensor_eigenvalues_frame(frames_eig_rt, ydelta_rt[:,i], eigenvalues_rt, averaging_times[i])
+    frames_bar_rt  = visualizer.build_anisotropy_tensor_barycentric_map_frame(frames_bar_rt, bar_map_x_rt[:,i], bar_map_y_rt[:,i], ydelta_rt[:,i], averaging_times[i])
 
-    # ------ save figure ------
-    #filename = f"../../data/{caseN}/post/anisotropy_tensor_barycentric_map_odt_avgTime_{avg_time:.0f}.jpg"
-    #print(f"\nMAKING PLOT OF BARYCENTRIC MAP OF ANISOTROPY TENSOR from ODT data at Averaging Time = {avg_time:.2f}, in filename: {filename}" )
-    #plt.savefig(filename, dpi=600)
 
-    # ------ gif frame by pillow ---------
-    # Save the current figure as an image frame
-    fig = plt.gcf()
-    fig.canvas.draw()
-    img = Image.frombytes("RGB", fig.canvas.get_width_height(), fig.canvas.tostring_rgb())
-    frames.append(img)
+# -------------------------------------------------------------------------
+# ------------------ Create the animation from the frames -----------------
+# -------------------------------------------------------------------------
 
-    plt.close()
+# post-processed statistics
+filename = f"../../data/{caseN}/post/anisotropy_tensor_eigenvalues_odt_convergence_post.gif"
+frames_eig_post[0].save(filename, save_all=True, append_images=frames_eig_post[1:], duration=100, loop=0)
+filename = f"../../data/{caseN}/post/anisotropy_tensor_barycentric_map_odt_convergence_post.gif"
+frames_bar_post[0].save(filename, save_all=True, append_images=frames_bar_post[1:], duration=100, loop=0)
 
-# ---------- Create the animation from the frames ----------
-
-filename = f"../../data/{caseN}/post/anisotropy_tensor_barycentric_map_odt_convergence.gif"
-frames[0].save(filename, save_all=True, append_images=frames[1:], duration=100, loop=0)
+# runtime statistics
+filename = f"../../data/{caseN}/post/anisotropy_tensor_eigenvalues_odt_convergence_rt.gif"
+frames_eig_rt[0].save(filename, save_all=True, append_images=frames_eig_rt[1:], duration=100, loop=0)
+filename = f"../../data/{caseN}/post/anisotropy_tensor_barycentric_map_odt_convergence_rt.gif"
+frames_bar_rt[0].save(filename, save_all=True, append_images=frames_bar_rt[1:], duration=100, loop=0)
 

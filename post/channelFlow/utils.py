@@ -141,7 +141,7 @@ def compute_odt_statistics(odt_statistics_filepath, input_params, plot_reynolds_
         # ------------------ (compute) Velocity statistics, from instantaneous values ------------------
 
         # update mean profiles
-        um  += uu                 
+        um  += uu
         vm  += vv
         wm  += ww
         u2m += uu*uu
@@ -408,13 +408,6 @@ def get_odt_statistics_rt(input_params):
     flist_stat = sorted(gb.glob('../../data/' + case_name + '/data/data_00000/statistics/dmp_*_stat.dat'))
     flast      = flist_stat[-1]
     data_stat  = np.loadtxt(flast)
-
-    # statistics file rows (expected):
-    # 1_posUnif, 
-    # 2_uvel_mean, 3_uvel_rmsf, 4_uvel_Fpert, 
-    # 5_vvel_mean, 6_vvel_rmsf, 7_vvel_Fpert,
-    # 8_wvel_mean, 9_wvel_rmsf, 10_wvel_Fpert
-    # 11_Rxx, 12_Ryy, 13_Rzz, 14_Rxy, 15_Rxz, 16_Ryz
 
     # -> check the file rows correspond to the expected variables:
     with open(flast,'r') as f:
@@ -722,6 +715,138 @@ def get_odt_statistics_during_runtime(input_params, averaging_times):
     # --- Save ODT computational data ---
 
     return (ydelta, yuplus, um, CI, yuplus_all, um_all, um_symmetric_all)
+
+
+def get_odt_statistics_rt_at_chosen_averaging_times(input_params, averaging_times):
+
+    # --- Get ODT input parameters ---
+    
+    delta        = input_params["delta"]
+    case_name    = input_params["caseN"]
+    dTimeStart   = input_params["dTimeStart"]
+    dTimeEnd     = input_params["dTimeEnd"]
+    dTimeStep    = input_params["dTimeStep"]
+    domainLength = input_params["domainLength"]
+    dxmin        = input_params["dxmin"]
+
+    # un-normalize
+    dxmin       *= domainLength
+    
+    # uniform fine grid
+    nunif        = int(1/dxmin)
+    nunif2       = int(nunif/2)
+
+    # --- Averaging times and files identification ---
+    
+    dTimeVec = np.arange(dTimeStart, dTimeEnd+1e-3, dTimeStep).round(2)
+    averaging_times_num = len(averaging_times)
+    averaging_times_idx = []
+    for t_idx in range(averaging_times_num):
+         averaging_times_idx.append(np.where(dTimeVec==averaging_times[t_idx])[0][0])
+    averaging_times_str = [str(idx).zfill(5) for idx in averaging_times_idx]
+    if (len(averaging_times_str) != averaging_times_num):
+        raise ValueError("Not all averaging_times where found!")
+
+    # --- Get vel. statistics computed during runtime at chosen averaging times ---
+
+    flist = ['../../data/' + case_name + '/data/data_00000/statistics/dmp_' + s  + '_stat.dat' for s in averaging_times_str]
+
+    # -> check the file rows correspond to the expected variables:
+    with open(flist[0],'r') as f:
+        rows_info = f.readlines()[3] # 4th line of the file
+    rows_info_expected = '#         1_posUnif        2_uvel_mean        3_uvel_rmsf       4_uvel_Fpert        5_vvel_mean        6_vvel_rmsf       7_vvel_Fpert        8_wvel_mean        9_wvel_rmsf      10_wvel_Fpert             11_Rxx             12_Ryy             13_Rzz             14_Rxy             15_Rxz             16_Ryz         17_lambda0         18_lambda1         19_lambda2           20_xmap1           21_xmap2\n'
+    if rows_info != rows_info_expected:
+        print("statistic files rows do not correspond to the expected variables")
+        print("rows variables (expected):\n",rows_info_expected,"\n")
+        print("rows variables (current):\n", rows_info)
+        exit(0)
+
+    # --- initialize variables ---
+
+    yu           = np.zeros([nunif, averaging_times_num])
+    # velocity data & F-perturbation
+    um_data      = np.zeros([nunif, averaging_times_num])
+    urmsf_data   = np.zeros([nunif, averaging_times_num])
+    uFpert_data  = np.zeros([nunif, averaging_times_num])
+    vm_data      = np.zeros([nunif, averaging_times_num])
+    vrmsf_data   = np.zeros([nunif, averaging_times_num])
+    vFpert_data  = np.zeros([nunif, averaging_times_num])
+    wm_data      = np.zeros([nunif, averaging_times_num])
+    wrmsf_data   = np.zeros([nunif, averaging_times_num])
+    wFpert_data  = np.zeros([nunif, averaging_times_num])
+    # reynolds str
+    ufufm_data   = np.zeros([nunif, averaging_times_num])
+    vfvfm_data   = np.zeros([nunif, averaging_times_num])
+    wfwfm_data   = np.zeros([nunif, averaging_times_num])
+    ufvfm_data   = np.zeros([nunif, averaging_times_num])
+    ufwfm_data   = np.zeros([nunif, averaging_times_num])
+    vfwfm_data   = np.zeros([nunif, averaging_times_num])
+    # anisotropy t
+    lambda0_data = np.zeros([nunif, averaging_times_num])
+    lambda1_data = np.zeros([nunif, averaging_times_num])
+    lambda2_data = np.zeros([nunif, averaging_times_num])
+    xmap1_data   = np.zeros([nunif, averaging_times_num])
+    xmap2_data   = np.zeros([nunif, averaging_times_num])
+
+    # --- get data of statistics calc. at runtime at chosen averaging times ---
+
+    for i in range(averaging_times_num):
+
+        data_stat         = np.loadtxt(flist[i])
+
+        yu[:,i]           = data_stat[:,0]
+        um_data[:,i]      = data_stat[:,1] 
+        urmsf_data[:,i]   = data_stat[:,2] 
+        uFpert_data[:,i]  = data_stat[:,3]
+        vm_data[:,i]      = data_stat[:,4] 
+        vrmsf_data[:,i]   = data_stat[:,5] 
+        vFpert_data[:,i]  = data_stat[:,6] 
+        wm_data[:,i]      = data_stat[:,7] 
+        wrmsf_data[:,i]   = data_stat[:,8] 
+        wFpert_data[:,i]  = data_stat[:,9]  
+        ufufm_data[:,i]   = data_stat[:,10]
+        vfvfm_data[:,i]   = data_stat[:,11]
+        wfwfm_data[:,i]   = data_stat[:,12]
+        ufvfm_data[:,i]   = data_stat[:,13]
+        ufwfm_data[:,i]   = data_stat[:,14]
+        vfwfm_data[:,i]   = data_stat[:,15]
+        lambda0_data[:,i] = data_stat[:,16] 
+        lambda1_data[:,i] = data_stat[:,17] 
+        lambda2_data[:,i] = data_stat[:,18]
+        xmap1_data[:,i]   = data_stat[:,19] 
+        xmap2_data[:,i]   = data_stat[:,20] 
+
+    # mirror data (symmetric in the y-direction from the channel center)
+    
+    yu           = yu[:nunif2,:] + delta
+    um_data      = 0.5 * ( um_data[:nunif2,:]      + np.flipud(um_data[nunif2:,:])      )
+    urmsf_data   = 0.5 * ( urmsf_data[:nunif2,:]   + np.flipud(urmsf_data[nunif2:,:])   )
+    uFpert_data  = 0.5 * ( uFpert_data[:nunif2,:]  + np.flipud(uFpert_data[nunif2:,:])  )
+    vm_data      = 0.5 * ( vm_data[:nunif2,:]      + np.flipud(vm_data[nunif2:,:])      )
+    vrmsf_data   = 0.5 * ( vrmsf_data[:nunif2,:]   + np.flipud(vrmsf_data[nunif2:,:])   )
+    vFpert_data  = 0.5 * ( vFpert_data[:nunif2,:]  + np.flipud(vFpert_data[nunif2:,:])  )
+    wm_data      = 0.5 * ( wm_data[:nunif2,:]      + np.flipud(wm_data[nunif2:,:])      )
+    wrmsf_data   = 0.5 * ( wrmsf_data[:nunif2,:]   + np.flipud(wrmsf_data[nunif2:,:])   )
+    wFpert_data  = 0.5 * ( wFpert_data[:nunif2,:]  + np.flipud(wFpert_data[nunif2:,:])  )
+    ufufm_data   = 0.5 * ( ufufm_data[:nunif2,:]   + np.flipud(ufufm_data[nunif2:,:])   )
+    vfvfm_data   = 0.5 * ( vfvfm_data[:nunif2,:]   + np.flipud(vfvfm_data[nunif2:,:])   )
+    wfwfm_data   = 0.5 * ( wfwfm_data[:nunif2,:]   + np.flipud(wfwfm_data[nunif2:,:])   )
+    ufvfm_data   = 0.5 * ( ufvfm_data[:nunif2,:]   + np.flipud(ufvfm_data[nunif2:,:])   )
+    ufwfm_data   = 0.5 * ( ufwfm_data[:nunif2,:]   + np.flipud(ufwfm_data[nunif2:,:])   )
+    vfwfm_data   = 0.5 * ( vfwfm_data[:nunif2,:]   + np.flipud(vfwfm_data[nunif2:,:])   )
+    lambda0_data = 0.5 * ( lambda0_data[:nunif2,:] + np.flipud(lambda0_data[nunif2:,:]) )
+    lambda1_data = 0.5 * ( lambda1_data[:nunif2,:] + np.flipud(lambda1_data[nunif2:,:]) )
+    lambda2_data = 0.5 * ( lambda2_data[:nunif2,:] + np.flipud(lambda2_data[nunif2:,:]) )
+    xmap1_data   = 0.5 * ( xmap1_data[:nunif2,:]   + np.flipud(xmap1_data[nunif2:,:])   )
+    xmap2_data   = 0.5 * ( xmap2_data[:nunif2,:]   + np.flipud(xmap2_data[nunif2:,:])   )
+
+    return (yu/delta, 
+            um_data, urmsf_data, uFpert_data,
+            vm_data, vrmsf_data, vFpert_data,
+            wm_data, wrmsf_data, wFpert_data,
+            ufufm_data, vfvfm_data, wfwfm_data, ufvfm_data, ufwfm_data, vfwfm_data,
+            lambda0_data, lambda1_data, lambda2_data, xmap1_data, xmap2_data)
+
 
 
 def compute_convergence_indicator_odt_tEnd(input_params):
