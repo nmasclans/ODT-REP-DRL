@@ -37,6 +37,8 @@ plt.rc('text.latex', preamble=r"\usepackage{amsmath} \usepackage{amsmath} \usepa
 
 #--------------------------------------------------------------------------------------------
 
+verbose = False
+
 # --- Define parameters ---
 tensor_kk_tolerance   = 1.0e-8;	# [-]
 eigenvalues_tolerance = 1.0e-8;	# [-]
@@ -221,13 +223,15 @@ for sim in simulation_list:
         idx = eigenvalues_a_ij.argsort()[::-1]   
         eigenvalues_a_ij  = eigenvalues_a_ij[idx]
         eigenvectors_a_ij = eigenvectors_a_ij[:,idx]
-        print(f"\nPoint p = {p}")
-        print(f"3rd eigenvalue lambda_2 = {eigenvalues_a_ij[2]}")
-        print(f"3rd eigenvector v_2     = {eigenvectors_a_ij[:,2]}")
         inspected_eigenvalue = (-R00[p]+R11[p]-3*R12[p])/(3*R00[p]+6*R11[p])
-        print(f"(expected from equations) \lambda_2 = (-R_00+R_11-3R_12)/(3R_00+6R_11) = {inspected_eigenvalue}")
-        print(f"(expected from equations) v_2 = (0, -1, 1)$, not normalized")
-        print(f"R_11 = {R11[p]:.5f}, R_12 = {R12[p]:.5f}")
+
+        if verbose:
+            print(f"\nPoint p = {p}")
+            print(f"3rd eigenvalue lambda_2 = {eigenvalues_a_ij[2]}")
+            print(f"3rd eigenvector v_2     = {eigenvectors_a_ij[:,2]}")
+            print(f"(expected from equations) \lambda_2 = (-R_00+R_11-3R_12)/(3R_00+6R_11) = {inspected_eigenvalue}")
+            print(f"(expected from equations) v_2 = (0, -1, 1)$, not normalized")
+            print(f"R_11 = {R11[p]:.5f}, R_12 = {R12[p]:.5f}")
 
         # Calculate Barycentric map point
         # where eigenvalues_a_ij[0] >= eigenvalues_a_ij[1] >= eigenvalues_a_ij[2] (eigval in decreasing order)

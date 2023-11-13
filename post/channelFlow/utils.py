@@ -695,9 +695,9 @@ def get_odt_statistics_during_runtime(input_params, averaging_times):
 
     # CI = Eps_s : Convergence Indicator, from Pirozzoli207-A --- along fine uniform grid
     CI  = np.sqrt( 0.5 * np.sum( (um_all - um_symmetric_all)**2 , axis = 0) ) # rmse
-    print("\n(ODT) Convergence Indicator (CI, Esp_s) for each averaging time:")
-    for i in range(len(averaging_times)):
-        print(f"     At tavg = {averaging_times[i]:.1f} : CI = {CI[i]:.3f}")
+    ###print("\n(ODT) Convergence Indicator (CI, Esp_s) for each averaging time:")
+    ###for i in range(len(averaging_times)):
+    ###    print(f"     At tavg = {averaging_times[i]:.1f} : CI = {CI[i]:.3f}")
 
     # ------------ scale y to y+ ------------
 

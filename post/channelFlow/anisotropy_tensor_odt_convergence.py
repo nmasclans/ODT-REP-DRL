@@ -18,6 +18,8 @@ plt.rc('text.latex', preamble=r"\usepackage{amsmath} \usepackage{amsmath} \usepa
 
 #--------------------------------------------------------------------------------------------
 
+verbose = False
+
 # --- Define parameters ---
 tensor_kk_tolerance   = 1.0e-8;	# [-]
 eigenvalues_tolerance = 1.0e-8;	# [-]
@@ -79,7 +81,8 @@ for avg_time in averaging_times:
 
     #------------ Compute statistics until avg_time is reached ---------------
     
-    print(f"\n\n------------ Averaging Time = {avg_time:.2f} ---------------")
+    if verbose:
+        print(f"\n\n------------ Averaging Time = {avg_time:.2f} ---------------")
     (ydelta, _, _, urmsf, vrmsf, wrmsf, R11, R22, R33, R12, R13, R23) \
         = compute_odt_statistics_at_chosen_time(inputParams, avg_time)
 
@@ -121,14 +124,15 @@ for avg_time in averaging_times:
     detR  = np.linalg.det(R_ij)    # length(detR) = num_points
     cond3 = ( detR >= 0 ).all()
     
-    if cond1 and cond2 and cond3:
-        print("\nCONGRATULATIONS, the reynolds stress tensor satisfies REALIZABILITY CONDITIONS.")
-    else:
-        print(f"\nREALIZABILITY ERROR in AVERAGING TIME t_avg = {avg_time:.2f}")
-        print("\nERROR: The reynolds stress tensor does not satisfy REALIZABILITY CONDITIONS")
-        print("\nERROR: Cond 1 is ", cond1," - Cond 2 is ", cond2, "- Cond 3 is ", cond3)
-        #print("EXECUTION TERMINATED")
-        #exit(0)
+    if verbose:
+        if cond1 and cond2 and cond3:
+            print("\nCONGRATULATIONS, the reynolds stress tensor satisfies REALIZABILITY CONDITIONS.")
+        else:
+            print(f"\nREALIZABILITY ERROR in AVERAGING TIME t_avg = {avg_time:.2f}")
+            print("\nERROR: The reynolds stress tensor does not satisfy REALIZABILITY CONDITIONS")
+            print("\nERROR: Cond 1 is ", cond1," - Cond 2 is ", cond2, "- Cond 3 is ", cond3)
+            #print("EXECUTION TERMINATED")
+            #exit(0)
 
     #-----------------------------------------------------------------------------------------
     #           Anisotropy tensor, eigen-decomposition, mapping to barycentric map 

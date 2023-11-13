@@ -57,7 +57,7 @@ inputParams = {"kvisc":kvisc, "rho":rho, "dxmin": dxmin, "domainLength" : domain
 odtStatisticsFilepath = "../../data/" + caseN + "/post/ODTstat.dat"
 
 # post-processed statistics
-compute_odt_statistics(odtStatisticsFilepath, inputParams, plot_reynolds_stress_terms=True)
+compute_odt_statistics(odtStatisticsFilepath, inputParams, plot_reynolds_stress_terms=False)
 (ydelta_odt, yplus_odt, um_odt, vm_odt, wm_odt, urmsf_odt, vrmsf_odt, wrmsf_odt, ufufm_odt, vfvfm_odt, wfwfm_odt, ufvfm_odt, ufwfm_odt, vfwfm_odt, viscous_stress_odt, reynolds_stress_odt, total_stress_odt, vt_u_plus_odt, d_u_plus_odt) \
     = get_odt_statistics(odtStatisticsFilepath, inputParams)
 # calculated-at-runtime statistics
