@@ -62,11 +62,8 @@ class dv {
         vector<double>                Rzz;                    ///< todo: add description
         
         // anisotropy tensor eigenvalues & barycentric map coordinates
-        vector<double>                lambda0;                ///< todo: add description
-        vector<double>                lambda1;
-        vector<double>                lambda2;
+        vector<vector<double>>        eigVal;                ///< todo: add description
         vector<vector<double>>        xmap;
-
 
     //////////////////// MEMBER FUNCTIONS /////////////////
 

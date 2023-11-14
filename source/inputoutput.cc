@@ -308,9 +308,9 @@ void inputoutput::outputProperties(const string fname, const double time) {
             ofileStat << setw(19) << domn->Rij->Rxz.at(i);
             ofileStat << setw(19) << domn->Rij->Ryz.at(i);
             // Anisotropy stress - eigenvalues & barycentric map
-            ofileStat << setw(19) << domn->Rij->lambda0.at(i);
-            ofileStat << setw(19) << domn->Rij->lambda1.at(i);
-            ofileStat << setw(19) << domn->Rij->lambda2.at(i);
+            ofileStat << setw(19) << domn->Rij->eigVal.at(i).at(0);
+            ofileStat << setw(19) << domn->Rij->eigVal.at(i).at(1);
+            ofileStat << setw(19) << domn->Rij->eigVal.at(i).at(2);
             ofileStat << setw(19) << domn->Rij->xmap.at(i).at(0);
             ofileStat << setw(19) << domn->Rij->xmap.at(i).at(1);
         }

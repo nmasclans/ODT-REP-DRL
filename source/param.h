@@ -64,7 +64,9 @@ class param {
         bool    LTMA;            ///<  true for the triplet map TMA: 3 = vol segments; false for TMB: 3 equal length segments
         bool    LplanarTau;      ///<  true for computing cylindrical/spherical tau_eddy using a planar formulation. If accepted, a cylindrical eddy is implemented
         bool    Lignition;       ///<  true if starting with unreacted mixing profile to allow ignition
+        
         bool    Lstatconv;       ///<  flag to turn on statistics convergence (by added source term)
+        double  factorEigValPert;///<  factor of eigen-values perturbation to reach target xmap coordinate (statistics convergence)
 
         string  bcType;          ///<  OUTFLOW, PERIODIC, WALL, WALL_OUT
         int     cCoord;          ///<  1 = planar, 2 = cylindrical, 3 = spherical

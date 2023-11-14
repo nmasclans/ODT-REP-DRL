@@ -20,41 +20,49 @@ using namespace std;
  *  @author Nuria Masclans
  */
 
-class dv_reynolds_stress : public dv {
+class dv_reynolds_stress : public dv
+{
 
     //////////////////// DATA MEMBERS //////////////////////
 
-    public:
+public:
 
-        vector<double> x1c;
-        vector<double> x2c;
-        vector<double> x3c;
+    vector<vector<vector<double>>> RijDelta;
 
-    private: 
+private:
 
+    double                  factorEigValPert;
+    vector<double>          b;
+    vector<double>          Rkk;
+    vector<double>          x1c;
+    vector<double>          x2c;
+    vector<double>          x3c;
+    vector<double>          xmap_target;
+    vector<vector<double>>  Binv;
+    vector<vector<double>>  Deltaij;
+    vector<vector<double>>  eigVect;
 
     //////////////////// MEMBER FUNCTIONS /////////////////
 
-    public:
+public:
+    
+    virtual void updateTimeAveragedQuantities(const double &delta_t, const double &averaging_time);
+    virtual void getReynoldsStressDelta(const double &k_factor, const double &eigvect_rot, const double &eigval_factor);
 
-        virtual void updateTimeAveragedQuantities(const double &delta_t, const double &averaging_time);
-
-    private:
-
+private:
+    
     //////////////////// CONSTRUCTOR FUNCTIONS /////////////////
 
-    public:
+public:
 
-        dv_reynolds_stress(){};
-        dv_reynolds_stress(domain      *line,
-                           const string s,
-                           const bool   Lt,
-                           const bool   Lo=true);
+    dv_reynolds_stress(){};
+    dv_reynolds_stress(domain *line,
+                       const string s,
+                       const bool Lt,
+                       const bool Lo = true);
 
-        virtual ~dv_reynolds_stress(){};
+    virtual ~dv_reynolds_stress(){};
 
 };
 
-
 ////////////////////////////////////////////////////////////////////////////////
-

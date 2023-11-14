@@ -266,14 +266,14 @@ void dv_uvw::getRhsStatConv(const double &timeCurrent) {
     if(L_converge_stat){
 
 #if _CONSTANT_RHS_CONV_STAT_ // todo: erase this #if, just for initial testing
-            if(var_name == "uvel" && domn->pram->cCoord != 3.0) {
-                for(int i=0; i<domn->ngrd; i++)
-                    rhsStatConv.at(i) = 0.0; 
-            }
+        if(var_name == "uvel" && domn->pram->cCoord != 3.0) {
+            for(int i=0; i<domn->ngrd; i++)
+                rhsStatConv.at(i) = 0.0; 
+        }
 #elif _ENFORCED_TAU_PERTURBATION_
-            // TODO: IMPLEMENT HERE!
+        // for all velocity components  
 #else 
-            // todo: nothing here
+        // todo: nothing here
 #endif
     }
 
