@@ -37,7 +37,7 @@ void eigenDecomposition::init(domain *p_domn) {
  */
 
 void eigenDecomposition::sym_diagonalize(
-    const double (&A)[3][3], double (&Q)[3][3], double (&D)[3][3]) {
+    const vector<vector<double>> &A, vector<vector<double>> &Q, vector<vector<double>> &D) {
 
     const int maxsteps=24;
     int k0, k1, k2;
@@ -147,12 +147,12 @@ void eigenDecomposition::sym_diagonalize(
  */
 
 void eigenDecomposition::reconstruct_matrix_from_decomposition(
-  const double (&D)[3][3], const double (&Q)[3][3], double (&A)[3][3])
+  const vector<vector<double>> &D, const vector<vector<double>> &Q, vector<vector<double>> &A)
 {
 
     // A = Q*D*QT
-    double QT[3][3];
-    double B[3][3];
+    vector<vector<double>> QT(3, vector<double>(3, 0.0));
+    vector<vector<double>> B(3, vector<double>(3, 0.0));
 
     // compute QT
     for (int i = 0; i < 3; i++) {
@@ -182,7 +182,7 @@ void eigenDecomposition::reconstruct_matrix_from_decomposition(
 //-------- matrix_matrix_multiply 3D ---------------------------------------
 //--------------------------------------------------------------------------
 void eigenDecomposition::matrix_matrix_multiply(
-  const double (&A)[3][3], const double (&B)[3][3], double (&C)[3][3])
+  const vector<vector<double>> &A, const vector<vector<double>> &B, vector<vector<double>> &C)
 {
 
     // Perform multiplication C = A*B

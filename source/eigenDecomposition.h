@@ -28,12 +28,12 @@ class eigenDecomposition {
 
     //////////////////// MEMBER FUNCTIONS /////////////////
 
-        void sym_diagonalize(const double (&A)[3][3], double (&Q)[3][3], double (&D)[3][3]);
-        void reconstruct_matrix_from_decomposition(const double (&D)[3][3], const double (&Q)[3][3], double (&A)[3][3]);
+        void sym_diagonalize(const vector<vector<double>> &A, vector<vector<double>> &Q, vector<vector<double>> &D);
+        void reconstruct_matrix_from_decomposition(const vector<vector<double>> &D, const vector<vector<double>> &Q, vector<vector<double>> &A);
 
     private:
 
-        void matrix_matrix_multiply(const double (&A)[3][3], const double (&B)[3][3], double (&C)[3][3]);
+        void matrix_matrix_multiply(const vector<vector<double>> &A, const vector<vector<double>> &B, vector<vector<double>> &C);
 
     //////////////////// CONSTRUCTOR FUNCTIONS /////////////////
 

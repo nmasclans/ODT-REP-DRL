@@ -66,7 +66,9 @@ class param {
         bool    Lignition;       ///<  true if starting with unreacted mixing profile to allow ignition
         
         bool    Lstatconv;       ///<  flag to turn on statistics convergence (by added source term)
-        double  factorEigValPert;///<  factor of eigen-values perturbation to reach target xmap coordinate (statistics convergence)
+        double  factEigValPert;///<  factor of eigen-values perturbation to reach target xmap coordinate (statistics convergence)
+        double  xmapTarget1;     ///<  xmap target, 1st coordinate (statistics convergence)
+        double  xmapTarget2;     ///<  xmap target, 2nd coordinate (statistics convergence)
 
         string  bcType;          ///<  OUTFLOW, PERIODIC, WALL, WALL_OUT
         int     cCoord;          ///<  1 = planar, 2 = cylindrical, 3 = spherical
