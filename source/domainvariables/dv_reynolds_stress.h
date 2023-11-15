@@ -27,7 +27,6 @@ class dv_reynolds_stress : public dv
 
 public:
 
-    vector<vector<vector<double>>> RijDelta;
 
 private:
 
@@ -39,9 +38,16 @@ private:
     vector<double>                  x3c;
     vector<double>                  xmapTarget;
     vector<double>                  eigValTarget;
+    vector<double>                  RxxDeltaUnif;                 
+    vector<double>                  RxyDeltaUnif;                 
+    vector<double>                  RxzDeltaUnif;                 
+    vector<double>                  RyyDeltaUnif;                 
+    vector<double>                  RyzDeltaUnif;                 
+    vector<double>                  RzzDeltaUnif; 
     vector<vector<double>>          Binv;
     vector<vector<double>>          Deltaij;
-    vector<vector<vector<double>>>  eigVect;
+    vector<vector<vector<double>>>  eigVect;                
+
 
     //////////////////// MEMBER FUNCTIONS /////////////////
 
@@ -52,14 +58,15 @@ public:
 
 private:
 
+    virtual void getDirectBarycentricMapping(const vector<double> &eigenvalues, vector<double> &xmapping);
+    virtual void getInverseBarycentricMapping(const vector<double> &xmapping, vector<double> &eigenvalues);
     virtual void getPerturbedTrace(const double &Rkk, double &RkkPert);
     virtual void getPerturbedEigenValuesMatrix(const vector<double> &eigVal, vector<vector<double>> &DijPert);
     virtual void getPerturbedEigenVectorsMatrix(const vector<vector<double>> &eigVect, vector<vector<double>> &QijPert);
     virtual void getPerturbedReynoldsStresses(const double &RkkPert, const vector<vector<double>> &DijPert, const vector<vector<double>> &QijPert, vector<vector<double>> &RijPert);
-    virtual void getRijDelta(const vector<vector<double>> &RijPert, const int &i);
-    virtual void getDirectBarycentricMapping(const vector<double> &eigenvalues, vector<double> &xmapping);
-    virtual void getInverseBarycentricMapping(const vector<double> &xmapping, vector<double> &eigenvalues);
-    
+    virtual void getReynoldsStressesDeltaUnif(const vector<vector<double>> &RijPert, const int &i);
+    virtual void interpRijDeltaUniformToAdaptativeGrid();
+
     //////////////////// CONSTRUCTOR FUNCTIONS /////////////////
 
 public:

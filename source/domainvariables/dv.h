@@ -43,26 +43,32 @@ class dv {
         vector<double>                flux;
 
         // statistics calculation
-        int                           nunif;                  ///< todo: add description
-        vector<double>                posUnif;                ///< todo: add description
-        vector<double>                dunif;                  ///< todo: add description
-        vector<double>                davg;                   ///< todo: add description
-        vector<double>                drmsf;                  ///< todo: add description
+        int                           nunif;                  ///< todo: add descriptions
+        vector<double>                posUnif;
+        vector<double>                dunif;
+        vector<double>                davg;
+        vector<double>                drmsf;
 
         // statistics convergence framework
-        vector<double>                F_statConv;             ///< todo: add description      
-        vector<double>                F_statConv_nunif;       ///< todo: add description      
+        vector<double>                F_statConv;
+        vector<double>                F_statConv_nunif;
 
         // reynolds stress tensor
-        vector<double>                Rxx;                    ///< todo: add description
-        vector<double>                Rxy;                    ///< todo: add description
-        vector<double>                Rxz;                    ///< todo: add description
-        vector<double>                Ryy;                    ///< todo: add description
-        vector<double>                Ryz;                    ///< todo: add description
-        vector<double>                Rzz;                    ///< todo: add description
+        vector<double>                Rxx;
+        vector<double>                Rxy;
+        vector<double>                Rxz;
+        vector<double>                Ryy;
+        vector<double>                Ryz;
+        vector<double>                Rzz;
+        vector<double>                RxxDelta;
+        vector<double>                RxyDelta;
+        vector<double>                RxzDelta;
+        vector<double>                RyyDelta;
+        vector<double>                RyzDelta;
+        vector<double>                RzzDelta;
         
         // anisotropy tensor eigenvalues & barycentric map coordinates
-        vector<vector<double>>        eigVal;                ///< todo: add description
+        vector<vector<double>>        eigVal;
         vector<vector<double>>        xmap;
 
     //////////////////// MEMBER FUNCTIONS /////////////////
@@ -90,7 +96,7 @@ class dv {
         virtual void   updateTimeAveragedQuantities(const double &delta_t, const double &averaging_time){};
         virtual double updateTimeMeanQuantity(const double &quantity, const double &mean_quantity, const double &delta_t, const double &averaging_time);
         virtual double updateTimeRmsfQuantity(const double &quantity, const double &mean_quantity, const double &rmsf_quantity, const double &delta_t, const double &averaging_time);
-        
+        virtual void   getReynoldsStressDelta(){};
 
     //////////////////// CONSTRUCTOR FUNCTIONS /////////////////
 

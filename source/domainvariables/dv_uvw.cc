@@ -49,7 +49,7 @@ dv_uvw::dv_uvw(domain  *line,
     posUnif      = vector<double>(nunif, 0.0);     // uniform grid in y-axis
     double delta = domn->pram->domainLength / 2;   // half-channel length 
     for (int i=0; i<nunif; i++) {
-        posUnif[i] = - delta + i * (2.0 * delta) / (nunif - 1);
+        posUnif.at(i) = - delta + i * (2.0 * delta) / (nunif - 1);
     }
 
     // Instantaneous and Averaged quantities, defined in the uniform fine grid
@@ -60,6 +60,14 @@ dv_uvw::dv_uvw(domain  *line,
     // Statistics convergence framework
     F_statConv        = vector<double>(domn->ngrd, 0.0);
     F_statConv_nunif  = vector<double>(nunif, 0.0);
+
+    // Perturbed & Delta anisotropy tensor dof (in adaptative grid)
+    RxxDelta          = vector<double>(domn->ngrd, 0.0);
+    RxyDelta          = vector<double>(domn->ngrd, 0.0);
+    RxzDelta          = vector<double>(domn->ngrd, 0.0);
+    RyyDelta          = vector<double>(domn->ngrd, 0.0);
+    RyzDelta          = vector<double>(domn->ngrd, 0.0);
+    RzzDelta          = vector<double>(domn->ngrd, 0.0);
 
 }
 
@@ -178,12 +186,14 @@ void dv_uvw::getRhsMix(const vector<double> &gf,
      * It interpolates a cell centered variable to a face
      * by harmonic interpolation which gives roughly an upwind flux
      */
-    interpVarToFacesHarmonic(domn->dvisc->d, dvisc_f);
+    // domn->dvisc->d : dynamic viscosity in the adaptative grid centers (size ngrd)
+    // dvisc_f : dynamic viscosity in the adaptative grid faces (size ngrd+1)
+    interpVarToFacesHarmonic(domn->dvisc->d, dvisc_f);  // updates dvisc_f
 
     //---------- Interior faces
 
     for (int i=1, im=0; i < domn->ngrd; i++, im++)
-        flux.at(i) = -gf.at(i) * dvisc_f.at(i)*(d.at(i) - d.at(im));
+        flux.at(i) = -gf.at(i) * dvisc_f.at(i)*(d.at(i) - d.at(im));  // flux = - mu * (delta d / delta y or position)
 
     //---------- Boundary faces
 
@@ -252,13 +262,17 @@ void dv_uvw::getRhsMix(const vector<double> &gf,
  *  @param timeCurrent \input current time.
  */
 
-void dv_uvw::getRhsStatConv(const double &timeCurrent) {
+void dv_uvw::getRhsStatConv(const vector<double> &gf,
+                            const vector<double> &dxc) {
     
     if(!L_transported)
-        *domn->io->ostrm << endl << "ERROR:  dv_uvw::getRhsStatConv can only be called for dv objects with L_transported = true and L_converge_stat = true" << endl;
+        *domn->io->ostrm << endl << "ERROR:  dv_uvw::getRhsStatConv can only be called for dv objects with L_transported = true and Lstatconv = true" << endl;
 
     if(domn->pram->Lspatial)
         *domn->io->ostrm << endl << "ERROR: Lspatial = true not implemented for method dv_uvw::getRhsStatConv; set Lspatial = false or LstatConv = false" << endl;
+
+    if(domn->pram->cCoord!=1)
+        *domn->io->ostrm << endl << "ERROR: cCoord != 1 not implemented for method dv_uvw::getRhsStatConv; set cCoord = 1 or LstatConv = false" << endl;
 
     rhsStatConv.resize(domn->ngrd, 0.0); 
 
@@ -271,7 +285,37 @@ void dv_uvw::getRhsStatConv(const double &timeCurrent) {
                 rhsStatConv.at(i) = 0.0; 
         }
 #elif _ENFORCED_TAU_PERTURBATION_
-        // for all velocity components  
+        
+        // get updated RijDelta (in adaptative grid)
+        domn->Rij->getReynoldsStressDelta(); // updates RijDelta class data members
+
+        // interpolate RijDelta from adaptative cells centers (size ngrd) to faces (size ngrd+1)
+        vector<double> RiyDelta;
+        vector<double> RiyDeltaf(domn->ngrdf);
+        if (var_name == "uvel"){
+            RiyDelta = domn->Rij->RxyDelta;
+        } else if (var_name == "vvel"){
+            RiyDelta = domn->Rij->RyyDelta;
+        } else if (var_name == "wvel"){
+            RiyDelta = domn->Rij->RyzDelta;
+        } else {
+            *domn->io->ostrm << endl << "ERROR: data mamber var_name not recognized in dv_uvw::getRhsStatConv" << endl;
+            exit(0);
+        }
+        interpVarToFacesHarmonic(RiyDelta, RiyDeltaf);  // updates RiyDeltaf
+
+        // -------------------- perturbation term  (partial Rix) / (partial x) --------------------
+        
+        //---------- Interior faces
+
+        for (int i=1, im=0; i<domn->ngrd; i++, im++)
+       use flux or rhsMix derivative??
+       
+        flux.at(i) = -gf.at(i) * dvisc_f.at(i)*(d.at(i) - d.at(im));  // flux = - mu * (delta d / delta y or position)
+         * rhsMix.at(i) = - (1/(domn->rho->d.at(i) * dxc.at(i))) * (flux.at(ip)*1 - flux.at(i)*1)
+
+                
+
 #else 
         // todo: nothing here
 #endif

@@ -5,6 +5,7 @@
 
 #include "dv_reynolds_stress.h"
 #include "domain.h"
+#include "interp_linear.h"
 #include <cstdlib>
 #include <cmath>
 #include <iostream>
@@ -29,6 +30,13 @@ dv_reynolds_stress::dv_reynolds_stress(domain    *line,
     factEigValPert = domn->pram->factEigValPert;
     xmapTarget     = vector<double>{domn->pram->xmapTarget1,domn->pram->xmapTarget2};
 
+    // position uniform fine grid
+    posUnif      = vector<double>(nunif, 0.0);     // uniform grid in y-axis
+    double delta = domn->pram->domainLength / 2;   // half-channel length 
+    for (int i=0; i<nunif; i++) {
+        posUnif.at(i) = - delta + i * (2.0 * delta) / (nunif - 1);
+    }
+
     // Reynolds stress terms
     Rxx     = vector<double>(nunif, 0.0);
     Ryy     = vector<double>(nunif, 0.0);
@@ -51,8 +59,19 @@ dv_reynolds_stress::dv_reynolds_stress(domain    *line,
     x3c     = vector<double>{0.5, sqrt(3.0) / 2.0};                   // corner x3c
     xmap    = vector<vector<double>>(nunif, vector<double>(2, 0.0)); // coordinates sampled points (unif. fine grid)
 
-    // Perturbed & Delta anisotropy tensor dof
-    RijDelta = vector<vector<vector<double>>>(nunif, vector<vector<double>>(3, vector<double>(3, 0.0)));
+    // Perturbed & Delta anisotropy tensor dof (in uniform fine grid)
+    RxxDelta     = vector<double>(domn->ngrd, 0.0);
+    RxyDelta     = vector<double>(domn->ngrd, 0.0);
+    RxzDelta     = vector<double>(domn->ngrd, 0.0);
+    RyyDelta     = vector<double>(domn->ngrd, 0.0);
+    RyzDelta     = vector<double>(domn->ngrd, 0.0);
+    RzzDelta     = vector<double>(domn->ngrd, 0.0);
+    RxxDeltaUnif = vector<double>(nunif, 0.0);
+    RxyDeltaUnif = vector<double>(nunif, 0.0);
+    RxzDeltaUnif = vector<double>(nunif, 0.0);
+    RyyDeltaUnif = vector<double>(nunif, 0.0);
+    RyzDeltaUnif = vector<double>(nunif, 0.0);
+    RzzDeltaUnif = vector<double>(nunif, 0.0);
 
     // Direct mapping:  xmap = B * eigenvalues + b, where b = x3c
     b = vector<double>(2, 0.0);
@@ -165,6 +184,7 @@ void dv_reynolds_stress::getReynoldsStressDelta(){
     vector<vector<double>> DijPert(3, vector<double>(3, 0.0)); // diag. matrix of eigen-values
     vector<vector<double>> QijPert(3, vector<double>(3, 0.0)); // matrix of eigen-vectors
     vector<vector<double>> RijPert(3, vector<double>(3, 0.0));
+    
 
     for (int i = 0; i < nunif; i++){
 
@@ -180,21 +200,50 @@ void dv_reynolds_stress::getReynoldsStressDelta(){
         // perturbed Rij
         getPerturbedReynoldsStresses(RkkPert, DijPert, QijPert, RijPert); // update RijPert
 
-        // Delta Rij
-        getRijDelta(RijPert, i); // update RijDelta
+        // Delta Rij (uniform grid)
+        getReynoldsStressesDeltaUnif(RijPert, i); // update RijDeltaUnif
 
     }
+
+    // Delta Rij (adaptative grid)
+    interpRijDeltaUniformToAdaptativeGrid();
+
 }
+
+
+// Direct barycentric mapping: from eigenvalues to barycentric coordinates
+void dv_reynolds_stress::getDirectBarycentricMapping(const vector<double> &eigenvalues, vector<double> &xmapping){
+    for (int i=0; i<2; i++) {
+        xmapping[i] = x1c[i] * (    eigenvalues[0] - eigenvalues[1]) \
+                    + x2c[i] * (2.0*eigenvalues[1] - 2.0*eigenvalues[2]) \
+                    + x3c[i] * (3.0*eigenvalues[2] + 1.0);
+    }
+}
+
+
+// Inverse barycentric mapping: from barycentric coordinates to eigenvalues
+void dv_reynolds_stress::getInverseBarycentricMapping(const vector<double> &xmapping, vector<double> &eigenvalues){
+    for (int i = 0; i < 2; i++){
+        eigenvalues[i] = 0.0;
+        for (int j = 0; j < 2; j++){
+            eigenvalues[i] += Binv[i][j] * (xmapping[j] - b[j]);
+        }
+    }
+    eigenvalues[2] = -eigenvalues[0] - eigenvalues[1]; // by constrain: sum(eigenvalues) = 0
+}
+
 
 void dv_reynolds_stress::getPerturbedTrace(const double &Rkk, double &RkkPert){
     RkkPert = Rkk;
 }
+
 
 void dv_reynolds_stress::getPerturbedEigenValuesMatrix(const vector<double> &eigVal, vector<vector<double>> &DijPert){
     for (int q = 0; q < 3; q++){
         DijPert[q][q] = (1 - factEigValPert) * eigVal[q] + factEigValPert * eigValTarget[q];
     }
 }
+
 
 void dv_reynolds_stress::getPerturbedEigenVectorsMatrix(const vector<vector<double>> &eigVect, vector<vector<double>> &QijPert){
     for (int q = 0; q < 3; q++){
@@ -203,6 +252,7 @@ void dv_reynolds_stress::getPerturbedEigenVectorsMatrix(const vector<vector<doub
         }
     }
 }
+
 
 void dv_reynolds_stress::getPerturbedReynoldsStresses(const double &RkkPert, const vector<vector<double>> &DijPert, const vector<vector<double>> &QijPert, vector<vector<double>> &RijPert){
     vector<vector<double>> AijPert(3, vector<double>(3, 0.0));
@@ -214,34 +264,43 @@ void dv_reynolds_stress::getPerturbedReynoldsStresses(const double &RkkPert, con
     }
 }
 
-void dv_reynolds_stress::getRijDelta(const vector<vector<double>> &RijPert, const int &i){
-    RijDelta[i][0][0] = RijPert[0][0] - Rxx[i];
-    RijDelta[i][0][1] = RijPert[0][1] - Rxy[i];
-    RijDelta[i][0][2] = RijPert[0][2] - Rxz[i];
-    RijDelta[i][1][1] = RijPert[1][1] - Ryy[i];
-    RijDelta[i][1][2] = RijPert[1][2] - Ryz[i];
-    RijDelta[i][2][2] = RijPert[2][2] - Rzz[i];
-    RijDelta[i][1][0] = RijDelta[i][0][1];
-    RijDelta[i][2][0] = RijDelta[i][0][2];
-    RijDelta[i][2][1] = RijDelta[i][1][2];
+
+void dv_reynolds_stress::getReynoldsStressesDeltaUnif(const vector<vector<double>> &RijPert, const int &i){
+    RxxDeltaUnif[i] = RijPert[0][0] - Rxx[i];
+    RxyDeltaUnif[i] = RijPert[0][1] - Rxy[i];
+    RxzDeltaUnif[i] = RijPert[0][2] - Rxz[i];
+    RyyDeltaUnif[i] = RijPert[1][1] - Ryy[i];
+    RyzDeltaUnif[i] = RijPert[1][2] - Ryz[i];
+    RzzDeltaUnif[i] = RijPert[2][2] - Rzz[i];
 }
 
-// Direct barycentric mapping: from eigenvalues to barycentric coordinates
-void dv_reynolds_stress::getDirectBarycentricMapping(const vector<double> &eigenvalues, vector<double> &xmapping){
-    for (int i=0; i<2; i++) {
-        xmapping[i] = x1c[i] * (    eigenvalues[0] - eigenvalues[1]) \
-                    + x2c[i] * (2.0*eigenvalues[1] - 2.0*eigenvalues[2]) \
-                    + x3c[i] * (3.0*eigenvalues[2] + 1.0);
-    }
-}
 
-// Inverse barycentric mapping: from barycentric coordinates to eigenvalues
-void dv_reynolds_stress::getInverseBarycentricMapping(const vector<double> &xmapping, vector<double> &eigenvalues){
-    for (int i = 0; i < 2; i++){
-        eigenvalues[i] = 0.0;
-        for (int j = 0; j < 2; j++){
-            eigenvalues[i] += Binv[i][j] * (xmapping[j] - b[j]);
-        }
+void dv_reynolds_stress::interpRijDeltaUniformToAdaptativeGrid(){
+
+    // rezise RijDelta (adaptative grid)
+    RxxDelta.resize(domn->ngrd);
+    RxyDelta.resize(domn->ngrd);
+    RxzDelta.resize(domn->ngrd);
+    RyyDelta.resize(domn->ngrd);
+    RyzDelta.resize(domn->ngrd);
+    RzzDelta.resize(domn->ngrd);
+
+    // linear interpolators
+    Linear_interp Linterpxx(posUnif, RxxDeltaUnif);
+    Linear_interp Linterpxy(posUnif, RxyDeltaUnif);
+    Linear_interp Linterpxz(posUnif, RxzDeltaUnif);
+    Linear_interp Linterpyy(posUnif, RyyDeltaUnif);
+    Linear_interp Linterpyz(posUnif, RyzDeltaUnif);
+    Linear_interp Linterpzz(posUnif, RzzDeltaUnif);
+    double posCurrent = 0.0;
+    for (int i=0; i<domn->ngrd; i++) {
+        posCurrent = domn->pos->d.at(i);
+        RxxDelta.at(i) = Linterpxx.interp(posCurrent);
+        RxyDelta.at(i) = Linterpxy.interp(posCurrent);
+        RxzDelta.at(i) = Linterpxz.interp(posCurrent);
+        RyyDelta.at(i) = Linterpyy.interp(posCurrent);
+        RyzDelta.at(i) = Linterpyz.interp(posCurrent);
+        RzzDelta.at(i) = Linterpzz.interp(posCurrent);
     }
-    eigenvalues[2] = -eigenvalues[0] - eigenvalues[1]; // by constrain: sum(eigenvalues) = 0
+
 }
