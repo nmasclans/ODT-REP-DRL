@@ -5,6 +5,7 @@ params:
 
     seed:           22             #  random number generator seed (negative to randomize it)
     tEnd:           150.0          #  ending time of realization (s)
+    tBeginAvg:      50.0           #  averaging time at which to begin statistics calculation
     domainLength:   2.0            #  length of domain (m)
     ngrd0:          200            #  initial grid points
     rho0:           1.0            #  initial uniform density (kg/m^3)
@@ -13,7 +14,6 @@ params:
     pres:           101325.0       #  pressure (Pa)
     chemMechFile:   not_used.xml   #  name of chemical mechanism file
     probType:       CHANNEL        #  CHANNEL, CHANNEL_SCALAR, JETMIXL_RXN
-    tBeginAvg:      50.0           #  averaging time at which to begin statistics calculation
     #----------------------------------------------------------------------------------
     Z_param:        450.           #  Viscous penalty parameter
     A_param:        0.66666666667  #  Energy Distribution parameter alpha
@@ -25,10 +25,10 @@ params:
     Lsolver:        EXPLICIT       #  EXPLICIT, SEMI-IMPLICIT, STRANG
     #----------------------------------------------------------------------------------
     Lstatconv:      true           #  flag to turn on statistics convergence (by added source term)
-    factEigValPert: 0.01
+    factEigValPert: 0.1
     xmapTarget1:    0.5
     xmapTarget2:    0.0
-    tBeginStatConv: 50.0
+    tBeginStatConv: 55.0
     #----------------------------------------------------------------------------------
     bcType:         WALL           #  OUTFLOW, WALL, PERIODIC, WALL_OUT
     cCoord:         1              #  1 = planar, 2 = cylindrical, 3 = spherical

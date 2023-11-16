@@ -296,7 +296,7 @@ void inputoutput::outputProperties(const string fname, const double time) {
                 // rmsf quantity
                 ofileStat << setw(19) << domn->v.at(k)->drmsf.at(i);
                 // F-perturbation for statistics convergence
-                ofileStat << setw(19) << domn->v.at(k)->F_statConv_nunif.at(i);
+                ofileStat << setw(19) << domn->v.at(k)->FstatConvUnif.at(i);
             }
         }
         if (domn->Rij->L_output) {

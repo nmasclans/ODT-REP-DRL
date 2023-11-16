@@ -10,8 +10,6 @@
 #include <cmath>
 #include <iostream>
 
-#include "interp_linear.h" // todo: erase, it shouldn't be used here
-
 using namespace std;
 
 #define _CONSTANT_RHS_CONV_STAT_ 0 // todo: set to 0, or better erase! just for testing RhsStatConv is well implemented
@@ -36,7 +34,6 @@ dv_uvw::dv_uvw(domain  *line,
     // parameters
     L_converge_stat = Lcs;
     L_output_stat   = true;
-    nunif           = domn->pram->nunif;              // num. points uniform grid (using smallest grid size)   
     tBeginStatConv  = domn->pram->tBeginStatConv;
     
     // -> N-S Eq data members 
@@ -46,30 +43,21 @@ dv_uvw::dv_uvw(domain  *line,
 
     // ---------------------------- Statistics calc. during runtime ---------------------------- 
     
-
-    // position uniform fine grid
-    posUnif         = vector<double>(nunif, 0.0);     // uniform grid in y-axis
-    double delta    = domn->pram->domainLength / 2;   // half-channel length 
-    for (int i=0; i<nunif; i++) {
-        posUnif.at(i) = - delta + i * (2.0 * delta) / (nunif - 1);
-    }
-
     // Instantaneous and Averaged quantities, defined in the uniform fine grid
-    dunif             = vector<double>(nunif, 0.0);
-    davg              = vector<double>(nunif, 0.0);
-    drmsf             = vector<double>(nunif, 0.0);
+    dunif           = vector<double>(nunif, 0.0);
+    davg            = vector<double>(nunif, 0.0);
+    drmsf           = vector<double>(nunif, 0.0);
 
     // Statistics convergence framework
-    F_statConv        = vector<double>(domn->ngrd, 0.0);
-    F_statConv_nunif  = vector<double>(nunif, 0.0);
+    FstatConvUnif   = vector<double>(nunif, 0.0);
 
     // Perturbed & Delta anisotropy tensor dof (in adaptative grid)
-    RxxDelta          = vector<double>(domn->ngrd, 0.0);
-    RxyDelta          = vector<double>(domn->ngrd, 0.0);
-    RxzDelta          = vector<double>(domn->ngrd, 0.0);
-    RyyDelta          = vector<double>(domn->ngrd, 0.0);
-    RyzDelta          = vector<double>(domn->ngrd, 0.0);
-    RzzDelta          = vector<double>(domn->ngrd, 0.0);
+    RxxDelta        = vector<double>(domn->ngrd, 0.0);
+    RxyDelta        = vector<double>(domn->ngrd, 0.0);
+    RxzDelta        = vector<double>(domn->ngrd, 0.0);
+    RyyDelta        = vector<double>(domn->ngrd, 0.0);
+    RyzDelta        = vector<double>(domn->ngrd, 0.0);
+    RzzDelta        = vector<double>(domn->ngrd, 0.0);
 
 }
 
@@ -268,7 +256,7 @@ void dv_uvw::getRhsStatConv(const vector<double> &gf,
                             const vector<double> &dxc,
                             const double &time) { 
     // todo: change every instance to 'StatConv' to 'Pert' perturbation
-    
+
     if(!L_transported)
         *domn->io->ostrm << endl << "ERROR:  dv_uvw::getRhsStatConv can only be called for dv objects with L_transported = true and Lstatconv = true" << endl;
     if(domn->pram->Lspatial)
@@ -279,7 +267,7 @@ void dv_uvw::getRhsStatConv(const vector<double> &gf,
     rhsStatConv.resize(domn->ngrd, 0.0); 
 
     // update the rhs term for statistics convergence 'rhsStatConv'
-    if(L_converge_stat & (tBeginStatConv > time)){
+    if(L_converge_stat & (time > tBeginStatConv)){
 
 #if _CONSTANT_RHS_CONV_STAT_ // todo: erase this #if, just for initial testing
         if(var_name == "uvel" && domn->pram->cCoord != 3.0) {
@@ -287,7 +275,7 @@ void dv_uvw::getRhsStatConv(const vector<double> &gf,
                 rhsStatConv.at(i) = 0.0; 
         }
 #elif _ENFORCED_TAU_PERTURBATION_
-        
+
         // get updated RijDelta (in adaptative grid)
         domn->Rij->getReynoldsStressDelta(); // updates RijDelta class data members
 
@@ -304,13 +292,17 @@ void dv_uvw::getRhsStatConv(const vector<double> &gf,
             *domn->io->ostrm << endl << "ERROR: data mamber var_name not recognized in dv_uvw::getRhsStatConv" << endl;
             exit(0);
         }
+
         interpVarToFacesHarmonic(RiyDelta, RiyDeltaf);  // updates RiyDeltaf, shape ngrdf = ngrd + 1
 
         // -------------------- perturbation term  (partial Rix) / (partial x) --------------------
         
         for (int i=0, ip=1; i<domn->ngrd; i++, ip++){
-            rhsStatConv.at(i) = (gf.at(i) / dxc.at(i)) * (RiyDelta.at(ip) - RiyDelta.at(ip));
+            rhsStatConv.at(i) = (RiyDeltaf.at(ip) - RiyDeltaf.at(i)) / dxc.at(i) ;
         }
+
+        // interpolate to uniform grid
+        interpVarAdaptToUnifGrid(rhsStatConv, FstatConvUnif); // updates FstatConvUnif
 
 #else 
         // todo: nothing here
@@ -326,12 +318,7 @@ void dv_uvw::getRhsStatConv(const vector<double> &gf,
 void dv_uvw::updateTimeAveragedQuantities(const double &delta_t, const double &averaging_time) {
 
     // interpolate instantaneous quantity in adaptative grid to uniform fine grid
-    vector<double> dmb = d;
-    Linear_interp Linterp(domn->pos->d, dmb);
-    for (int i=0; i<nunif; i++) {
-        // velocity instantaneous (fine grid)
-        dunif.at(i) = Linterp.interp(posUnif.at(i));
-    } 
+    interpVarAdaptToUnifGrid(d, dunif);
 
     // update time-averaged quantities at each grid point
     for(int i=0; i<nunif; i++) {

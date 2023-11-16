@@ -42,16 +42,17 @@ class dv {
 
         vector<double>                flux;
 
-        // statistics calculation
+        // fine uniform grid
         int                           nunif;                  ///< todo: add descriptions
         vector<double>                posUnif;
+        
+        // statistics calculation
         vector<double>                dunif;
         vector<double>                davg;
         vector<double>                drmsf;
 
         // statistics convergence framework
-        vector<double>                F_statConv;
-        vector<double>                F_statConv_nunif;
+        vector<double>                FstatConvUnif;
 
         // reynolds stress tensor
         vector<double>                Rxx;
@@ -91,6 +92,9 @@ class dv {
 
         virtual void   interpVarToFacesHarmonic(const vector<double> &cvar, vector<double> &fvar);
         virtual double linearInterpToFace(const int &iface, const vector<double> &vec);
+        virtual void   interpVarAdaptToUnifGrid(const vector<double> &dAdapt, vector<double> &dUnif);
+        virtual void   interpVarUnifToAdaptGrid(const vector<double> &dUnif, vector<double> &dAdapt);
+        
         virtual void   setDvFromRegion(const int i1, const int i2);
         virtual void   resize();
         virtual void   updateTimeAveragedQuantities(const double &delta_t, const double &averaging_time){};

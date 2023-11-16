@@ -5,6 +5,7 @@
 
 #include "dv.h"
 #include "domain.h"
+#include "interp_linear.h"
 #include <iostream>
 
 using namespace std;
@@ -27,11 +28,19 @@ dv::dv(domain    *line,
     L_output      = Lo;
     d             = vector<double>(domn->ngrd, 0.0);
 
+    LagSrc = false;
+
     // additional setup - only used in dv_uvw
     L_output_stat   = false;
     L_converge_stat = false;
 
-    LagSrc = false;
+    // position uniform fine grid
+    nunif           = domn->pram->nunif;
+    posUnif         = vector<double>(nunif, 0.0);     // uniform grid in y-axis
+    double delta    = domn->pram->domainLength / 2;   // half-channel length 
+    for (int i=0; i<nunif; i++) {
+        posUnif.at(i) = - delta + i * (2.0 * delta) / (nunif - 1);
+    }
 
 }
 
@@ -170,6 +179,31 @@ double dv::linearInterpToFace(const int &iface, const vector<double> &vec) {
     }
 
     return y1 + (y2 - y1) / (x2 - x1) * (domn->posf->d.at(iface) - x1);
+}
+
+/////////////////////////////////////////////////////////////////////////////////
+/*! Interpolate variable between different grids
+*/
+
+// Interpolate variable from adaptative grid to uniform fine grid
+void dv::interpVarAdaptToUnifGrid(const vector<double> &dAdapt, vector<double> &dUnif){
+    vector<double> dmb = dAdapt;
+    Linear_interp Linterp(domn->pos->d, dmb);
+    for (int i=0; i<nunif; i++) {
+        // velocity instantaneous (fine grid)
+        dUnif.at(i) = Linterp.interp(posUnif.at(i));
+    } 
+}
+
+// Interpolate variable from uniform fine grid to adaptative grid
+void dv::interpVarUnifToAdaptGrid(const vector<double> &dUnif, vector<double> &dAdapt){
+    dAdapt.resize(domn->ngrd);
+    vector<double> dmb = dUnif;
+    Linear_interp Linterp(posUnif, dmb);
+    for (int i=0; i<domn->ngrd; i++) {
+        // velocity instantaneous (fine grid)
+        dAdapt.at(i) = Linterp.interp(domn->pos->d.at(i));
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

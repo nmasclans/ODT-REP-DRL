@@ -5,7 +5,6 @@
 
 #include "dv_reynolds_stress.h"
 #include "domain.h"
-#include "interp_linear.h"
 #include <cstdlib>
 #include <cmath>
 #include <iostream>
@@ -26,16 +25,8 @@ dv_reynolds_stress::dv_reynolds_stress(domain    *line,
                                        const bool Lo) : dv(line, s, Lt, Lo) {
 
     // Parameters
-    nunif          = domn->pram->nunif;
     factEigValPert = domn->pram->factEigValPert;
     xmapTarget     = vector<double>{domn->pram->xmapTarget1,domn->pram->xmapTarget2};
-
-    // position uniform fine grid
-    posUnif      = vector<double>(nunif, 0.0);     // uniform grid in y-axis
-    double delta = domn->pram->domainLength / 2;   // half-channel length 
-    for (int i=0; i<nunif; i++) {
-        posUnif.at(i) = - delta + i * (2.0 * delta) / (nunif - 1);
-    }
 
     // Reynolds stress terms
     Rxx     = vector<double>(nunif, 0.0);
@@ -277,30 +268,11 @@ void dv_reynolds_stress::getReynoldsStressesDeltaUnif(const vector<vector<double
 
 void dv_reynolds_stress::interpRijDeltaUniformToAdaptativeGrid(){
 
-    // rezise RijDelta (adaptative grid)
-    RxxDelta.resize(domn->ngrd);
-    RxyDelta.resize(domn->ngrd);
-    RxzDelta.resize(domn->ngrd);
-    RyyDelta.resize(domn->ngrd);
-    RyzDelta.resize(domn->ngrd);
-    RzzDelta.resize(domn->ngrd);
-
-    // linear interpolators
-    Linear_interp Linterpxx(posUnif, RxxDeltaUnif);
-    Linear_interp Linterpxy(posUnif, RxyDeltaUnif);
-    Linear_interp Linterpxz(posUnif, RxzDeltaUnif);
-    Linear_interp Linterpyy(posUnif, RyyDeltaUnif);
-    Linear_interp Linterpyz(posUnif, RyzDeltaUnif);
-    Linear_interp Linterpzz(posUnif, RzzDeltaUnif);
-    double posCurrent = 0.0;
-    for (int i=0; i<domn->ngrd; i++) {
-        posCurrent = domn->pos->d.at(i);
-        RxxDelta.at(i) = Linterpxx.interp(posCurrent);
-        RxyDelta.at(i) = Linterpxy.interp(posCurrent);
-        RxzDelta.at(i) = Linterpxz.interp(posCurrent);
-        RyyDelta.at(i) = Linterpyy.interp(posCurrent);
-        RyzDelta.at(i) = Linterpyz.interp(posCurrent);
-        RzzDelta.at(i) = Linterpzz.interp(posCurrent);
-    }
+    interpVarUnifToAdaptGrid(RxxDeltaUnif, RxxDelta);
+    interpVarUnifToAdaptGrid(RxyDeltaUnif, RxyDelta);
+    interpVarUnifToAdaptGrid(RxzDeltaUnif, RxzDelta);
+    interpVarUnifToAdaptGrid(RyyDeltaUnif, RyyDelta);
+    interpVarUnifToAdaptGrid(RyzDeltaUnif, RyzDelta);
+    interpVarUnifToAdaptGrid(RzzDeltaUnif, RzzDelta);
 
 }
