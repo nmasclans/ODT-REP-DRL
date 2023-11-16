@@ -25,6 +25,7 @@ params:
     Lsolver:        EXPLICIT       #  EXPLICIT, SEMI-IMPLICIT, STRANG
     #----------------------------------------------------------------------------------
     Lstatconv:      true           #  flag to turn on statistics convergence (by added source term)
+    nunif:          200
     factEigValPert: 0.1
     xmapTarget1:    0.5
     xmapTarget2:    0.0

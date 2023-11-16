@@ -66,6 +66,7 @@ class param {
         bool    Lignition;       ///<  true if starting with unreacted mixing profile to allow ignition
         
         bool    Lstatconv;       ///<  flag to turn on statistics convergence (by added source term)
+        int     nunif;           ///<  number of sampled points in uniform fine grid to evaluate & store the statistics (statistics convergence)
         double  factEigValPert;  ///<  factor of eigen-values perturbation to reach target xmap coordinate (statistics convergence)
         double  tBeginStatConv;  ///<  time instant from which it is applied the F-perturbation statistics convergence 
         double  xmapTarget1;     ///<  xmap target, 1st coordinate (statistics convergence)
@@ -78,7 +79,6 @@ class param {
         double  gDens;           ///<  grid density for mesher
         double  dxmin;           ///<  min grid spacing: = dxmin / domain length
         double  dxmax;           ///<  max grid spacing = dxmax / domain length
-        int     nunif;           ///<  num. points uniform grid of calculated statistics (using smallest grid size)   
 
         double  Pmax;            ///<  maximum eddy acceptance probability
         double  Pav;             ///<  Average acceptance probability

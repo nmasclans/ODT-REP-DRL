@@ -61,6 +61,7 @@ param::param(inputoutput *p_io) {
     Lignition      = io->params["Lignition"]      ? io->params["Lignition"].as<bool>()       : false;
 
     Lstatconv      = io->params["Lstatconv"]      ? io->params["Lstatconv"].as<bool>()       : false;
+    nunif          = io->params["nunif"]          ? io->params["nunif"].as<int>()            : 1000;
     factEigValPert = io->params["factEigValPert"] ? io->params["factEigValPert"].as<double>() : 0.0;
     tBeginStatConv = io->params["tBeginStatConv"] ? io->params["tBeginStatConv"].as<double>(): 0.0;
     xmapTarget1    = io->params["xmapTarget1"]    ? io->params["xmapTarget1"].as<double>()   : 0.0;
@@ -142,7 +143,8 @@ param::param(inputoutput *p_io) {
 
     // -------------------- statistics uniform grid
 
-    nunif  = int(1/dxmin);
+    if (nunif > int(1/dxmin))
+        nunif = int(1/dxmin);       // minimal resolution of fine uniform grid
 
     //--------------------- sanity checks
 
