@@ -30,11 +30,11 @@ with open("../../data/"+caseN+"/input/input.yaml") as ifile :
 kvisc = yml["params"]["kvisc0"]
 dxmin = yml["params"]["dxmin"]
 delta = yml["params"]["domainLength"] * 0.5
+nunif = yml["params"]["nunif"]
 Retau = 1.0/kvisc
 
 flist = sorted(gb.glob('../../data/'+caseN+'/data/data_00000/dmp_*.dat'))
 
-nunif  = int(1/dxmin)        # uniform grid (using smallest grid size)   
 nunif2 = int(nunif/2)        # half as many (for ploting to domain center)
 
 nfiles = len(flist)

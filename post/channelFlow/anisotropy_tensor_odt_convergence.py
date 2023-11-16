@@ -55,13 +55,14 @@ with open(odtInputDataFilepath) as ifile :
 kvisc = yml["params"]["kvisc0"] # kvisc = nu = mu / rho
 rho   = yml["params"]["rho0"]
 dxmin = yml["params"]["dxmin"]
+nunif = yml["params"]["nunif"]
 domainLength = yml["params"]["domainLength"] 
 delta = domainLength * 0.5
 utau  = 1.0
 dTimeStart = yml["dumpTimesGen"]["dTimeStart"]
 dTimeEnd   = yml["dumpTimesGen"]["dTimeEnd"]
 dTimeStep  = yml["dumpTimesGen"]["dTimeStep"]
-inputParams = {"kvisc":kvisc, "rho":rho, "dxmin": dxmin, "domainLength" : domainLength, "delta": delta, "Retau": Retau, "caseN": caseN, "utau": utau, 'dTimeStart':dTimeStart, 'dTimeEnd':dTimeEnd, 'dTimeStep':dTimeStep} 
+inputParams = {"kvisc":kvisc, "rho":rho, "dxmin": dxmin, "nunif": nunif, "domainLength" : domainLength, "delta": delta, "Retau": Retau, "caseN": caseN, "utau": utau, 'dTimeStart':dTimeStart, 'dTimeEnd':dTimeEnd, 'dTimeStep':dTimeStep} 
 
 #------------ Averaging times ---------------
 

@@ -55,20 +55,20 @@ with open(odtInputDataFilepath) as ifile :
 kvisc = yml["params"]["kvisc0"] # kvisc = nu = mu / rho
 rho   = yml["params"]["rho0"]
 dxmin = yml["params"]["dxmin"]
+nunif = yml["params"]["nunif"]
 domainLength = yml["params"]["domainLength"] 
 delta = domainLength * 0.5
 utau  = 1.0
 dTimeStart = yml["dumpTimesGen"]["dTimeStart"]
 dTimeEnd   = yml["dumpTimesGen"]["dTimeEnd"]
 dTimeStep  = yml["dumpTimesGen"]["dTimeStep"]
-inputParams = {"kvisc":kvisc, "rho":rho, "dxmin": dxmin, "domainLength" : domainLength, "delta": delta, "Retau": Retau, "caseN": caseN, "utau": utau, 'dTimeStart':dTimeStart, 'dTimeEnd':dTimeEnd, 'dTimeStep':dTimeStep} 
+inputParams = {"kvisc":kvisc, "rho":rho, "dxmin": dxmin, "nunif":nunif, "domainLength" : domainLength, "delta": delta, "Retau": Retau, "caseN": caseN, "utau": utau, 'dTimeStart':dTimeStart, 'dTimeEnd':dTimeEnd, 'dTimeStep':dTimeStep} 
 
 # --- Get ODT computational data ---
 
 flist = sorted(gb.glob('../../data/'+caseN+'/data/data_00000/dmp_*.dat'))
 
 # Num points uniform grid
-nunif  = int(1/dxmin)        # num. points uniform grid (using smallest grid size)   
 nunif2 = int(nunif/2)        # half of num. points (for ploting to domain center, symmetry in y-axis)
 
 # Averaging times

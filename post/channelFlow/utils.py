@@ -27,18 +27,18 @@ def get_odt_instantaneous(input_params):
     # --- Get ODT input parameters ---
 
     dxmin = input_params["dxmin"]
+    nunif = input_params["nunif"]
+    delta = input_params["delta"]
     domainLength = input_params["domainLength"]
 
-    # un-normalize
-    dxmin *= domainLength       
+    dxmin *= domainLength       # un-normalize
+    nunif2 = int(nunif/2)       # half of num. points (for ploting to domain center, symmetry in y-axis)
 
     # --- Get ODT data ---
 
     flist     = sorted(gb.glob('../../data/' + case_name + '/data/data_00000/dmp_*.dat'))
     num_files = len(flist)
 
-    nunif  = int(1/dxmin)        # num. points uniform grid (using smallest grid size)   
-    nunif2 = int(nunif/2)        # half of num. points (for ploting to domain center, symmetry in y-axis)
     
     yu    = np.linspace(-delta,delta,nunif) # uniform grid in y-axis
     uvel = np.zeros([nunif, num_files])
@@ -93,6 +93,7 @@ def compute_odt_statistics(odt_statistics_filepath, input_params, plot_reynolds_
     dxmin = input_params["dxmin"]
     delta = input_params["delta"]
     Retau = input_params["Retau"]
+    nunif = input_params["nunif"]
     case_name = input_params["caseN"]
     
     # un-normalize
@@ -104,7 +105,6 @@ def compute_odt_statistics(odt_statistics_filepath, input_params, plot_reynolds_
     flist = sorted(gb.glob('../../data/' + case_name + '/data/data_00000/dmp_*.dat'))
     flist_stat = sorted(gb.glob('../../data/' + case_name + '/data/data_00000/statistics/dmp_*_stat.dat'))
 
-    nunif  = int(1/dxmin)        # num. points uniform grid (using smallest grid size)   
     nunif2 = int(nunif/2)        # half of num. points (for ploting to domain center, symmetry in y-axis)
     nfiles = len(flist)          # num. files of instantaneous data, i.e. num. discrete time instants
     yu  = np.linspace(-delta,delta,nunif) # uniform grid in y-axis
@@ -641,6 +641,7 @@ def get_odt_statistics_during_runtime(input_params, averaging_times):
     dTimeStart   = input_params["dTimeStart"]
     dTimeEnd     = input_params["dTimeEnd"]
     dTimeStep    = input_params["dTimeStep"]
+    nunif        = input_params["nunif"]
     dxmin       *= domainLength
 
     # Averaging times and files identification
@@ -658,7 +659,6 @@ def get_odt_statistics_during_runtime(input_params, averaging_times):
     flist = ['../../data/' + case_name + '/data/data_00000/statistics/dmp_' + s  + '_stat.dat' for s in averaging_times_str]
 
     # Num points uniform grid
-    nunif  = int(1/dxmin)        # num. points uniform grid (using smallest grid size)   
     nunif2 = int(nunif/2)        # half of num. points (for ploting to domain center, symmetry in y-axis)
 
     um = np.zeros([nunif, averaging_times_num]) 
@@ -728,12 +728,12 @@ def get_odt_statistics_rt_at_chosen_averaging_times(input_params, averaging_time
     dTimeStep    = input_params["dTimeStep"]
     domainLength = input_params["domainLength"]
     dxmin        = input_params["dxmin"]
+    nunif        = input_params["nunif"]
 
     # un-normalize
     dxmin       *= domainLength
     
     # uniform fine grid
-    nunif        = int(1/dxmin)
     nunif2       = int(nunif/2)
 
     # --- Averaging times and files identification ---
@@ -859,10 +859,11 @@ def compute_convergence_indicator_odt_tEnd(input_params):
     case_name    = input_params["caseN"]
     kvisc        = input_params["kvisc"]
     utau         = input_params["utau"]
+    nunif        = input_params["nunif"]
+    
     # un-normalize
     dxmin *= domainLength
     # uniform fine grid
-    nunif  = int(1/dxmin) 
     nunif2 = int(nunif/2)
 
     # --------------- Get ODT statistics ---------------
@@ -915,10 +916,10 @@ def compute_convergence_indicator_odt_along_time(input_params):
     case_name    = input_params["caseN"]
     kvisc        = input_params["kvisc"]
     utau         = input_params["utau"]
+    nunif        = input_params["nunif"]
     # un-normalize
     dxmin *= domainLength
     # uniform fine grid
-    nunif  = int(1/dxmin) 
     nunif2 = int(nunif/2)
 
     # --------------- Get ODT statistics ---------------
@@ -974,6 +975,7 @@ def compute_odt_statistics_at_chosen_time(input_params, time_end):
     delta = input_params["delta"]
     Retau = input_params["Retau"]
     case_name = input_params["caseN"]
+    nunif     = input_params["nunif"]
     
     # un-normalize
     domainLength = input_params["domainLength"]
@@ -984,7 +986,6 @@ def compute_odt_statistics_at_chosen_time(input_params, time_end):
     flist = sorted(gb.glob('../../data/' + case_name + '/data/data_00000/dmp_*.dat'))
     flist_stat = sorted(gb.glob('../../data/' + case_name + '/data/data_00000/statistics/dmp_*_stat.dat'))
 
-    nunif  = int(1/dxmin)        # num. points uniform grid (using smallest grid size)   
     nunif2 = int(nunif/2)        # half of num. points (for ploting to domain center, symmetry in y-axis)
     yu  = np.linspace(-delta,delta,nunif) # uniform grid in y-axis
     # empty vectors of time-averaged quantities
