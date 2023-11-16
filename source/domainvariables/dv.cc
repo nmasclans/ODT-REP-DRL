@@ -210,7 +210,7 @@ void dv::resize() {
  *  @param ipt \input optional point to compute source at.
  */
 
-void dv::getRhsStatConv(const double &timeCurrent){
+void dv::getRhsStatConv(const vector<double> &gf, const vector<double> &dxc, const double &time){
     
     if(!L_transported) return;
 

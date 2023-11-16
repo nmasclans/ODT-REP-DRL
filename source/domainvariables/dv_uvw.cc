@@ -33,21 +33,23 @@ dv_uvw::dv_uvw(domain  *line,
 
     d = vector<double>(domn->ngrd, 0.0);
 
+    // parameters
     L_converge_stat = Lcs;
-    L_output_stat = true;
+    L_output_stat   = true;
+    nunif           = domn->pram->nunif;              // num. points uniform grid (using smallest grid size)   
+    tBeginStatConv  = domn->pram->tBeginStatConv;
     
     // -> N-S Eq data members 
-    rhsSrc        = vector<double>(domn->ngrd, 0.0);
-    rhsMix        = vector<double>(domn->ngrd, 0.0);
-    rhsStatConv   = vector<double>(domn->ngrd, 0.0);
+    rhsSrc          = vector<double>(domn->ngrd, 0.0);
+    rhsMix          = vector<double>(domn->ngrd, 0.0);
+    rhsStatConv     = vector<double>(domn->ngrd, 0.0);
 
     // ---------------------------- Statistics calc. during runtime ---------------------------- 
     
 
     // position uniform fine grid
-    nunif        = domn->pram->nunif;              // num. points uniform grid (using smallest grid size)   
-    posUnif      = vector<double>(nunif, 0.0);     // uniform grid in y-axis
-    double delta = domn->pram->domainLength / 2;   // half-channel length 
+    posUnif         = vector<double>(nunif, 0.0);     // uniform grid in y-axis
+    double delta    = domn->pram->domainLength / 2;   // half-channel length 
     for (int i=0; i<nunif; i++) {
         posUnif.at(i) = - delta + i * (2.0 * delta) / (nunif - 1);
     }
@@ -263,21 +265,21 @@ void dv_uvw::getRhsMix(const vector<double> &gf,
  */
 
 void dv_uvw::getRhsStatConv(const vector<double> &gf,
-                            const vector<double> &dxc) {
+                            const vector<double> &dxc,
+                            const double &time) { 
+    // todo: change every instance to 'StatConv' to 'Pert' perturbation
     
     if(!L_transported)
         *domn->io->ostrm << endl << "ERROR:  dv_uvw::getRhsStatConv can only be called for dv objects with L_transported = true and Lstatconv = true" << endl;
-
     if(domn->pram->Lspatial)
         *domn->io->ostrm << endl << "ERROR: Lspatial = true not implemented for method dv_uvw::getRhsStatConv; set Lspatial = false or LstatConv = false" << endl;
-
     if(domn->pram->cCoord!=1)
         *domn->io->ostrm << endl << "ERROR: cCoord != 1 not implemented for method dv_uvw::getRhsStatConv; set cCoord = 1 or LstatConv = false" << endl;
 
     rhsStatConv.resize(domn->ngrd, 0.0); 
 
     // update the rhs term for statistics convergence 'rhsStatConv'
-    if(L_converge_stat){
+    if(L_converge_stat & (tBeginStatConv > time)){
 
 #if _CONSTANT_RHS_CONV_STAT_ // todo: erase this #if, just for initial testing
         if(var_name == "uvel" && domn->pram->cCoord != 3.0) {
@@ -302,19 +304,13 @@ void dv_uvw::getRhsStatConv(const vector<double> &gf,
             *domn->io->ostrm << endl << "ERROR: data mamber var_name not recognized in dv_uvw::getRhsStatConv" << endl;
             exit(0);
         }
-        interpVarToFacesHarmonic(RiyDelta, RiyDeltaf);  // updates RiyDeltaf
+        interpVarToFacesHarmonic(RiyDelta, RiyDeltaf);  // updates RiyDeltaf, shape ngrdf = ngrd + 1
 
         // -------------------- perturbation term  (partial Rix) / (partial x) --------------------
         
-        //---------- Interior faces
-
-        for (int i=1, im=0; i<domn->ngrd; i++, im++)
-       use flux or rhsMix derivative??
-       
-        flux.at(i) = -gf.at(i) * dvisc_f.at(i)*(d.at(i) - d.at(im));  // flux = - mu * (delta d / delta y or position)
-         * rhsMix.at(i) = - (1/(domn->rho->d.at(i) * dxc.at(i))) * (flux.at(ip)*1 - flux.at(i)*1)
-
-                
+        for (int i=0, ip=1; i<domn->ngrd; i++, ip++){
+            rhsStatConv.at(i) = (gf.at(i) / dxc.at(i)) * (RiyDelta.at(ip) - RiyDelta.at(ip));
+        }
 
 #else 
         // todo: nothing here

@@ -62,7 +62,7 @@ void micromixer::advanceOdt(const double p_tstart, const double p_tend, const in
         else if(domn->pram->Lsolver=="STRANG")
             advanceOdtSingleStep_StrangSplit();
 
-        updateTimeAveragedQuantitiesIfNeeded(dt, time);
+        updateTimeAveragedQuantitiesIfNeeded(dt);
         
         domn->io->dumpDomainIfNeeded();
 
@@ -166,7 +166,7 @@ void micromixer::advanceOdtSingleStep_Explicit(){
         if(domn->v.at(k)->L_transported) {
             domn->v.at(k)->getRhsMix(gf, dxc);
             domn->v.at(k)->getRhsSrc();
-            domn->v.at(k)->getRhsStatConv(time+dt);
+            domn->v.at(k)->getRhsStatConv(gf, dxc, time);
         }
     }
 
@@ -417,7 +417,7 @@ bool micromixer::adaptGridIfNeeded() {
 /** Update statistics of domain variables 
  */
 
-void micromixer::updateTimeAveragedQuantitiesIfNeeded(const double &delta_t, const double &time) {
+void micromixer::updateTimeAveragedQuantitiesIfNeeded(const double &delta_t) {
     double averaging_time = time - tBeginAvg;
     if (averaging_time > 0.0) {
         // update velocity time-average and rmsf

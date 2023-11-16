@@ -87,7 +87,7 @@ class dv {
         virtual void   getRhsSrc(const int ipt=-1){if(!L_transported) return;}
         virtual void   getRhsMix(const vector<double> &gf,
                                  const vector<double> &dxc){if(!L_transported) return;}
-        virtual void   getRhsStatConv(const double &timeCurrent);
+        virtual void   getRhsStatConv(const vector<double> &gf, const vector<double> &dxc, const double &time);
 
         virtual void   interpVarToFacesHarmonic(const vector<double> &cvar, vector<double> &fvar);
         virtual double linearInterpToFace(const int &iface, const vector<double> &vec);

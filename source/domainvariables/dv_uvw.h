@@ -28,6 +28,7 @@ class dv_uvw : public dv {
 
     private: 
 
+        double tBeginStatConv;
 
     //////////////////// MEMBER FUNCTIONS /////////////////
 
@@ -35,7 +36,7 @@ class dv_uvw : public dv {
 
         virtual void getRhsSrc(const int ipt=-1);
         virtual void getRhsMix(const vector<double> &gf, const vector<double> &dxc);
-        virtual void getRhsStatConv(const vector<double> &gf, const vector<double> &dxc);
+        virtual void getRhsStatConv(const vector<double> &gf, const vector<double> &dxc, const double &time);
         virtual void updateTimeAveragedQuantities(const double &delta_t, const double &averaging_time);
         
     private:
