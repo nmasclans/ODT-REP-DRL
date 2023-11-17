@@ -269,13 +269,6 @@ void dv_uvw::getRhsStatConv(const vector<double> &gf,
     // update the rhs term for statistics convergence 'rhsStatConv'
     if(L_converge_stat & (time > tBeginStatConv)){
 
-#if _CONSTANT_RHS_CONV_STAT_ // todo: erase this #if, just for initial testing
-        if(var_name == "uvel" && domn->pram->cCoord != 3.0) {
-            for(int i=0; i<domn->ngrd; i++)
-                rhsStatConv.at(i) = 0.0; 
-        }
-#elif _ENFORCED_TAU_PERTURBATION_
-
         // get updated RijDelta (in adaptative grid)
         domn->Rij->getReynoldsStressDelta(); // updates RijDelta class data members
 
@@ -309,9 +302,6 @@ void dv_uvw::getRhsStatConv(const vector<double> &gf,
         // interpolate to uniform grid
         interpVarAdaptToUnifGrid(rhsStatConv, FstatConvUnif); // updates FstatConvUnif
 
-#else 
-        // todo: nothing here
-#endif
     }
 
 }

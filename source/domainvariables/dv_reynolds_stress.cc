@@ -68,18 +68,18 @@ dv_reynolds_stress::dv_reynolds_stress(domain    *line,
     b = vector<double>(2, 0.0);
     vector<vector<double>> B(2, vector<double>(2, 0.0));
     for (int i=0; i<2; i++){
-        b[i]     = x3c[i];
-        B[i][0]  = x1c[i] + 2 * x2c[i] - 3 * x3c[i];
-        B[i][1]  = -x1c[i] + 4 * x2c[i] - 3 * x3c[i];
+        b[i]     =   x3c[i];
+        B[i][0]  =   x1c[i] + 2 * x2c[i] - 3 * x3c[i];
+        B[i][1]  = - x1c[i] + 4 * x2c[i] - 3 * x3c[i];
     }
 
     // Inverse mapping: eigenvalues = B^{-1} * (xmap - b), where B^{-1}:
     double Bdet  = B[0][0] * B[1][1] - B[0][1] * B[1][0];
     Binv         = vector<vector<double>>(2, vector<double>(2, 0.0));
-    Binv[0][0]   = B[1][1] / Bdet;
-    Binv[0][1]   = -B[0][1] / Bdet;
-    Binv[1][0]   = -B[1][0] / Bdet;
-    Binv[1][1]   = B[0][0] / Bdet;
+    Binv[0][0]   =   B[1][1] / Bdet;
+    Binv[0][1]   = - B[0][1] / Bdet;
+    Binv[1][0]   = - B[1][0] / Bdet;
+    Binv[1][1]   =   B[0][0] / Bdet;
 
     // Kronecker delta
     Deltaij      = vector<vector<double>>(3, vector<double>(3, 0.0));
@@ -221,7 +221,7 @@ void dv_reynolds_stress::getInverseBarycentricMapping(const vector<double> &xmap
             eigenvalues[i] += Binv[i][j] * (xmapping[j] - b[j]);
         }
     }
-    eigenvalues[2] = -eigenvalues[0] - eigenvalues[1]; // by constrain: sum(eigenvalues) = 0
+    eigenvalues[2] = - eigenvalues[0] - eigenvalues[1]; // by constrain: sum(eigenvalues) = 0
 }
 
 
