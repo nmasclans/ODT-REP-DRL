@@ -82,7 +82,10 @@ dv_reynolds_stress::dv_reynolds_stress(domain    *line,
     Binv[1][1]   =   B[0][0] / Bdet;
 
     // Kronecker delta
-    Deltaij      = vector<vector<double>>(3, vector<double>(3, 0.0));
+    Deltaij       = vector<vector<double>>(3, vector<double>(3, 0.0));
+    Deltaij[0][0] = 1.0;
+    Deltaij[1][1] = 1.0;
+    Deltaij[2][2] = 1.0;
 
     // Target barycentric map coordinates and eigenvalues
     eigValTarget = vector<double>(3, 0.0);
@@ -121,6 +124,9 @@ void dv_reynolds_stress::updateTimeAveragedQuantities(const double &delta_t, con
         Rxy.at(i) = updateTimeMeanQuantity(Rxy_inst, Rxy.at(i), delta_t, averaging_time);
         Rxz.at(i) = updateTimeMeanQuantity(Rxz_inst, Rxz.at(i), delta_t, averaging_time);
         Ryz.at(i) = updateTimeMeanQuantity(Ryz_inst, Ryz.at(i), delta_t, averaging_time);
+
+        // NURIA: previous check with LLUIS showed Rij calculation was correct.
+
 
         // ----------------- update anisotropy tensor -----------------
 
