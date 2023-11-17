@@ -1085,4 +1085,11 @@ def compute_odt_statistics_at_chosen_time(input_params, time_end):
     return (ydelta, yuplus, um, urmsf, vrmsf, wrmsf, 
             ufufm, vfvfm, wfwfm, ufvfm, ufwfm, vfwfm)
 
+def get_provisional_tEnd(case_name):
 
+    # --- Get vel. statistics computed during runtime at last time increment ---
+
+    flist_stat = sorted(gb.glob('../../data/' + case_name + '/data/data_00000/statistics/dmp_*_stat.dat'))
+    flast      = flist_stat[-1]
+
+    return get_time(flast)

@@ -59,9 +59,10 @@ nunif = yml["params"]["nunif"]
 domainLength = yml["params"]["domainLength"] 
 delta = domainLength * 0.5
 utau  = 1.0
-dTimeStart = yml["dumpTimesGen"]["dTimeStart"]
-dTimeEnd   = yml["dumpTimesGen"]["dTimeEnd"]
-dTimeStep  = yml["dumpTimesGen"]["dTimeStep"]
+dTimeStart  = yml["dumpTimesGen"]["dTimeStart"]
+#dTimeEnd   = yml["dumpTimesGen"]["dTimeEnd"]
+dTimeEnd    = get_provisional_tEnd(caseN)  # tEnd, valid even while running odt, instead of yml["dumpTimesGen"]["dTimeEnd"]
+dTimeStep   = yml["dumpTimesGen"]["dTimeStep"]
 inputParams = {"kvisc":kvisc, "rho":rho, "dxmin": dxmin, "nunif": nunif, "domainLength" : domainLength, "delta": delta, "Retau": Retau, "caseN": caseN, "utau": utau, 'dTimeStart':dTimeStart, 'dTimeEnd':dTimeEnd, 'dTimeStep':dTimeStep} 
 
 #------------ Averaging times ---------------
@@ -231,13 +232,17 @@ for i in range(num_aver_times):
 
 # post-processed statistics
 filename = f"../../data/{caseN}/post/anisotropy_tensor_eigenvalues_odt_convergence_post.gif"
+print(f"\nMAKING GIF EIGENVALUES OF ANISOTROPY TENSOR for POST-PROCESSING calculations ALONG AVG. TIME in {filename}" )
 frames_eig_post[0].save(filename, save_all=True, append_images=frames_eig_post[1:], duration=100, loop=0)
 filename = f"../../data/{caseN}/post/anisotropy_tensor_barycentric_map_odt_convergence_post.gif"
+print(f"\nMAKING GIF OF BARYCENTRIC MAP OF ANISOTROPY TENSOR for POST-PROCESSING calculations ALONG AVG. TIME in {filename}" )
 frames_bar_post[0].save(filename, save_all=True, append_images=frames_bar_post[1:], duration=100, loop=0)
 
 # runtime statistics
 filename = f"../../data/{caseN}/post/anisotropy_tensor_eigenvalues_odt_convergence_rt.gif"
+print(f"\nMAKING GIF EIGENVALUES OF ANISOTROPY TENSOR for RUNTIME calculations ALONG AVG. TIME in {filename}" )
 frames_eig_rt[0].save(filename, save_all=True, append_images=frames_eig_rt[1:], duration=100, loop=0)
+print(f"\nMAKING GIF OF BARYCENTRIC MAP OF ANISOTROPY TENSOR for RUNTIME calculations ALONG AVG. TIME in {filename}" )
 filename = f"../../data/{caseN}/post/anisotropy_tensor_barycentric_map_odt_convergence_rt.gif"
 frames_bar_rt[0].save(filename, save_all=True, append_images=frames_bar_rt[1:], duration=100, loop=0)
 

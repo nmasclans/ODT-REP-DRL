@@ -42,7 +42,7 @@ verbose = False
 # --- Define parameters ---
 tensor_kk_tolerance   = 1.0e-8;	# [-]
 eigenvalues_tolerance = 1.0e-8;	# [-]
-simulation_list = ["odt"]#, "dns"]
+simulation_list = ["odt"] #, "dns"]
 
 # --- Location of Barycentric map corners ---
 x1c = np.array( [ 1.0 , 0.0 ] )
@@ -75,10 +75,11 @@ rho   = yml["params"]["rho0"]
 dxmin = yml["params"]["dxmin"]
 nunif = yml["params"]["nunif"]
 domainLength = yml["params"]["domainLength"] 
-tEnd  = yml["dumpTimesGen"]["dTimeEnd"]
+# tEnd = yml["params"]["tEnd"]
+tEnd = get_provisional_tEnd(caseN)  # tEnd, valid even while running odt
 delta = domainLength * 0.5
 utau  = 1.0
-inputParams = {"kvisc":kvisc, "rho":rho, "dxmin": dxmin, "nunif": nunif, "domainLength" : domainLength, "delta": delta, "Retau": Retau, "caseN": caseN, "utau": utau} 
+inputParams = {"kvisc":kvisc, "rho":rho, "dxmin": dxmin, "nunif": nunif, "domainLength" : domainLength, "delta": delta, "Retau": Retau, "caseN": caseN, "utau": utau, "tEnd": tEnd} 
 
 #------------ Get ODT data ---------------
 
@@ -90,7 +91,9 @@ compute_odt_statistics(odtStatisticsFilepath, inputParams)
 # calculated-at-runtime statistics
 (_, _,_,_, _,_,_, _,_,_, _,_,_,_,_,_, \
     lambda0_odt_rt, lambda1_odt_rt, lambda2_odt_rt, xmap1_odt_rt, xmap2_odt_rt) \
-    = get_odt_statistics_rt(inputParams)
+     = get_odt_statistics_rt(inputParams)
+
+
 
 #------------ Get DNS statistics ---------------
 

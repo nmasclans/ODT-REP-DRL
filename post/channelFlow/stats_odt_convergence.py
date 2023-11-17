@@ -59,9 +59,10 @@ nunif = yml["params"]["nunif"]
 domainLength = yml["params"]["domainLength"] 
 delta = domainLength * 0.5
 utau  = 1.0
-dTimeStart = yml["dumpTimesGen"]["dTimeStart"]
-dTimeEnd   = yml["dumpTimesGen"]["dTimeEnd"]
-dTimeStep  = yml["dumpTimesGen"]["dTimeStep"]
+dTimeStart  = yml["dumpTimesGen"]["dTimeStart"]
+#dTimeEnd   = yml["dumpTimesGen"]["dTimeEnd"]
+dTimeEnd    = get_provisional_tEnd(caseN)  # tEnd, valid even while running odt, instead of yml["params"]["tEnd"]
+dTimeStep   = yml["dumpTimesGen"]["dTimeStep"]
 inputParams = {"kvisc":kvisc, "rho":rho, "dxmin": dxmin, "nunif":nunif, "domainLength" : domainLength, "delta": delta, "Retau": Retau, "caseN": caseN, "utau": utau, 'dTimeStart':dTimeStart, 'dTimeEnd':dTimeEnd, 'dTimeStep':dTimeStep} 
 
 # --- Get ODT computational data ---
