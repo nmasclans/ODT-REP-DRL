@@ -297,9 +297,14 @@ void dv_uvw::getRhsStatConv(const vector<double> &gf,
 
         // -------------------- perturbation term  (partial Rix) / (partial x) --------------------
         
+        //---------- interior faces
         for (int i=0, ip=1; i<domn->ngrd; i++, ip++){
-            rhsStatConv.at(i) = (RiyDeltaf.at(ip) - RiyDeltaf.at(i)) / dxc.at(i) ;
+            rhsStatConv.at(i) = (RiyDeltaf.at(ip) - RiyDeltaf.at(i)) / (domn->rho->d.at(i) * dxc.at(i));
         }
+        //---------- Boundary faces
+
+        rhsStatConv.at(0) = 0.0;
+        rhsStatConv.at(domn->ngrd-1) = 0.0;
 
         // interpolate to uniform grid
         interpVarAdaptToUnifGrid(rhsStatConv, FstatConvUnif); // updates FstatConvUnif

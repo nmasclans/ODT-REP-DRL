@@ -87,6 +87,7 @@ dv_reynolds_stress::dv_reynolds_stress(domain    *line,
     // Target barycentric map coordinates and eigenvalues
     eigValTarget = vector<double>(3, 0.0);
     getInverseBarycentricMapping(xmapTarget, eigValTarget);
+
 }
 
 void dv_reynolds_stress::updateTimeAveragedQuantities(const double &delta_t, const double &averaging_time) {
