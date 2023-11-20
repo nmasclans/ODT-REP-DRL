@@ -73,5 +73,5 @@
     },
     "todohighlight.isEnable" : true,
     "todohighlight.isCaseSensitive": false,
-    "workbench.editor.enablePreview": false
+    "workbench.editor.enablePreview": true
 }
