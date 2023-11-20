@@ -6,6 +6,7 @@
 #pragma once
 
 #include <vector>
+#include <string>
 
 class domain;
 
@@ -30,6 +31,7 @@ class eigenDecomposition {
 
         void sym_diagonalize(const vector<vector<double>> &A, vector<vector<double>> &Q, vector<vector<double>> &D);
         void reconstruct_matrix_from_decomposition(const vector<vector<double>> &D, const vector<vector<double>> &Q, vector<vector<double>> &A);
+        void sortEigenValuesAndEigenVectors(vector<vector<double>> &Qij, vector<vector<double>> &Dij);
 
     private:
 

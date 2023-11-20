@@ -170,6 +170,48 @@ void eigenDecomposition::reconstruct_matrix_from_decomposition(
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+/**
+ * Sort eigenvalues and eigenvectors 
+ * 
+ * Sort eigenvalues in decreasing order (and eigenvectors equivalently), with
+ * Qij[0][0] >= Qij[1][1] >= Qij[2][2]
+ * 
+ * @param Qij   \inputoutput matrix of eigenvectors, with Qij[0][:] the first eigenvector
+ * @param Dij   \inputoutput diagonal matrix of eigenvalues
+ * 
+ */
+
+void eigenDecomposition::sortEigenValuesAndEigenVectors(vector<vector<double>> &Qij, vector<vector<double>> &Dij){
+
+    // create pairs of indices and eigenvalues for sorting
+    vector<pair<double,size_t>> sortedEigVal(3);
+    for (size_t i = 0; i < 3; ++i) {
+        sortedEigVal[i] = {Dij[i][i], i}; // {value, idx} pair
+    }
+
+    // sort eigenvalues  in descending order
+    std::sort(sortedEigVal.begin(), sortedEigVal.end(), [](const auto& a, const auto& b) {
+        return a.first > b.first;
+    });
+
+    // Rearrange eigenvalues and eigenvectors based on the sorted indices
+    vector<vector<double>> tempQij(3, vector<double>(3, 0.0));
+    vector<vector<double>> tempDij(3, vector<double>(3, 0.0));
+    for (size_t i = 0; i < 3; ++i) {
+        tempDij[i][i] = Dij[sortedEigVal[i].second][sortedEigVal[i].second];
+        for (size_t j = 0; j < 3; j++){
+            tempQij[j][i] = Qij[j][sortedEigVal[i].second];
+        }
+    }
+
+    // update matrices
+    Qij = tempQij;
+    Dij = tempDij;
+
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
 /** Matrix-Matrix Multiplication 3D
  * 
  * Matrix multiplication C = A*B
