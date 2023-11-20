@@ -66,9 +66,6 @@ private:
     virtual void getPerturbedReynoldsStresses(const double &RkkPert, const vector<vector<double>> &DijPert, const vector<vector<double>> &QijPert, vector<vector<double>> &RijPert);
     virtual void getReynoldsStressesDeltaUnif(const vector<vector<double>> &RijPert, const int &i);
     virtual void interpRijDeltaUniformToAdaptativeGrid();
-    virtual void coutScalar(const double varValue, const string varName);
-    virtual void coutVector(const vector<double> varValue, const string varName);
-    virtual void coutMatrix(const vector<vector<double>> varValue, const string varName);
 
     //////////////////// CONSTRUCTOR FUNCTIONS /////////////////
 

@@ -271,3 +271,29 @@ double dv::updateTimeRmsfQuantity(const double &quantity, const double &mean_qua
     return( updated_rmsf_quantity );
 
 }
+
+
+////////////////////////////////////////////////////////////////////////////////
+/*! Print variables for testing - scalars, vectors and matrices
+ */
+
+void dv::coutScalar(const double varValue, const string varName){
+    cout << varName << ": " << varValue << endl;
+}
+
+void dv::coutVector(const vector<double> varValue, const string varName){
+    cout << varName << ": " << endl;
+    for (int j=0; j<varValue.size(); j++)
+        cout << varValue[j] << ", ";
+    cout << endl;
+}
+
+void dv::coutMatrix(const vector<vector<double>> varValue, const string varName){
+    cout << varName << ": " << endl;
+    for (int j=0; j<varValue.size(); j++){
+        for (int k=0; k<varValue[j].size(); k++){
+            cout << varValue[j][k] << ", ";
+        }
+        cout << endl;        
+    }
+}

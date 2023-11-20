@@ -102,6 +102,11 @@ class dv {
         virtual double updateTimeRmsfQuantity(const double &quantity, const double &mean_quantity, const double &rmsf_quantity, const double &delta_t, const double &averaging_time);
         virtual void   getReynoldsStressDelta(){};
 
+        virtual void coutScalar(const double varValue, const string varName);
+        virtual void coutVector(const vector<double> varValue, const string varName);
+        virtual void coutMatrix(const vector<vector<double>> varValue, const string varName);
+
+
     //////////////////// CONSTRUCTOR FUNCTIONS /////////////////
 
     public:

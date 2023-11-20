@@ -96,6 +96,7 @@ dv_reynolds_stress::dv_reynolds_stress(domain    *line,
     cout << endl;
     coutVector(xmapTarget,   "Target xmap");
     coutVector(eigValTarget, "Target eigen-values");
+    cout << endl;
 
 }
 
@@ -187,52 +188,23 @@ void dv_reynolds_stress::getReynoldsStressDelta(){
 
         // perturbed TKE - not implemented, same as current
         getPerturbedTrace(Rkk[i], RkkPert); // update RkkPert
-        ////if (i==100){
-        ////    cout << endl << "---- Values at i = 100 ----" << endl;
-        ////    coutScalar(Rkk[i],      "Rkk");
-        ////    coutScalar(RkkPert,     "RkkPert");
-        ////}
 
         // perturbed eigenvalues - implemented
         getPerturbedEigenValuesMatrix(eigVal[i], DijPert); // updates eigValPert
-        ////if (i==100){
-        ////    coutVector(eigVal[i],   "eigVal");
-        ////    coutMatrix(DijPert,     "DijPert");
-        ////}
 
         // perturbed eigenvectors - not implemented, same as current
         getPerturbedEigenVectorsMatrix(eigVect[i], QijPert); // update eigVectPert
-        ////if (i==100){
-        ////    coutMatrix(eigVect[i],  "eigVect");
-        ////    coutMatrix(QijPert,     "QijPert");
-        ////}
 
         // perturbed Rij
         getPerturbedReynoldsStresses(RkkPert, DijPert, QijPert, RijPert); // update RijPert
-        ////if (i==100){
-        ////    coutMatrix(RijPert,     "RijPert");
-        ////}
 
         // Delta Rij (uniform grid)
         getReynoldsStressesDeltaUnif(RijPert, i); // update RijDeltaUnif
-        ////if (i==100){
-        ////    coutScalar(RxxDeltaUnif[i], "RxxDeltaUnif");
-        ////    coutScalar(RxyDeltaUnif[i], "RxyDeltaUnif");
-        ////    coutScalar(RxzDeltaUnif[i], "RxzDeltaUnif");
-        ////    coutScalar(RyyDeltaUnif[i], "RyyDeltaUnif");
-        ////    coutScalar(RyzDeltaUnif[i], "RyzDeltaUnif");
-        ////    coutScalar(RzzDeltaUnif[i], "RzzDeltaUnif");
-        ////}
+
     }
 
     // Delta Rij (adaptative grid)
     interpRijDeltaUniformToAdaptativeGrid();
-    ////cout << endl << "---- Rxx vs pos ----" << endl;
-    ////coutVector(RxxDeltaUnif,    "RxxDeltaUnif");
-    ////coutVector(RxxDelta,        "RxxDelta");
-    ////coutVector(domn->pos->d,    "Adaptative Grid pos");
-    ////cout << endl;
-    ////exit(0);
 
 }
 
@@ -310,26 +282,4 @@ void dv_reynolds_stress::interpRijDeltaUniformToAdaptativeGrid(){
     interpVarUnifToAdaptGrid(RyzDeltaUnif, RyzDelta);
     interpVarUnifToAdaptGrid(RzzDeltaUnif, RzzDelta);
 
-}
-
-
-void dv_reynolds_stress::coutScalar(const double varValue, const string varName){
-    cout << varName << ": " << varValue << endl;
-}
-
-void dv_reynolds_stress::coutVector(const vector<double> varValue, const string varName){
-    cout << varName << ": " << endl;
-    for (int j=0; j<varValue.size(); j++)
-        cout << varValue[j] << ", ";
-    cout << endl;
-}
-
-void dv_reynolds_stress::coutMatrix(const vector<vector<double>> varValue, const string varName){
-    cout << varName << ": " << endl;
-    for (int j=0; j<varValue.size(); j++){
-        for (int k=0; k<varValue[j].size(); k++){
-            cout << varValue[j][k] << ", ";
-        }
-        cout << endl;        
-    }
 }
