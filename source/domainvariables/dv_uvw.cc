@@ -273,26 +273,26 @@ void dv_uvw::getRhsStatConv(const vector<double> &gf,
         domn->Rij->getReynoldsStressDelta(); // updates RijDelta class data members
 
         // interpolate RijDelta from adaptative cells centers (size ngrd) to faces (size ngrd+1)
-        vector<double> RiyDelta;
-        vector<double> RiyDeltaf(domn->ngrdf);
+        vector<double> RixDelta;
+        vector<double> RixDeltaf(domn->ngrdf);
         if (var_name == "uvel"){
-            RiyDelta = domn->Rij->RxyDelta;
+            RixDelta = domn->Rij->RxxDelta;
         } else if (var_name == "vvel"){
-            RiyDelta = domn->Rij->RyyDelta;
+            RixDelta = domn->Rij->RxyDelta;
         } else if (var_name == "wvel"){
-            RiyDelta = domn->Rij->RyzDelta;
+            RixDelta = domn->Rij->RxzDelta;
         } else {
             *domn->io->ostrm << endl << "ERROR: data mamber var_name not recognized in dv_uvw::getRhsStatConv" << endl;
             exit(0);
         }
 
-        interpVarToFacesHarmonic(RiyDelta, RiyDeltaf);  // updates RiyDeltaf, shape ngrdf = ngrd + 1
+        interpVarToFacesHarmonic(RixDelta, RixDeltaf);  // updates RiyDeltaf, shape ngrdf = ngrd + 1
 
         // -------------------- perturbation term  (partial Rix) / (partial x) --------------------
         
         //---------- interior faces
         for (int i=0, ip=1; i<domn->ngrd; i++, ip++){
-            rhsStatConv.at(i) = (RiyDeltaf.at(ip) - RiyDeltaf.at(i)) / (domn->rho->d.at(i) * dxc.at(i));
+            rhsStatConv.at(i) = (RixDeltaf.at(ip) - RixDeltaf.at(i)) * gf.at(i);
         }
         //---------- Boundary faces
 
