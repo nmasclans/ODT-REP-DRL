@@ -1446,6 +1446,8 @@ void meshManager::setGridDxc(const domain *line, vector<double> &dxc, double C) 
         pm1 = line->posf->d.at(ip)*line->posf->d.at(i) < 0 ? -1.0 : 1.0;              // handles cells that split x=0
         dxc.at(i) = abs(pow(abs(line->posf->d.at(ip)), C) -
                      pm1*pow(abs(line->posf->d.at(i) ), C));
+        // for cCoord=1 (channelFlow) and d.at(i), d.at(ip) > 0 (upper part of channel):
+        // dxc.at(i) can be understood as = line->posf->d.at(ip) - line->posf->d.at(i)
     }
 }
 

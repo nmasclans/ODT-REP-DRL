@@ -249,7 +249,8 @@ void dv_uvw::getRhsMix(const vector<double> &gf,
 ////////////////////////////////////////////////////////////////////////////////
 /*! lv statistics convergence term part of the rhs function. 
  *  Method implementation for statistics convergence term of the right-hand side (Rhs) 
- *  @param timeCurrent \input current time.
+ * @param gf   \input grid factor array, size domn->ngrdf (ngrd+1, at cell boundaries) 
+ * @param time \input current time.
  */
 
 void dv_uvw::getRhsStatConv(const vector<double> &gf,
@@ -292,7 +293,7 @@ void dv_uvw::getRhsStatConv(const vector<double> &gf,
         
         //---------- interior faces
         for (int i=0, ip=1; i<domn->ngrd; i++, ip++){
-            rhsStatConv.at(i) = (RixDeltaf.at(ip) - RixDeltaf.at(i)) * gf.at(i);
+            rhsStatConv.at(i) = (domn->pram->cCoord / dxc.at(i)) * (RixDeltaf.at(ip) - RixDeltaf.at(i));
         }
         //---------- Boundary faces
 
