@@ -250,6 +250,7 @@ void dv_uvw::getRhsMix(const vector<double> &gf,
 /*! lv statistics convergence term part of the rhs function. 
  *  Method implementation for statistics convergence term of the right-hand side (Rhs) 
  * @param gf   \input grid factor array, size domn->ngrdf (ngrd+1, at cell boundaries) 
+ * @param dxc  \input dxcenter, dx corresponding to cell i with cell center xi = pos(i), where dxc(i) = posf(i+1)-posf(i)
  * @param time \input current time.
  */
 
