@@ -6,6 +6,7 @@
 #include "eigenDecomposition.h"
 #include "domain.h"
 #include <cmath>
+#include <algorithm>
 
 using namespace std;
 
