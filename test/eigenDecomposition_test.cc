@@ -1,13 +1,13 @@
 // compile and run as:
-// $ g++ eigenDecomposition_test.cc eigenDecomposition_testclass.cc -o eigenDecomposition_test
+// $  g++ eigenDecomposition_.cc eigenDecomposition_test.cc -o eigenDecomposition_test; ./eigenDecomposition_test
 
-#include "eigenDecomposition_testclass.h"
+#include "eigenDecomposition_.h"
 #include <iostream>
 #include <cmath>
 
 using namespace std;
 
-void printMatrix(const double matrix[3][3]) {
+void printMatrix(const vector<vector<double>> matrix) {
     for (int i = 0; i < 3; i++) {
         for (int j = 0; j < 3; j++) {
             cout << matrix[i][j] << " ";
@@ -18,11 +18,16 @@ void printMatrix(const double matrix[3][3]) {
 }
 
 int main() {
-    eigenDecomposition_testclass eigenDecomp;
+    eigenDecomposition_ eigenDecomp;
 
-    double A[3][3] = {{1.0, 2.0, 3.0}, {2.0, 4.0, 5.0}, {3.0, 5.0, 6.0}};
-    double Q[3][3];
-    double D[3][3];
+    vector<vector<double>> A(3, vector<double>(3, 0.0));
+    vector<vector<double>> Q(3, vector<double>(3, 0.0));
+    vector<vector<double>> D(3, vector<double>(3, 0.0));
+
+    // A symmetric matrix for testing
+    A[0][0] = 1.0;  A[0][1] = 2.0;  A[0][2] = 3.0;
+    A[1][0] = 2.0;  A[1][1] = 4.0;  A[1][2] = 5.0;
+    A[2][0] = 3.0;  A[2][1] = 5.0;  A[2][2] = 6.0;
 
     eigenDecomp.sym_diagonalize(A, Q, D);
 
@@ -34,7 +39,7 @@ int main() {
     printMatrix(D);
 
     // Reconstruct matrix A from Q and D
-    double reconstructedA[3][3];
+    vector<vector<double>> reconstructedA(3, vector<double>(3, 0.0));;
     eigenDecomp.reconstruct_matrix_from_decomposition(D, Q, reconstructedA);
     cout << "Reconstructed Matrix A:\n";
     printMatrix(reconstructedA);

@@ -3,8 +3,10 @@
  * @brief Header file for class \ref eigenDecomposition
  */
 
-#include "eigenDecomposition_testclass.h"
+#include "eigenDecomposition_.h"
+//#include "domain.h"   // commented for testing compilation
 #include <cmath>
+#include <algorithm>
 
 using namespace std;
 
@@ -16,7 +18,10 @@ using namespace std;
  * @param p_domn  \input set domain pointer with.
  */
 
-void eigenDecomposition_testclass::init() {
+// void eigenDecomposition_::init(domain *p_domn) {    // commented for testing compilation
+void eigenDecomposition_::init() {
+
+//    domn    = p_domn; // commented for testing compilation
 
 }
 
@@ -33,8 +38,8 @@ void eigenDecomposition_testclass::init() {
  * @param D     \output diagonal matrix of eigenvalues
  */
 
-void eigenDecomposition_testclass::sym_diagonalize(
-    const double (&A)[3][3], double (&Q)[3][3], double (&D)[3][3]) {
+void eigenDecomposition_::sym_diagonalize(
+    const vector<vector<double>> &A, vector<vector<double>> &Q, vector<vector<double>> &D) {
 
     const int maxsteps=24;
     int k0, k1, k2;
@@ -143,13 +148,13 @@ void eigenDecomposition_testclass::sym_diagonalize(
  * @param A     \output reconstructed symmetric matrix
  */
 
-void eigenDecomposition_testclass::reconstruct_matrix_from_decomposition(
-  const double (&D)[3][3], const double (&Q)[3][3], double (&A)[3][3])
+void eigenDecomposition_::reconstruct_matrix_from_decomposition(
+  const vector<vector<double>> &D, const vector<vector<double>> &Q, vector<vector<double>> &A)
 {
 
     // A = Q*D*QT
-    double QT[3][3];
-    double B[3][3];
+    vector<vector<double>> QT(3, vector<double>(3, 0.0));
+    vector<vector<double>> B(3, vector<double>(3, 0.0));
 
     // compute QT
     for (int i = 0; i < 3; i++) {
@@ -167,6 +172,48 @@ void eigenDecomposition_testclass::reconstruct_matrix_from_decomposition(
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+/**
+ * Sort eigenvalues and eigenvectors 
+ * 
+ * Sort eigenvalues in decreasing order (and eigenvectors equivalently), with
+ * Qij[0][0] >= Qij[1][1] >= Qij[2][2]
+ * 
+ * @param Qij   \inputoutput matrix of eigenvectors, with Qij[0][:] the first eigenvector
+ * @param Dij   \inputoutput diagonal matrix of eigenvalues
+ * 
+ */
+
+void eigenDecomposition_::sortEigenValuesAndEigenVectors(vector<vector<double>> &Qij, vector<vector<double>> &Dij){
+
+    // create pairs of indices and eigenvalues for sorting
+    vector<pair<double,size_t>> sortedEigVal(3);
+    for (size_t i = 0; i < 3; ++i) {
+        sortedEigVal[i] = {Dij[i][i], i}; // {value, idx} pair
+    }
+
+    // sort eigenvalues  in descending order
+    std::sort(sortedEigVal.begin(), sortedEigVal.end(), [](const auto& a, const auto& b) {
+        return a.first > b.first;
+    });
+
+    // Rearrange eigenvalues and eigenvectors based on the sorted indices
+    vector<vector<double>> tempQij(3, vector<double>(3, 0.0));
+    vector<vector<double>> tempDij(3, vector<double>(3, 0.0));
+    for (size_t i = 0; i < 3; ++i) {
+        tempDij[i][i] = Dij[sortedEigVal[i].second][sortedEigVal[i].second];
+        for (size_t j = 0; j < 3; j++){
+            tempQij[j][i] = Qij[j][sortedEigVal[i].second];
+        }
+    }
+
+    // update matrices
+    Qij = tempQij;
+    Dij = tempDij;
+
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
 /** Matrix-Matrix Multiplication 3D
  * 
  * Matrix multiplication C = A*B
@@ -178,8 +225,8 @@ void eigenDecomposition_testclass::reconstruct_matrix_from_decomposition(
 //--------------------------------------------------------------------------
 //-------- matrix_matrix_multiply 3D ---------------------------------------
 //--------------------------------------------------------------------------
-void eigenDecomposition_testclass::matrix_matrix_multiply(
-  const double (&A)[3][3], const double (&B)[3][3], double (&C)[3][3])
+void eigenDecomposition_::matrix_matrix_multiply(
+  const vector<vector<double>> &A, const vector<vector<double>> &B, vector<vector<double>> &C)
 {
 
     // Perform multiplication C = A*B
