@@ -1,5 +1,5 @@
 // compile and run as:
-// $  g++ eigenDecomposition_.cc eigenDecomposition_test.cc -o eigenDecomposition_test; ./eigenDecomposition_test
+// $  g++ eigenDecomposition_.cc eigenDecomposition_test.cc -o eigenDecomposition_test.x; ./eigenDecomposition_test.x
 
 #include "eigenDecomposition_.h"
 #include <iostream>
@@ -18,6 +18,7 @@ void printMatrix(const vector<vector<double>> matrix) {
 }
 
 int main() {
+
     eigenDecomposition_ eigenDecomp;
 
     vector<vector<double>> A(3, vector<double>(3, 0.0));
@@ -43,17 +44,29 @@ int main() {
     eigenDecomp.reconstruct_matrix_from_decomposition(D, Q, reconstructedA);
     cout << "Reconstructed Matrix A:\n";
     printMatrix(reconstructedA);
+    cout << "-> Note matrix A and reconstructed-A are the same!" << endl;
+    cout << "---> This proves methods sym_diagonalize (eigen-decomposition) and reconstruct_matrix_from_decomposition are correct!" << endl << endl;
 
-    // sort eigen values in descending order
-    vector<double> eigenValues = {D[2][2], D[1][1], D[0][0]};
-    double avgEigenValues      = (eigenValues[0] + eigenValues[1] + eigenValues[2]) / 3.0;
-
-    // Adjust the eigenvalues to ensure their sum is 0
-    for (double &eigval : eigenValues){
-        eigval -= avgEigenValues;
+    // print eigenvalues
+    cout << "--- Non-sorted eigenvalues ---" << endl;
+    cout << "Non-sorted eigenvalues: "; 
+    for (int i=0; i<3; i++){
+        cout << D[i][i] << ", ";
     }
-
-    cout << "Eigen values: " << eigenValues[0] << ", " << eigenValues[1] << ", " << eigenValues[2] << endl;
+    cout << endl;
+    cout << "Non-sorted eigenvectors:" << endl;
+    printMatrix(Q);
+    
+    // print sorted eigenvalues in descending order
+    eigenDecomp.sortEigenValuesAndEigenVectors(Q, D);
+    cout << "--- Sorted eigenvalues (descending order) ---" << endl;
+    cout << "Sorted eigenvalues: ";
+    for (int i=0; i<3; i++){
+        cout << D[i][i] << ", ";
+    }
+    cout << endl;
+    cout << "Sorted eigenvectors:" << endl;
+    printMatrix(Q);
 
     return 0;
 }
