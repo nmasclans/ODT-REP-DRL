@@ -79,9 +79,6 @@ int main(int argc, char*argv[]) {
     domn.init(&io,  &mesher, &strm, &gas, tran, mimx, &ed, &eddl, solv, &rand, &eigdec, &rl);
     eddl.init(NULL, NULL,    NULL,  NULL, NULL, NULL, NULL,NULL,  NULL, NULL,  NULL,    NULL, true);
     
-    // test rl - torch
-    domn.rl->testTorch();
-
     //-------------------
 
     // Starting time
