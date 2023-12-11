@@ -1,12 +1,13 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.10 FATAL_ERROR)
 
 project(test LANGUAGES CXX C)
 
 if(NOT CMAKE_BUILD_TYPE)
-    set(CMAKE_BUILD_TYPE Release)      # Release or Debug
+    set(CMAKE_BUILD_TYPE Release)           # Release or Debug
 endif()
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ../run)
+set(CMAKE_INCLUDE_DIRECTORY ../include)     # Nuria
 
 add_executable(odt.x "")
 
@@ -79,6 +80,15 @@ endif()
 target_link_libraries(odt.x ${FMT_LIB})
 # --- Nuria (End) ---
 
+# --- Nuria (Begin): link Libtorch-CPU local library ---
+# in project demo
+list(APPEND CMAKE_PREFIX_PATH "${CMAKE_INCLUDE_DIRECTORY}/libtorch_GPU12_1")
+find_package(Torch REQUIRED)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TORCH_CXX_FLAGS}")
+target_link_libraries(odt.x "${TORCH_LIBRARIES}")
+set_property(TARGET odt.x PROPERTY CXX_STANDARD 17)
+# --- Nuria (End)
+
 #################### Local source files
 
 target_include_directories(odt.x PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
@@ -86,18 +96,19 @@ target_include_directories(odt.x PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 target_sources(odt.x
     PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/main.cc
-        ${CMAKE_CURRENT_SOURCE_DIR}/inputoutput.cc          ${CMAKE_CURRENT_SOURCE_DIR}/inputoutput.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/domain.cc               ${CMAKE_CURRENT_SOURCE_DIR}/domain.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/processor.cc            ${CMAKE_CURRENT_SOURCE_DIR}/processor.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/streams.cc              ${CMAKE_CURRENT_SOURCE_DIR}/streams.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/meshManager.cc          ${CMAKE_CURRENT_SOURCE_DIR}/meshManager.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/param.cc                ${CMAKE_CURRENT_SOURCE_DIR}/param.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/micromixer.cc           ${CMAKE_CURRENT_SOURCE_DIR}/micromixer.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/eddy.cc                 ${CMAKE_CURRENT_SOURCE_DIR}/eddy.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/solver.cc               ${CMAKE_CURRENT_SOURCE_DIR}/solver.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/cvodeDriver.cc          ${CMAKE_CURRENT_SOURCE_DIR}/cvodeDriver.h
-                                                            ${CMAKE_CURRENT_SOURCE_DIR}/interp_linear.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/eigenDecomposition.cc   ${CMAKE_CURRENT_SOURCE_DIR}/eigenDecomposition.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/inputoutput.cc            ${CMAKE_CURRENT_SOURCE_DIR}/inputoutput.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/domain.cc                 ${CMAKE_CURRENT_SOURCE_DIR}/domain.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/processor.cc              ${CMAKE_CURRENT_SOURCE_DIR}/processor.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/streams.cc                ${CMAKE_CURRENT_SOURCE_DIR}/streams.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/meshManager.cc            ${CMAKE_CURRENT_SOURCE_DIR}/meshManager.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/param.cc                  ${CMAKE_CURRENT_SOURCE_DIR}/param.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/micromixer.cc             ${CMAKE_CURRENT_SOURCE_DIR}/micromixer.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/eddy.cc                   ${CMAKE_CURRENT_SOURCE_DIR}/eddy.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/solver.cc                 ${CMAKE_CURRENT_SOURCE_DIR}/solver.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/cvodeDriver.cc            ${CMAKE_CURRENT_SOURCE_DIR}/cvodeDriver.h
+                                                              ${CMAKE_CURRENT_SOURCE_DIR}/interp_linear.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/eigenDecomposition.cc     ${CMAKE_CURRENT_SOURCE_DIR}/eigenDecomposition.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/reinforcementLearning.cc  ${CMAKE_CURRENT_SOURCE_DIR}/reinforcementLearning.h
 )
 
 #################### Subdirectories
