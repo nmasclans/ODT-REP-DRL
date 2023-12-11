@@ -16,6 +16,7 @@
 #include "solver.h"
 #include "randomGenerator.h"
 #include "eigenDecomposition.h"
+#include "reinforcementLearning.h"
 #include "cantera/thermo/IdealGasPhase.h"
 #include "cantera/transport.h"
 #include <vector>
@@ -82,6 +83,7 @@ class domain {
         solver                  *solv;       ///< pointer to solver object
         meshManager             *mesher;     ///< pointer to mesh manager object
         eigenDecomposition      *eigdec;     ///< pointer to eigen decomposition object
+        reinforcementLearning   *rl;         ///< pointer to reinforcement learning object
 
         randomGenerator         *rand;
 
@@ -107,17 +109,18 @@ class domain {
 
     public:
 
-        void init(inputoutput        *p_io,
-                  meshManager        *p_mesher,
-                  streams            *p_strm,
-                  IdealGasPhase      *p_gas,
-                  Transport          *p_tran,
-                  micromixer         *p_mimx,
-                  eddy               *p_ed,
-                  domain             *p_eddl,
-                  solver             *p_solv,
-                  randomGenerator    *p_rand,
-                  eigenDecomposition *p_eigdec,
+        void init(inputoutput           *p_io,
+                  meshManager           *p_mesher,
+                  streams               *p_strm,
+                  IdealGasPhase         *p_gas,
+                  Transport             *p_tran,
+                  micromixer            *p_mimx,
+                  eddy                  *p_ed,
+                  domain                *p_eddl,
+                  solver                *p_solv,
+                  randomGenerator       *p_rand,
+                  eigenDecomposition    *p_eigdec,
+                  reinforcementLearning *p_rl,
                   bool               LisEddyDomain=false);
         domain(domain *p_domn, param *p_pram); /// constructor
         virtual ~domain() {                    /// destructor

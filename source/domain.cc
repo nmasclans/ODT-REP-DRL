@@ -43,17 +43,18 @@ domain::domain(domain *p_domn, param *p_pram) {
 /** Initializer
  */
 
-void domain::init(inputoutput        *p_io,
-                  meshManager        *p_mesher,
-                  streams            *p_strm,
-                  IdealGasPhase      *p_gas,
-                  Transport          *p_tran,
-                  micromixer         *p_mimx,
-                  eddy               *p_ed,
-                  domain             *p_eddl,
-                  solver             *p_solv,
-                  randomGenerator    *p_rand,
-                  eigenDecomposition *p_eigdec,
+void domain::init(inputoutput           *p_io,
+                  meshManager           *p_mesher,
+                  streams               *p_strm,
+                  IdealGasPhase         *p_gas,
+                  Transport             *p_tran,
+                  micromixer            *p_mimx,
+                  eddy                  *p_ed,
+                  domain                *p_eddl,
+                  solver                *p_solv,
+                  randomGenerator       *p_rand,
+                  eigenDecomposition    *p_eigdec,
+                  reinforcementLearning *p_rl,
                   bool               LisEddyDomain) {
 
     //----------------------
@@ -69,6 +70,7 @@ void domain::init(inputoutput        *p_io,
     solv   = p_solv;
     rand   = p_rand;
     eigdec = p_eigdec;
+    rl     = p_rl;
 
     //----------------------
 
