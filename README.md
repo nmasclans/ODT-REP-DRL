@@ -53,3 +53,66 @@ Post-processing data produced by ODT and ODT is processed via Python 3 scripts. 
     * The user specifies inputDir as the path to the input file containing the case to run and specifies a case name for variable caseName. Files are created and copied into `data/caseName`, as noted above.
 * `source`: contains source code (including header files) and `CMakeLists.txt` files
 
+## Docker image
+
+### Build & Run docker image
+```
+docker run --gpus all -it -v /home/jofre/Students/Nuria_Masclans/repositories/ODT/:/ODT/ --name ODT-RL nvidia/cuda:12.1.0-cudnn8-devel-ubuntu22.04
+```
+
+Alert! -> you should get a -devel- image for cuda compiling, do not install -base- or -runtime- versions. 
+
+### Execute docker image
+```
+docker start ODT-RL
+docker exec -it ODT-RL bash
+```
+
+### Additional installations
+Run the following commands when executing the docker container for the first time:
+
+- Install cmake:
+```
+apt-get update
+apt-get install -y cmake
+```
+
+- Install c++ compiler:
+```
+apt-get install -y g++
+export CXX=/usr/bin/g++
+```
+
+- Install git: 
+```
+apt-get install -y git
+```
+
+- Install doxygen:
+```
+apt-get install -y doxygen
+```
+
+- Install Boost library (ODT dependency):
+```
+apt-get install -y libboost-all-dev
+```
+
+- Install Yaml library (ODT dependency):
+```
+apt-get install -y libyaml-cpp-dev
+```
+
+- Install fmt library (ODT dependency):
+```
+apt-get install -y libfmt-dev
+```
+
+- Install Cantera library (ODT dependency) - Cantera PPA:
+```
+apt install -y software-properties-common
+apt-add-repository ppa:cantera-team/cantera
+apt install -y cantera-python3 libcantera-dev
+```
+
+
