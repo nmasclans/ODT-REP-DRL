@@ -128,3 +128,52 @@ apt install -y software-properties-common
 apt-add-repository ppa:cantera-team/cantera
 apt install -y cantera-python3 libcantera-dev
 ```
+
+## Save Docker Container as Docker Image
+
+The previous docker container is saved as an image to be exported in the next step, so that we do not need to follow the previous installation steps every time we use a different node. To save the docker container as a docker image:
+
+```
+$ docker commit <container> <image>
+```
+In this case: 
+```
+$ docker ps -a
+CONTAINER ID   IMAGE                                                 COMMAND                  CREATED       STATUS         PORTS     NAMES
+c34c54a93062   nvidia/cuda:12.1.0-cudnn8-devel-ubuntu22.04           "/opt/nvidia/nvidia_…"   2 hours ago   Up 5 minutes             ODT-RL
+
+$ docker commit c34c54a93062 nvidia/cuda:12.1.0-cudnn8-devel-ubuntu22.04-for-ODT-RL
+```
+
+Now, we have the original image (`nvidia/cuda:12.1.0-cudnn8-devel-ubuntu22.04`) and the just created image with all required packages installed (`nvidia/cuda:12.1.0-cudnn8-devel-ubuntu22.04-for-ODT-RL`):
+```
+$ docker images
+REPOSITORY                  TAG                                          IMAGE ID       CREATED         SIZE
+nvidia/cuda                 12.1.0-cudnn8-devel-ubuntu22.04-for-ODT-RL   6b5487fadc1a   6 seconds ago   11.5GB
+nvidia/cuda                 12.1.0-cudnn8-devel-ubuntu22.04              3d89d59a4dc1   4 weeks ago     9.49GB
+```
+
+## Export Image 
+
+If direct access to the Docker registry isn't feasible (perhaps due to firewall restrictions or no direct internet access), you can save your image as a tar archive and transfer it manually.
+This is recomended on this project because the docker image `nvidia/cuda:12.1.0-cudnn8-devel-ubuntu22.04` is scheduled to be deleted. 
+
+It is exported both the original `nvidia/cuda:12.1.0-cudnn8-devel-ubuntu22.04` and the working image container with all necessary libraries installed `nvidia/cuda:12.1.0-cudnn8-devel-ubuntu22.04-for-ODT-RL`:
+
+On the source server:
+```
+docker save <image_tag> -o <file_name>
+```
+in my case:
+```
+docker save nvidia/cuda:12.1.0-cudnn8-devel-ubuntu22.04 -o nvidia-cuda-12.1.0-cudnn8-devel-ubuntu22.04.tar
+docker save nvidia/cuda:12.1.0-cudnn8-devel-ubuntu22.04-for-ODT-RL -o nvidia-cuda-12.1.0-cudnn8-devel-ubuntu22.04-for-ODT-RL.tar
+```
+
+Then, transfer the generated jax_23.08_paxml_py3_for_PI_DeepONets.tar file to the target server using any preferred method (SCP, FTP, etc.).
+
+On the target server:
+```
+docker load -i <file_name>
+```
+This method doesn't require direct access to the Docker registry but involves manual file transfer.
