@@ -104,8 +104,22 @@ apt-get install -y libyaml-cpp-dev
 ```
 
 - Install fmt library (ODT dependency):
+
+Using ```apt-get```, the only available fmt library is ```libfmt-dev```, which installes a __shared__ library (bin files ```libfmt.so```), which will lead to compilation errors. C++ requires the __static__ library (bin files ```libfmt.a```).
+
+As fmt static library is found by apt-get, the library is built from source code as:
 ```
-apt-get install -y libfmt-dev
+cd /usr/src/
+git clone --depth 1 https://github.com/fmtlib/fmt.git
+cd fmt; mkdir build; cd build
+cmake -DCMAKE_POSITION_INDEPENDENT_CODE=TRUE ..
+```
+This creates the required ```libfmt.a``` file in ```/usr/src/fmt/build```. 
+
+To detect and use the installed version of ```fmt``` library, the lib and include paths are specified in the ```user_config_dockerContainer``` file as:
+```
+set(FMT_INCLUDE_DIR "/usr/src/fmt/include" CACHE PATH "fmt include location")
+set(FMT_LIB_DIR "/usr/src/fmt/build" CACHE PATH "fmt library location")
 ```
 
 - Install Cantera library (ODT dependency) - Cantera PPA:
@@ -114,5 +128,3 @@ apt install -y software-properties-common
 apt-add-repository ppa:cantera-team/cantera
 apt install -y cantera-python3 libcantera-dev
 ```
-
-
