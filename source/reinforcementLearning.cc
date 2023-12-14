@@ -6,8 +6,9 @@
 #include "reinforcementLearning.h"
 #include "domain.h"
 
-#include <torch/torch.h>
 #include <iostream>
+#include <torch/torch.h>
+#include <vector>
 
 using namespace std;
 
@@ -31,12 +32,17 @@ void reinforcementLearning::init(domain *p_domn) {
 
     domn    = p_domn;
 
+    vector<double> x_probes(domn->pram->nProbes, 0.0);      // probes position 
+    vector<double> d_probes(domn->pram->nProbes, 0.0);      // probes data
+    vector<double> x_act(domn->pram->nAct, 0.0);            // actuators position
+    vector<double> d_act(domn->pram->nAct, 0.0);            // actuators data
+
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 /**
  * Test torch package
-*/
+ */
 void reinforcementLearning::testTorch() {
   
     // output main CUDA information

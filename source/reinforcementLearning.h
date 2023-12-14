@@ -21,13 +21,23 @@ using namespace std;
 
 class reinforcementLearning {
 
-    public: 
 
     //////////////////// DATA MEMBERS //////////////////////
 
+    public: 
+
         domain         *domn;          ///< pointer to domain object
 
+    private:
+
+        vector<double>  x_probes;
+        vector<double>  d_probes;
+        vector<double>  x_act;
+        vector<double>  d_act;
+
     //////////////////// MEMBER FUNCTIONS /////////////////
+
+    public:
 
         void testTorch();
 
