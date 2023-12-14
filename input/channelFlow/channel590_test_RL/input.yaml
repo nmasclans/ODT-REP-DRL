@@ -30,6 +30,8 @@ params:
     xmapTarget1:    0.0
     xmapTarget2:    0.0
     tBeginStatConv: 55.0
+    nProbes:        3
+    nAct:           18
     #----------------------------------------------------------------------------------
     bcType:         WALL           #  OUTFLOW, WALL, PERIODIC, WALL_OUT
     cCoord:         1              #  1 = planar, 2 = cylindrical, 3 = spherical

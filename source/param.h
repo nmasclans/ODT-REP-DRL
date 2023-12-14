@@ -71,6 +71,8 @@ class param {
         double  tBeginStatConv;  ///<  time instant from which it is applied the F-perturbation statistics convergence 
         double  xmapTarget1;     ///<  xmap target, 1st coordinate (statistics convergence)
         double  xmapTarget2;     ///<  xmap target, 2nd coordinate (statistics convergence)
+        int     nProbes;         ///<  (RL) number of sensors placed in the domain for observation collection
+        int     nAct;            ///<  (RL) action dimensionality, number of actuators
 
         string  bcType;          ///<  OUTFLOW, PERIODIC, WALL, WALL_OUT
         int     cCoord;          ///<  1 = planar, 2 = cylindrical, 3 = spherical

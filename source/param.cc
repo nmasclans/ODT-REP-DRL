@@ -62,10 +62,12 @@ param::param(inputoutput *p_io) {
 
     Lstatconv      = io->params["Lstatconv"]      ? io->params["Lstatconv"].as<bool>()       : false;
     nunif          = io->params["nunif"]          ? io->params["nunif"].as<int>()            : 1000;
-    factEigValPert = io->params["factEigValPert"] ? io->params["factEigValPert"].as<double>() : 0.0;
+    factEigValPert = io->params["factEigValPert"] ? io->params["factEigValPert"].as<double>(): 0.0;
     tBeginStatConv = io->params["tBeginStatConv"] ? io->params["tBeginStatConv"].as<double>(): 0.0;
     xmapTarget1    = io->params["xmapTarget1"]    ? io->params["xmapTarget1"].as<double>()   : 0.0;
     xmapTarget2    = io->params["xmapTarget2"]    ? io->params["xmapTarget2"].as<double>()   : 0.0;
+    nProbes        = io->params["nProbes"]        ? io->params["nProbes"].as<int>()          : 0;
+    nAct           = io->params["nAct"]           ? io->params["nAct"].as<int>()             : 0;
 
     bcType         = io->params["bcType"]         ? io->params["bcType"].as<string>()        : errMsg<string>("bcType");
     cCoord         = io->params["cCoord"]         ? io->params["cCoord"].as<int>()           : 1;
@@ -97,7 +99,7 @@ param::param(inputoutput *p_io) {
 
     Lrestart       = io->params["Lrestart"]       ? io->params["Lrestart"].as<bool>()        : false;
     rstType        = io->params["rstType"]        ? io->params["rstType"].as<string>()       : "single";    // "single" or "multiple"
-    trst = 0.0; // (dont read this in, it comes from the restart file
+    trst           = 0.0; // (dont read this in, it comes from the restart file
 
     umin_spatial   = io->params["umin_spatial"]   ? io->params["umin_spatial"].as<double>()  : 0.5;
 
