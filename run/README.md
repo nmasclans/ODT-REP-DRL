@@ -14,3 +14,7 @@ From this location, run in terminal:
 ```
 cd ../build; make clean; cmake -C user_config ../source; make -j8; cd ../run; ./runOneRlz.sh <case_name>;
 ```
+In case you are compiling & running the code in a docker container (built as specified in main [README](./../README.md)), use the specific ```user_config_dockerContainer``` configuration:
+```
+cd ../build; make clean; cmake -C user_config_dockerContainer ../source; make -j8; cd ../run; ./runOneRlz.sh <case_name>;
+```

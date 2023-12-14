@@ -1,0 +1,12 @@
+# ODT User Configuration
+set(CHEMISTRY "SIMPLEDLR" CACHE STRING "user mechanism source to add")
+set(PARALLEL "no" CACHE STRING "build with mpi")
+set(SILENT "yes" CACHE STRING "code output config")
+
+# Link cantera library
+set(CANTERA_INCLUDE_DIR "/usr/include/cantera/" CACHE PATH "Cantera include location")
+set(CANTERA_LIB_DIR "/usr/lib" CACHE PATH "Cantera library location")
+
+# Link fmt library
+set(FMT_INCLUDE_DIR "/usr/src/fmt/include" CACHE PATH "fmt include location")
+set(FMT_LIB_DIR "/usr/src/fmt/build" CACHE PATH "fmt library location")
