@@ -72,11 +72,7 @@ target_link_libraries(odt.x yaml-cpp)
 # --- Nuria (End) ---
 
 # --- Nuria (Begin): link fmt library ---
-# 'make' crashes because missing links with 'fmt' library -> link odt.x with fmt library
-find_library(FMT_LIB fmt HINTS ${FMT_LIB_DIR}) # Specify the library name without package name
-if(NOT FMT_LIB)
-    message(FATAL_ERROR "fmt library not found")
-endif()
+find_library(FMT_LIB fmt REQUIRED HINTS ${FMT_LIB_DIR})
 target_link_libraries(odt.x ${FMT_LIB})
 # --- Nuria (End) ---
 

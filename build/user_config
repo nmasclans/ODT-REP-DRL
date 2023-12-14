@@ -4,13 +4,11 @@ set(CHEMISTRY "SIMPLEDLR" CACHE STRING "user mechanism source to add")
 set(PARALLEL "no" CACHE STRING "build with mpi")
 set(SILENT "yes" CACHE STRING "code output config")
 
-# --- Nuria (Begin): modify with your paths ---
+# --- Nuria (Begin) ---
 # Link cantera library
 set(CANTERA_INCLUDE_DIR "/usr/include/cantera/" CACHE PATH "Cantera includes location")
 set(CANTERA_LIB_DIR "/usr/lib" CACHE PATH "Cantera library location")
-# --- Nuria (End) ---
 
-# --- Nuria (Begin): added fmt library, if not added 'make' does not find 'fmt' library, and does not link it ---
 # Link fmt library
 set(FMT_LIB_DIR "/usr/lib/x86_64-linux-gnu/" CACHE PATH "fmt library location")
 # --- Nuria (End) ---
