@@ -71,8 +71,18 @@ class param {
         double  tBeginStatConv;  ///<  time instant from which it is applied the F-perturbation statistics convergence 
         double  xmapTarget1;     ///<  xmap target, 1st coordinate (statistics convergence)
         double  xmapTarget2;     ///<  xmap target, 2nd coordinate (statistics convergence)
-        int     nProbes;         ///<  (RL) number of sensors placed in the domain for observation collection
-        int     nAct;            ///<  (RL) action dimensionality, number of actuators
+        
+        
+        int     dqnNObserv;      ///<  (DQN) observation dimensionality, number of observers placed in the domain for observation collection
+        int     dqnNActions;     ///<  (DQN) action dimensionality, number of actuators
+        int     dqnNPL;          ///<  (DQN) number of neurons per hidden layer
+        int     dqnBatchSize;    ///<  (DQN) number of transitions sampled from the replay buffer
+        double  dqnGamma;        ///<  (DQN) discount factor, between 0 and 1
+        double  dqnEpsStart;     ///<  (DQN) starting value of epsilon
+        double  dqnEpsEnd;       ///<  (DQN) final value of epsilon
+        double  dqnEpsDecay;     ///<  (DQN) controls the rate of exponential decay of epsilon, higher means a slower decay
+        double  dqnTau;          ///<  (DQN) update rate of the target network
+        double  dqnLr;           ///<  (DQN) learning rate of the AdamW optimizer
 
         string  bcType;          ///<  OUTFLOW, PERIODIC, WALL, WALL_OUT
         int     cCoord;          ///<  1 = planar, 2 = cylindrical, 3 = spherical

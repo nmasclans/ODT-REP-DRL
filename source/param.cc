@@ -66,8 +66,17 @@ param::param(inputoutput *p_io) {
     tBeginStatConv = io->params["tBeginStatConv"] ? io->params["tBeginStatConv"].as<double>(): 0.0;
     xmapTarget1    = io->params["xmapTarget1"]    ? io->params["xmapTarget1"].as<double>()   : 0.0;
     xmapTarget2    = io->params["xmapTarget2"]    ? io->params["xmapTarget2"].as<double>()   : 0.0;
-    nProbes        = io->params["nProbes"]        ? io->params["nProbes"].as<int>()          : 0;
-    nAct           = io->params["nAct"]           ? io->params["nAct"].as<int>()             : 0;
+    
+    dqnNObserv     = io->params["dqnNObserv"]     ? io->params["dqnNObserv"].as<int>()       : 0;
+    dqnNActions    = io->params["dqnNActions"]    ? io->params["dqnNActions"].as<int>()      : 0;
+    dqnNPL         = io->params["dqnNPL"]         ? io->params["dqnNPL"].as<int>()           : 0;
+    dqnBatchSize   = io->params["dqnBatchSize"]   ? io->params["dqnBatchSize"].as<int>()     : 0;
+    dqnGamma       = io->params["dqnGamma"]       ? io->params["dqnGamma"].as<double>()      : 0.0;
+    dqnEpsStart    = io->params["dqnEpsStart"]    ? io->params["dqnEpsStart"].as<double>()   : 0.0;
+    dqnEpsEnd      = io->params["dqnEpsEnd"]      ? io->params["dqnEpsEnd"].as<double>()     : 0.0;
+    dqnEpsDecay    = io->params["dqnEpsDecay"]    ? io->params["dqnEpsDecay"].as<double>()   : 0.0;
+    dqnTau         = io->params["dqnTau"]         ? io->params["dqnTau"].as<double>()        : 0.0;
+    dqnLr          = io->params["dqnLr"]          ? io->params["dqnLr"].as<double>()         : 0.0;
 
     bcType         = io->params["bcType"]         ? io->params["bcType"].as<string>()        : errMsg<string>("bcType");
     cCoord         = io->params["cCoord"]         ? io->params["cCoord"].as<int>()           : 1;
