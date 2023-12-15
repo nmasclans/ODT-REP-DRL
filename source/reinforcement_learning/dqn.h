@@ -1,6 +1,6 @@
 /**
- * @file DQN.h
- * @brief Header file for class DQN
+ * @file dqn.h
+ * @brief Header file for class dqn
  */
 
 #pragma once
@@ -15,12 +15,12 @@ using namespace std;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-/** Class implementing DQN (Deep Q-Learning Network) object.
+/** Class implementing dqn (Deep Q-Learning Network) object.
  *
  *  @author Núria Masclans
  */
 
-class DQN : public torch::nn::Module {
+class dqn : public torch::nn::Module {
 
 
     //////////////////// DATA MEMBERS //////////////////////
@@ -41,8 +41,8 @@ class DQN : public torch::nn::Module {
 
     //////////////////// CONSTRUCTOR FUNCTIONS /////////////////
 
-        DQN(int64_t n_observations, int64_t n_actions, int64_t n_neurons_per_layer);
+        dqn(int n_observations, int n_actions, int n_neurons_per_layer);
         void init(domain *line);
-        virtual ~DQN();
+        virtual ~dqn();
 
 };
