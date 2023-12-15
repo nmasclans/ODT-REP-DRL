@@ -41,22 +41,22 @@ VT PPO::returns(VT& rewards, VT& dones, VT& vals, double gamma, double lambda)
     return returns;
 }
 
-void PPO::update(actorCritic& ac,
-                 torch::Tensor& states,
-                 torch::Tensor& actions,
-                 torch::Tensor& log_probs,
-                 torch::Tensor& returns,
-                 torch::Tensor& advantages, 
-                 OPT& opt, 
+void PPO::update(actorCritic   *ac,
+                 torch::Tensor &states,
+                 torch::Tensor &actions,
+                 torch::Tensor &log_probs,
+                 torch::Tensor &returns,
+                 torch::Tensor &advantages, 
+                 OPT           &opt, 
                  uint steps, uint epochs, uint mini_batch_size, double beta, double clip_param)
 {
     
     for (uint e=0;e<epochs;e++) {
         // Generate random indices.
-        torch::Tensor cpy_sta = torch::zeros({mini_batch_size, states.size(1)}, states.options());
-        torch::Tensor cpy_act = torch::zeros({mini_batch_size, actions.size(1)}, actions.options());
-        torch::Tensor cpy_log = torch::zeros({mini_batch_size, log_probs.size(1)}, log_probs.options());
-        torch::Tensor cpy_ret = torch::zeros({mini_batch_size, returns.size(1)}, returns.options());
+        torch::Tensor cpy_sta = torch::zeros({mini_batch_size, states.size(1)},     states.options());
+        torch::Tensor cpy_act = torch::zeros({mini_batch_size, actions.size(1)},    actions.options());
+        torch::Tensor cpy_log = torch::zeros({mini_batch_size, log_probs.size(1)},  log_probs.options());
+        torch::Tensor cpy_ret = torch::zeros({mini_batch_size, returns.size(1)},    returns.options());
         torch::Tensor cpy_adv = torch::zeros({mini_batch_size, advantages.size(1)}, advantages.options());
 
         for (uint b=0;b<mini_batch_size;b++) {
@@ -68,21 +68,23 @@ void PPO::update(actorCritic& ac,
             cpy_adv[b] = advantages[idx];
         }
 
-        auto av = ac->forward(cpy_sta); // action value pairs
-        auto action = get<0>(av);
-        auto entropy = ac->entropy().mean();
-        auto new_log_prob = ac->log_prob(cpy_act);
+        tuple<torch::Tensor, torch::Tensor> av = ac->forward(cpy_sta); // action value pairs
+        torch::Tensor action  = get<0>(av);
+        torch::Tensor entropy = ac->entropy().mean();
+        torch::Tensor new_log_prob = ac->log_prob(cpy_act);
 
-        auto old_log_prob = cpy_log;
-        auto ratio = (new_log_prob - old_log_prob).exp();
-        auto surr1 = ratio*cpy_adv;
-        auto surr2 = torch::clamp(ratio, 1. - clip_param, 1. + clip_param)*cpy_adv;
+        torch::Tensor old_log_prob = cpy_log;
+        torch::Tensor ratio = (new_log_prob - old_log_prob).exp();
+        torch::Tensor surr1 = ratio * cpy_adv;
+        torch::Tensor surr2 = torch::clamp(ratio, 1.0 - clip_param, 1.0 + clip_param) * cpy_adv; 
+        // torch::clamp restricts the values of ratio between the value range (1.0-clip_param, 1+clip_param)
 
-        auto val = get<1>(av);
-        auto actor_loss = -torch::min(surr1, surr2).mean();
-        auto critic_loss = (cpy_ret-val).pow(2).mean();
-
-        auto loss = 0.5*critic_loss+actor_loss-beta*entropy;
+        torch::Tensor val = get<1>(av);
+        torch::Tensor actor_loss = - torch::min(surr1, surr2).mean();
+        // torch::min performs element-wise comparison between tensors surr1, surr2, and returns the element-wise min
+        torch::Tensor critic_loss = (cpy_ret-val).pow(2).mean();
+        // pow() element-wise power 2, and mean() returns single element torch::Tensor of the mean value
+        torch::Tensor loss = 0.5 * critic_loss + actor_loss - beta * entropy;
 
         opt.zero_grad();
         loss.backward();

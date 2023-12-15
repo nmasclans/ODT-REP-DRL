@@ -18,13 +18,13 @@ class PPO {
     public: 
 
         VT returns(VT &rewards, VT &dones, VT &vals, double gamma, double lambda); 
-        void update(actorCritic& ac,
-                    torch::Tensor& states,
-                    torch::Tensor& actions,
-                    torch::Tensor& log_probs,
-                    torch::Tensor& returns,
-                    torch::Tensor& advantages, 
-                    OPT& opt, 
+        void update(actorCritic   *ac,
+                    torch::Tensor &states,
+                    torch::Tensor &actions,
+                    torch::Tensor &log_probs,
+                    torch::Tensor &returns,
+                    torch::Tensor &advantages, 
+                    OPT           &opt, 
                     uint steps, uint epochs, uint mini_batch_size, double beta, double clip_param=.2);
 
 

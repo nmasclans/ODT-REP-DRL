@@ -104,7 +104,7 @@ void actorCritic::normal(double mu, double std) {
 
 
 ///////////////////////////////////////////////////////////////////////////////
-/*  Differential entropy of normal distribution
+/** Differential entropy of normal distribution
  * 
  *  Calculates the differential entropy of a normal distribution. 
  *  For reference https://pytorch.org/docs/stable/_modules/torch/distributions/normal.html#Normal
@@ -113,6 +113,16 @@ torch::Tensor actorCritic::entropy() {
     return 0.5 + 0.5*log(2*M_PI) + log_std_;    // M_PI is the pi value provided by math.h class
 }
 
+
+///////////////////////////////////////////////////////////////////////////////
+/** Logarithmic probability of taken action, given the current distribution.
+ * 
+ * @param action    \input action of which the logarithmic probability is calculated 
+ */
+torch::Tensor actorCritic::log_prob(torch::Tensor action) {
+    torch::Tensor var = (log_std_ + log_std_).exp();
+    return -((action - mu_)*(action - mu_))/(2*var) - log_std_ - log(sqrt(2*M_PI));
+} 
 
 // TODO: if compilation doesn't work, maybe there is an issue with the way
 // libtorch manages the class/modules. rename actorCritic as actorCriticImpl, and 

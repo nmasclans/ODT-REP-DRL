@@ -35,10 +35,9 @@ class actorCritic : public torch::nn::Module {
     //////////////////// MEMBER FUNCTIONS /////////////////
 
         tuple<torch::Tensor, torch::Tensor> forward(torch::Tensor x);
-
-        void normal(double mu, double std);
-        torch::Tensor actorCritic::entropy();
-
+        void          normal(double mu, double std);
+        torch::Tensor entropy();
+        torch::Tensor log_prob(torch::Tensor action);
 
     //////////////////// CONSTRUCTOR FUNCTIONS /////////////////
 
