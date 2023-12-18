@@ -1,6 +1,6 @@
 /**
- * @file dqn.h
- * @brief Header file for class dqn
+ * @file dqnImpl.h
+ * @brief Header file for class dqnImpl
  */
 
 #pragma once
@@ -20,7 +20,7 @@ using namespace std;
  *  @author Núria Masclans
  */
 
-class dqn : public torch::nn::Module {
+struct dqnImpl : public torch::nn::Module {
 
 
     //////////////////// DATA MEMBERS //////////////////////
@@ -31,7 +31,7 @@ class dqn : public torch::nn::Module {
     
     private:
 
-        torch::nn::Linear*   layer1{ nullptr }, layer2{ nullptr }, layer3{ nullptr };
+        torch::nn::Linear linear1, linear2, linear3;
 
     //////////////////// MEMBER FUNCTIONS /////////////////
 
@@ -41,8 +41,8 @@ class dqn : public torch::nn::Module {
 
     //////////////////// CONSTRUCTOR FUNCTIONS /////////////////
 
-        dqn(int n_observations, int n_actions, int n_neurons_per_layer);
+        dqnImpl(int n_observations, int n_actions, int n_neurons_per_layer);
         void init(domain *line);
-        virtual ~dqn();
+        virtual ~dqnImpl();
 
 };

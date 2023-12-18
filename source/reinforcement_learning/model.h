@@ -27,6 +27,7 @@ class model {
     public: 
 
         domain              *domn;              //< pointer to domain object
+        env                 *env;
     
     private:
 
@@ -44,10 +45,13 @@ class model {
 
     public:
 
+        void    train(int num_episodes);
+
     private:
 
         void    plot_durations(const vector<int> &episode_durations, bool show_result = false);
-        int     select_action(torch::Tensor state, dqn &policy_net);
+        int     select_action(torch::Tensor state); //, dqn &policy_net);
+        void    optimize(); // (vector<Transition> &memory, DQN &policy_net, DQN &target_net);
 
     //////////////////// CONSTRUCTOR FUNCTIONS /////////////////
 

@@ -5,6 +5,7 @@
 
 #include "model.h"
 #include "domain.h"
+#include "replayMemory.h"
 
 #include <torch/torch.h>
 
@@ -46,7 +47,8 @@ model::model() {
     target_net.load_state_dict(policy_net.state_dict());
 
     optimizer = torch::optim::AdamW(policy_net.parameters(), lr=domn->pram->dqnLr, amsgrad=True);
-    memory = ReplayMemory(10000);
+    memory    = replayMemory(10000);
+    env       = domn->env;
 
     steps_done = 0;
 
@@ -59,7 +61,7 @@ model::model() {
  * @param state         \input (torch::Tensor)
  * @param policy_net    \input (DQN)
  */
-int model::select_action(torch::Tensor state, DQN &policy_net) {
+int model::select_action(torch::Tensor state) {
      
     // rd: non-deterministic random number generator based on hardware entropy sources 
     random_device  rd;
@@ -87,17 +89,24 @@ int model::select_action(torch::Tensor state, DQN &policy_net) {
 
 ///////////////////////////////////////////////////////////////////////////////
 /** Model optimization
- * ...
+ *  Performs a single step of the optimization, by:
+ *      (1) sample a batch,
+ *      (2) concatenate all the tensors into a single one,
+ *      (3) (POLICY NETWORK) compute Q(s_t, a_t),
+ *      (4) (TARGET NETWORK) compute V(s_{t+1}) = max_a q(s_{t+1},a) for added stability
+ *      (4) combine Q,V into the loss
+ *  * by definition, we set V(s) = 0 if s is a terminal state
+ *  The network is updated at every step with a 'soft update' controlled by the 
+ *  hyperparameter 'tau'.
+ *  
  */
-void model::optimize(vector<Transition> &memory, DQN &policy_net, DQN &target_net) {
+void model::optimize() {
 
     if (memory.size() < batch_size)
         return;
 
     // Sample transitions
-    vector<Transition> transitions = sample(memory, domn->pram->dqnBatchSize);
-    
-
+    vector<Transition> transitions = sample(memory, batch_size);
     /* Transpose batch of transitions:
      * This converts batch-array of Transitions to Transition of batch-arrays
      * see https://stackoverflow.com/a/19343/3343043 for detailed explanation)
@@ -177,7 +186,7 @@ void model::optimize(vector<Transition> &memory, DQN &policy_net, DQN &target_ne
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-void plot_durations(const std::vector<int> &episode_durations, bool show_result) {
+void model::plot_durations(const std::vector<int> &episode_durations, bool show_result) {
 
     // Code for plotting the episode durations (use your preferred plotting library)
     // Implementation based on matplotlib or other plotting libraries
@@ -186,6 +195,24 @@ void plot_durations(const std::vector<int> &episode_durations, bool show_result)
 }
 
 
+///////////////////////////////////////////////////////////////////////////////
+void model::train(int num_episodes) {
+
+    for (int i_episode = 0; i_episode < num_episodes; ++i_episode) {
+        
+        // Initialize the environment and get its state
+        torch::Tensor state = env.reset(); // Assuming 'env' is an instance of the environment
+        
+        for (int64_t t=0; ; ++t) {
+
+            // select action using epsilon-greedy policy
+            int action = select_action(state, policy_net);
+
+            CONTINUE HERE!
+        }
+    }
+
+}
 // TODO: transform train_loop python code bellow to a method of model class:
 
 // Below, you can find the main training loop. At the beginning we reset the environment and obtain the initial state Tensor. Then, we sample an action, execute it, observe the next state and the reward (always 1), and optimize our model once. When the episode ends (our model fails), we restart the loop.
