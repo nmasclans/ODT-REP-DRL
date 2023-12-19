@@ -39,6 +39,10 @@ class model {
         int                 n_observations;
         int                 batch_size;
         int                 steps_done;
+        double              eps_start;
+        double              eps_end;
+        double              eps_decay;
+
 
 
     //////////////////// MEMBER FUNCTIONS /////////////////

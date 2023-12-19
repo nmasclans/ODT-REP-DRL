@@ -8,6 +8,10 @@ class domain;
 
 using namespace std;
 
+/**Transition:
+ * Object representing a single transition in the environment. It maps
+ * (state, action) pairs to their (next_state, reward) result.
+ */
 struct Transition {
     torch::Tensor state;
     torch::Tensor action;
@@ -15,6 +19,14 @@ struct Transition {
     torch::Tensor reward;
 };
 
+/**Replay Memory:
+ * The experience replay memory will be used for training the DQN.
+ * It stores the transitions that the agent observes, allowing us to
+ * reuse this data later. By sampling from the replay memory randomly,
+ * the transitions that build up a batch are decorrelated. It has
+ * been shown that this greatly stabilizes and improves the DQN
+ * training procedure. 
+ */
 class replayMemory {
 
     //////////////////// DATA MEMBERS //////////////////////

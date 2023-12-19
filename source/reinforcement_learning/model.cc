@@ -32,6 +32,9 @@ model::model() {
     n_actions       = domn->pram->dqnNActions;
     n_observations  = domn->pram->dqnNObserv;
     batch_size      = domn->pram->dqnBatchSize;
+    eps_start       = domn->pram->dqnEpsStart;
+    eps_end         = domn->pram->dqnEpsEnd;
+    eps_decay       = domn->pram->dqnEpsDecay;
 
     // define the device
     // initialize with CPU as default
@@ -56,7 +59,12 @@ model::model() {
 
 ///////////////////////////////////////////////////////////////////////////////
 /** Select Action
- * ...
+ *  Selection of the action to take accordingly to an epsilon greedy policy.
+ *  Sometimes we'll use the policy model for choosing the action, and 
+ *  sometimes we'll just sample one uniformly.
+ *  The probability of choosing a random action will start at 'eps_start' and
+ *  will decay exponentially towards 'eps_end'. 'eps_decay' controls the 
+ *  rate of decay.
  * 
  * @param state         \input (torch::Tensor)
  * @param policy_net    \input (DQN)
@@ -72,14 +80,16 @@ int model::select_action(torch::Tensor state) {
     uniform_real_distribution<double> dis(0, 1);
     // sample: single (random) sample of the uniform distribution
     double          sample = dis(gen);
-    double          eps_threshold = domn->pram->dqnEpsEnd + (domn->pram->dqnEpsStart - domn->pram->dqnEpsEnd) * std::exp(-1.0 * steps_done / EPS_DECAY);
+    double          eps_threshold = eps_end + (eps_start - eps_end) * std::exp(-1.0 * steps_done / eps_decay);
     steps_done++;
 
     if (sample > eps_threshold) {
+        // use policy model for chosing the action
         torch::NoGradGuard no_grad;
         auto result = policy_net(state).max(1, true);
         return result[1].item<int>();
     } else {
+        // sample action with (random) uniform probability
         std::uniform_int_distribution<int> action_dist(0, n_actions - 1);
         return action_dist(gen);
     }
