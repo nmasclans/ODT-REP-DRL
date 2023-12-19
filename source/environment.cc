@@ -82,7 +82,7 @@ void environment::testTorch() {
 */
 vector<double> environment::reset() {
 
-    vector<double state;
+    vector<double> state;
 
     // TODO: add content
 
@@ -102,7 +102,7 @@ stepResult environment::step(const int &action_idx){
     
     // TODO: add content
 
-    return {reward, observation, truncated, terminated}
+    return {reward, observation, truncated, terminated};
 
 }
 

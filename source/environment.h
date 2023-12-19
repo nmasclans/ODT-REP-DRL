@@ -19,7 +19,7 @@ struct stepResult {
     vector<double>  observation;
     bool            truncated;
     bool            terminated;
-}
+};
 
 ////////////////////////////////////////////////////////////////////////////////
 /** @brief Class implementing `environment` object
@@ -48,7 +48,7 @@ class environment {
 
         void            testTorch();
         vector<double>  reset();
-        stepResult      step(const int &action_idx)
+        stepResult      step(const int &action_idx);
 
 
     //////////////////// CONSTRUCTOR FUNCTIONS /////////////////
