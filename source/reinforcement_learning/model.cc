@@ -52,7 +52,6 @@ model::model() {
 
     optimizer = torch::optim::AdamW(policy_net.parameters(), lr=domn->pram->dqnLr, amsgrad=True);
     memory    = replayMemory(10000);
-    env       = domn->env;
 
     steps_done = 0;
 
@@ -212,7 +211,7 @@ void model::train(int num_episodes) {
         // Initialize the environment and get its state
         // Environment initialization returns ODT to initial condition when RL is applied
         // -> get initial state
-        auto state_info = env.reset();                      // state_info has attributes (state,)
+        auto state_info = domn->env->reset();                      // state_info has attributes (state,)
         // -> convert state to torch::Tensor type float32
         state = torch::from_blob(state_info.state.data(), {1, state_info.state.size()}, torch::kFloat32).to(device);
         
@@ -223,7 +222,7 @@ void model::train(int num_episodes) {
             action      = torch::tensor(action_idx, torch::kInt64).to(device);
             
             // perform action, advance environment
-            auto step_info  = env.step(action_idx);         // step_info has attributes (state, action, next_state, reward,)
+            auto step_info  = domn->env->step(action_idx);         // step_info has attributes (state, action, next_state, reward,)
             done            = step.info.terminated || step.info.truncated;
             reward          = torch::from_blob(step_info.reward.data(), {1, step_info.reward.size()},      torch::kFloat32).to(device);
             

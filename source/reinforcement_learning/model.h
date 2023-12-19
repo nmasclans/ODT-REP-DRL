@@ -26,9 +26,8 @@ class model {
 
     public: 
 
-        domain              *domn;              //< pointer to domain object
-        env                 *env;
-    
+        domain             *domn;              //< pointer to domain object
+        
     private:
 
         torch::Device       device;
