@@ -65,6 +65,3 @@ torch::Tensor dqnImpl::forward(torch::Tensor x) {
     x = layer3->forward(x);
     return x;
 }
-
-
-TORCH_MODULE(dqnImpl);

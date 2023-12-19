@@ -45,3 +45,6 @@ struct dqnImpl : public torch::nn::Module {
         void init(domain *line);
 
 };
+
+// TORCH_MODULE is a macro provided by PyTorch to define a TorchScript module.
+TORCH_MODULE(dqnImpl);
