@@ -24,7 +24,10 @@ struct Transition {
      * similar to PyTorch. Thus, it is not necessary to explicitely use .detach().
      */
     Transition(torch::Tensor state_, torch::Tensor action_, torch::Tensor next_state_, torch::Tensor reward_) :
-        state(state_.clone()), action(action_.clone()), next_state(next_state_.clone()), reward(reward_.clone()) {}
+        state(move(state_)),
+        action(move(action_)), 
+        next_state(move(next_state_)),
+        reward(move(reward_)) {}
 
 };
 
