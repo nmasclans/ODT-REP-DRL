@@ -5,7 +5,7 @@
 #include <random>
 #include <vector>
 
-#include "dqn.h"
+#include "dqnImpl.h"
 
 class domain;
 
@@ -31,10 +31,11 @@ class model {
     
     private:
 
-        dqn                 policy_net;
-        dqn                 target_net;
+        torch::Device       device;
+        dqnImpl             policy_net;
+        dqnImpl             target_net;
         torch::optim::AdamW optimizer;
-        ReplayMemory        memory;
+        replayMemory        memory;
         int                 n_actions;
         int                 n_observations;
         int                 batch_size;
@@ -42,8 +43,7 @@ class model {
         double              eps_start;
         double              eps_end;
         double              eps_decay;
-
-
+        double              tau;
 
     //////////////////// MEMBER FUNCTIONS /////////////////
 
@@ -53,7 +53,6 @@ class model {
 
     private:
 
-        void    plot_durations(const vector<int> &episode_durations, bool show_result = false);
         int     select_action(torch::Tensor state); //, dqn &policy_net);
         void    optimize(); // (vector<Transition> &memory, DQN &policy_net, DQN &target_net);
 

@@ -35,6 +35,7 @@ model::model() {
     eps_start       = domn->pram->dqnEpsStart;
     eps_end         = domn->pram->dqnEpsEnd;
     eps_decay       = domn->pram->dqnEpsDecay;
+    tau             = domn->pram->dqnTau;
 
     // define the device
     // initialize with CPU as default
@@ -68,6 +69,8 @@ model::model() {
  * 
  * @param state         \input (torch::Tensor)
  * @param policy_net    \input (DQN)
+ * 
+ * @return index of the action choosen
  */
 int model::select_action(torch::Tensor state) {
      
@@ -195,83 +198,74 @@ void model::optimize() {
 
 }
 
-///////////////////////////////////////////////////////////////////////////////
-void model::plot_durations(const std::vector<int> &episode_durations, bool show_result) {
-
-    // Code for plotting the episode durations (use your preferred plotting library)
-    // Implementation based on matplotlib or other plotting libraries
-    // TODO: implement code
-    
-}
-
 
 ///////////////////////////////////////////////////////////////////////////////
 void model::train(int num_episodes) {
 
+    torch::Tensor state, action, next_state, reward;
+    bool done;
+    int  action_idx;
+    vector<int> episode_durations;
+
     for (int i_episode = 0; i_episode < num_episodes; ++i_episode) {
         
         // Initialize the environment and get its state
-        torch::Tensor state = env.reset(); // Assuming 'env' is an instance of the environment
+        // Environment initialization returns ODT to initial condition when RL is applied
+        // -> get initial state
+        auto state_info = env.reset();                      // state_info has attributes (state,)
+        // -> convert state to torch::Tensor type float32
+        state = torch::from_blob(state_info.state.data(), {1, state_info.state.size()}, torch::kFloat32).to(device);
         
         for (int64_t t=0; ; ++t) {
 
             // select action using epsilon-greedy policy
-            int action = select_action(state, policy_net);
+            action_idx  = select_action(state);
+            action      = torch::tensor(action_idx, torch::kInt64).to(device);
+            
+            // perform action, advance environment
+            auto step_info  = env.step(action_idx);         // step_info has attributes (state, action, next_state, reward,)
+            done            = step.info.terminated || step.info.truncated;
+            reward          = torch::from_blob(step_info.reward.data(), {1, step_info.reward.size()},      torch::kFloat32).to(device);
+            
+            // get next state
+            if (step_info.terminated) {
+                next_state  = torch::Tensor();
+            } else {
+                next_state  = torch::from_blob(step_info.observation.data(), {1, step_info.observation.size()}, torch::kFloat32).to(device);
+            }
+            
+            // store transition in memory
+            memory.push(state, torch::tensor(action, torch::kInt64).to(device), next_state, reward);
+            
+            // move to the next state (update next_state)
+            state = next_state.clone();
+            
+            // perform one optimization step (on the policy network, policy_net)
+            optimize();
 
-            CONTINUE HERE!
+            // soft update of the target network's weights (target_net)
+            // θ′ ← τ θ + (1 − τ ) θ′, with θ  the policy_net weights, 
+            //                              θ' the target_net weights.
+            // -> retrive the state dictionary of the policy & target networks
+            auto policy_net_state_dict = policy_net->state_dict();
+            auto target_net_state_dict = target_net->state_dict();
+            // -> calculate updated weights of target_net using soft update strategy
+            for (const auto &key : policy_net_state_dict.keys()) {
+                target_net_state_dict[key] = 
+                    policy_net_state_dict[key] * tau + 
+                    target_net_state_dict[key] * (1 - tau);
+            }
+            // -> update target_net
+            target_net->load_state_dict(target_net_state_dict);
+
+            if done {
+                episode_durations.push_back(t + 1);
+                break;
+            }          
         }
     }
 
+    // log episodes duration:
+    cout << endl << "Episode durations: " << endl << episode_durations << endl;
+
 }
-// TODO: transform train_loop python code bellow to a method of model class:
-
-// Below, you can find the main training loop. At the beginning we reset the environment and obtain the initial state Tensor. Then, we sample an action, execute it, observe the next state and the reward (always 1), and optimize our model once. When the episode ends (our model fails), we restart the loop.
-
-// Below, num_episodes is set to 600 if a GPU is available, otherwise 50 episodes are scheduled so training does not take too long. However, 50 episodes is insufficient for to observe good performance on CartPole. You should see the model constantly achieve 500 steps within 600 training episodes. Training RL agents can be a noisy process, so restarting training can produce better results if convergence is not observed.
-
-// if torch.cuda.is_available():
-//     num_episodes = 600
-// else:
-//     num_episodes = 50
-
-// for i_episode in range(num_episodes):
-//     # Initialize the environment and get it's state
-//     state, info = env.reset()
-//     state = torch.tensor(state, dtype=torch.float32, device=device).unsqueeze(0)
-//     for t in count():
-//         action = select_action(state)
-//         observation, reward, terminated, truncated, _ = env.step(action.item())
-//         reward = torch.tensor([reward], device=device)
-//         done = terminated or truncated
-
-//         if terminated:
-//             next_state = None
-//         else:
-//             next_state = torch.tensor(observation, dtype=torch.float32, device=device).unsqueeze(0)
-
-//         # Store the transition in memory
-//         memory.push(state, action, next_state, reward)
-
-//         # Move to the next state
-//         state = next_state
-
-//         # Perform one step of the optimization (on the policy network)
-//         optimize_model()
-
-//         # Soft update of the target network's weights
-//         # θ′ ← τ θ + (1 −τ )θ′
-//         target_net_state_dict = target_net.state_dict()
-//         policy_net_state_dict = policy_net.state_dict()
-//         for key in policy_net_state_dict:
-//             target_net_state_dict[key] = policy_net_state_dict[key]*TAU + target_net_state_dict[key]*(1-TAU)
-//         target_net.load_state_dict(target_net_state_dict)
-
-//         if done:
-//             episode_durations.append(t + 1)
-//             plot_durations()
-//             break
-
-// print('Complete')
-// plot_durations(show_result=True)
-// plt.ioff()
-// plt.show()
