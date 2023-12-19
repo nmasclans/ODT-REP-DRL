@@ -19,6 +19,10 @@ struct Transition {
     torch::Tensor reward;
 
     // Constructor to initialize Transition directly from tensors
+    /* in c++ LibTorch API, .clone() already performs python .detach(),
+     * as the cloned tensor doesn't retain any gradient information by default,
+     * similar to PyTorch. Thus, it is not necessary to explicitely use .detach().
+     */
     Transition(torch::Tensor state_, torch::Tensor action_, torch::Tensor next_state_, torch::Tensor reward_) :
         state(state_.clone()), action(action_.clone()), next_state(next_state_.clone()), reward(reward_.clone()) {}
 
