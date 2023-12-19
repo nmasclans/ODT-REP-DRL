@@ -15,7 +15,6 @@ using namespace std;
 ///////////////////////////////////////////////////////////////////////////////
 /** environment constructor function
  */
-
 environment::environment() {
     
     // add code
@@ -74,3 +73,38 @@ void environment::testTorch() {
     }
 
 }
+
+
+
+///////////////////////////////////////////////////////////////////////////////
+/**
+ * 
+*/
+vector<double> environment::reset() {
+
+    vector<double state;
+
+    // TODO: add content
+
+    return state;
+    
+} 
+
+
+///////////////////////////////////////////////////////////////////////////////
+/**
+ * 
+*/
+stepResult environment::step(const int &action_idx){
+
+    vector<double> reward, observation;
+    bool           truncated, terminated;
+    
+    // TODO: add content
+
+    return {reward, observation, truncated, terminated}
+
+}
+
+
+

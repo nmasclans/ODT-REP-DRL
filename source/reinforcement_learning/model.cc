@@ -5,6 +5,7 @@
 
 #include "model.h"
 #include "domain.h"
+#include "environment.h"
 #include "replayMemory.h"
 
 #include <torch/torch.h>
@@ -50,8 +51,8 @@ model::model() {
     target_net = DQN(n_observations, n_actions).to(device);
     target_net.load_state_dict(policy_net.state_dict());
 
-    optimizer = torch::optim::AdamW(policy_net.parameters(), lr=domn->pram->dqnLr, amsgrad=True);
-    memory    = replayMemory(10000);
+    optimizer  = torch::optim::AdamW(policy_net.parameters(), lr=domn->pram->dqnLr, amsgrad=True);
+    memory     = replayMemory(10000);
 
     steps_done = 0;
 
@@ -201,40 +202,40 @@ void model::optimize() {
 ///////////////////////////////////////////////////////////////////////////////
 void model::train(int num_episodes) {
 
-    torch::Tensor state, action, next_state, reward;
-    bool done;
-    int  action_idx;
-    vector<int> episode_durations;
+    torch::Tensor   state, action, next_state, reward;
+    vector<int>     episode_durations;
+    vector<double>  state_;
+    stepResult      step_result;
+    int             action_idx;
 
     for (int i_episode = 0; i_episode < num_episodes; ++i_episode) {
         
         // Initialize the environment and get its state
         // Environment initialization returns ODT to initial condition when RL is applied
         // -> get initial state
-        auto state_info = domn->env->reset();                      // state_info has attributes (state,)
+        state_ = domn->env->reset();
         // -> convert state to torch::Tensor type float32
-        state = torch::from_blob(state_info.state.data(), {1, state_info.state.size()}, torch::kFloat32).to(device);
+        state  = torch::from_blob(state_.data(), {1, state_.size()}, torch::kFloat32).clone().to(device);
         
         for (int64_t t=0; ; ++t) {
 
             // select action using epsilon-greedy policy
-            action_idx  = select_action(state);
-            action      = torch::tensor(action_idx, torch::kInt64).to(device);
+            action_idx      = select_action(state); 
+            action          = torch::tensor(action_idx, torch::kInt64).clone().to(device);
             
             // perform action, advance environment
-            auto step_info  = domn->env->step(action_idx);         // step_info has attributes (state, action, next_state, reward,)
-            done            = step.info.terminated || step.info.truncated;
-            reward          = torch::from_blob(step_info.reward.data(), {1, step_info.reward.size()},      torch::kFloat32).to(device);
+            step_result     = domn->env->step(action_idx);
+            reward          = torch::from_blob(step_result.reward.data(), {1, step_result.reward.size()}, torch::kFloat32).clone().to(device);
             
             // get next state
-            if (step_info.terminated) {
+            if (step_result.terminated) {
                 next_state  = torch::Tensor();
             } else {
-                next_state  = torch::from_blob(step_info.observation.data(), {1, step_info.observation.size()}, torch::kFloat32).to(device);
+                next_state  = torch::from_blob(step_result.observation.data(), {1, step_result.observation.size()}, torch::kFloat32).clone().to(device);
             }
             
             // store transition in memory
-            memory.push(state, torch::tensor(action, torch::kInt64).to(device), next_state, reward);
+            memory.push(state, action, next_state, reward);
             
             // move to the next state (update next_state)
             state = next_state.clone();
@@ -257,7 +258,7 @@ void model::train(int num_episodes) {
             // -> update target_net
             target_net->load_state_dict(target_net_state_dict);
 
-            if done {
+            if (step_result.terminated || step_result.truncated) {
                 episode_durations.push_back(t + 1);
                 break;
             }          

@@ -7,18 +7,25 @@
 
 #include <vector>
 #include <string>
+#include <torch/torch.h>
 
 class domain;
 
 using namespace std;
 
 ////////////////////////////////////////////////////////////////////////////////
+struct stepResult {
+    vector<double>  reward;
+    vector<double>  observation;
+    bool            truncated;
+    bool            terminated;
+}
 
+////////////////////////////////////////////////////////////////////////////////
 /** @brief Class implementing `environment` object
  *
  *  @author Nuria Masclans
  */
-
 class environment {
 
 
@@ -39,7 +46,10 @@ class environment {
 
     public:
 
-        void testTorch();
+        void            testTorch();
+        vector<double>  reset();
+        stepResult      step(const int &action_idx)
+
 
     //////////////////// CONSTRUCTOR FUNCTIONS /////////////////
 
