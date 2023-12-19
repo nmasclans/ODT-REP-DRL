@@ -31,7 +31,7 @@ struct dqnImpl : public torch::nn::Module {
     
     private:
 
-        torch::nn::Linear linear1, linear2, linear3;
+        torch::nn::Linear layer1, layer2, layer3;
 
     //////////////////// MEMBER FUNCTIONS /////////////////
 
