@@ -67,14 +67,4 @@ torch::Tensor dqnImpl::forward(torch::Tensor x) {
 }
 
 
-///////////////////////////////////////////////////////////////////////////////
-/** dqn destructor
- */
-dqnImpl::~dqnImpl() {
-    delete layer1;
-    delete layer2;
-    delete layer3;
-}
-
-
 TORCH_MODULE(dqnImpl);

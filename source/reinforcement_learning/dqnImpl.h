@@ -43,6 +43,5 @@ struct dqnImpl : public torch::nn::Module {
 
         dqnImpl(int n_observations, int n_actions, int n_neurons_per_layer);
         void init(domain *line);
-        virtual ~dqnImpl();
 
 };
