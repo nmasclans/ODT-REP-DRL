@@ -17,6 +17,11 @@ struct Transition {
     torch::Tensor action;
     torch::Tensor next_state;
     torch::Tensor reward;
+
+    // Constructor to initialize Transition directly from tensors
+    Transition(torch::Tensor state_, torch::Tensor action_, torch::Tensor next_state_, torch::Tensor reward_) :
+        state(state_.clone()), action(action_.clone()), next_state(next_state_.clone()), reward(reward_.clone()) {}
+
 };
 
 /**Replay Memory:

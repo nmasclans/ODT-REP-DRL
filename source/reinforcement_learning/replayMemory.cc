@@ -13,8 +13,10 @@ replayMemory::replayMemory(size_t capacity) : capacity_(capacity) {
 ///////////////////////////////////////////////////////////////////////////////
 void replayMemory::push(torch::Tensor state, torch::Tensor action, torch::Tensor next_state, torch::Tensor reward) {
 
+    // create new transition
+    Transition new_transition(state, action, next_state, reward);
     // add new transition into memory
-    memory_.push_back({state, action, next_state, reward});
+    memory_.push_back(new_transition);
 
     // check memory size - compare to chosen capacity
     // -> if the memory exceeds the capacity, remove the oldest element
