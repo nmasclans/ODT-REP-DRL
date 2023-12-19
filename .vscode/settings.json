@@ -75,7 +75,8 @@
         "regex": "cpp",
         "future": "cpp",
         "shared_mutex": "cpp",
-        "cfenv": "cpp"
+        "cfenv": "cpp",
+        "*.ipp": "cpp"
     },
     "todohighlight.isEnable" : true,
     "todohighlight.isCaseSensitive": false,
