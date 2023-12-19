@@ -102,7 +102,7 @@ target_sources(odt.x
         ${CMAKE_CURRENT_SOURCE_DIR}/cvodeDriver.cc            ${CMAKE_CURRENT_SOURCE_DIR}/cvodeDriver.h
                                                               ${CMAKE_CURRENT_SOURCE_DIR}/interp_linear.h
         ${CMAKE_CURRENT_SOURCE_DIR}/eigenDecomposition.cc     ${CMAKE_CURRENT_SOURCE_DIR}/eigenDecomposition.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/reinforcementLearning.cc  ${CMAKE_CURRENT_SOURCE_DIR}/reinforcementLearning.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/environment.cc            ${CMAKE_CURRENT_SOURCE_DIR}/environment.h
 )
 
 #################### Subdirectories
@@ -113,6 +113,8 @@ add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/radiation)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/domaincases)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/user_chemical_mechanisms)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/yaml)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/reinforcement_learning)
+
 
 #################### Doxygen documentation
 

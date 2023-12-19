@@ -1,6 +1,6 @@
 /**
- * @file reinforcementLearning.h
- * @brief Header file for class \ref reinforcementLearning
+ * @file environment.h
+ * @brief Header file for class \ref environment
  */
 
 #pragma once
@@ -14,12 +14,12 @@ using namespace std;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-/** @brief Class implementing `reinforcementLearning` object
+/** @brief Class implementing `environment` object
  *
  *  @author Nuria Masclans
  */
 
-class reinforcementLearning {
+class environment {
 
 
     //////////////////// DATA MEMBERS //////////////////////
@@ -30,8 +30,8 @@ class reinforcementLearning {
 
     private:
 
-        vector<double>  x_probes;
-        vector<double>  d_probes;
+        vector<double>  x_obs;
+        vector<double>  d_obs;
         vector<double>  x_act;
         vector<double>  d_act;
 
@@ -45,8 +45,8 @@ class reinforcementLearning {
 
     public:
 
-        reinforcementLearning();
+        environment();
         void init(domain *p_domn);
-        virtual ~reinforcementLearning(){};
+        virtual ~environment(){};
 
 };

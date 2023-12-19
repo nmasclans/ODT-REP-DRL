@@ -1,9 +1,9 @@
 /**
- * @file reinforcementLearning.cc
- * @brief Source file for class \ref reinforcementLearning
+ * @file environment.cc
+ * @brief Source file for class \ref environment
  */
 
-#include "reinforcementLearning.h"
+#include "environment.h"
 #include "domain.h"
 
 #include <iostream>
@@ -13,10 +13,10 @@
 using namespace std;
 
 ///////////////////////////////////////////////////////////////////////////////
-/** micromixer constructor function
+/** environment constructor function
  */
 
-reinforcementLearning::reinforcementLearning() {
+environment::environment() {
     
     // add code
 
@@ -28,14 +28,14 @@ reinforcementLearning::reinforcementLearning() {
  * @param p_domn  \input set domain pointer with.
  */
 
-void reinforcementLearning::init(domain *p_domn) {
+void environment::init(domain *p_domn) {
 
     domn    = p_domn;
 
-    vector<double> x_probes(domn->pram->nProbes, 0.0);      // probes position 
-    vector<double> d_probes(domn->pram->nProbes, 0.0);      // probes data
-    vector<double> x_act(domn->pram->nAct, 0.0);            // actuators position
-    vector<double> d_act(domn->pram->nAct, 0.0);            // actuators data
+    vector<double> x_obs(domn->pram->dqnNObserv,  0.0);     // observations position 
+    vector<double> d_obs(domn->pram->dqnNObserv,  0.0);     // observations data
+    vector<double> x_act(domn->pram->dqnNActions, 0.0);     // actions position
+    vector<double> d_act(domn->pram->dqnNActions, 0.0);     // actions data
 
 }
 
@@ -43,7 +43,7 @@ void reinforcementLearning::init(domain *p_domn) {
 /**
  * Test torch package
  */
-void reinforcementLearning::testTorch() {
+void environment::testTorch() {
   
     // output main CUDA information
     cout << "cuda is available: " << torch::cuda::is_available() << endl;

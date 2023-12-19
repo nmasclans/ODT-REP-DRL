@@ -54,7 +54,7 @@ void domain::init(inputoutput           *p_io,
                   solver                *p_solv,
                   randomGenerator       *p_rand,
                   eigenDecomposition    *p_eigdec,
-                  reinforcementLearning *p_rl,
+                  environment           *p_env,
                   bool               LisEddyDomain) {
 
     //----------------------
@@ -70,7 +70,7 @@ void domain::init(inputoutput           *p_io,
     solv   = p_solv;
     rand   = p_rand;
     eigdec = p_eigdec;
-    rl     = p_rl;
+    env    = p_env;
 
     //----------------------
 
