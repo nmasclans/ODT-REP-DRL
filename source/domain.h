@@ -17,6 +17,7 @@
 #include "randomGenerator.h"
 #include "eigenDecomposition.h"
 #include "environment.h"
+#include "model.h"
 #include "cantera/thermo/IdealGasPhase.h"
 #include "cantera/transport.h"
 #include <vector>
@@ -83,8 +84,8 @@ class domain {
         solver                  *solv;       ///< pointer to solver object
         meshManager             *mesher;     ///< pointer to mesh manager object
         eigenDecomposition      *eigdec;     ///< pointer to eigen decomposition object
-        environment             *env;         ///< pointer to reinforcement learning object
-
+        environment             *env;        ///< pointer to reinforcement learning environment
+        model                   *rlmodel;    ///< pointer to reinforcement learning model 
         randomGenerator         *rand;
 
         int                     nTrans;      ///< number of transported variables on the domain.
@@ -121,6 +122,7 @@ class domain {
                   randomGenerator       *p_rand,
                   eigenDecomposition    *p_eigdec,
                   environment           *p_env,
+                  model                 *p_rlmodel,
                   bool                   LisEddyDomain=false);
         domain(domain *p_domn, param *p_pram); /// constructor
         virtual ~domain() {                    /// destructor

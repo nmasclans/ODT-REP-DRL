@@ -19,45 +19,42 @@ using namespace std;
  * @param p_domn  \input set domain pointer with.
  */
 void model::init(domain *p_domn) {
+    
     domn    = p_domn;
-}
-
-
-///////////////////////////////////////////////////////////////////////////////
-/** Model constructor
- * ...
-*/
-model::model() {
 
     // get network hyperparameters 
-    n_actions           = domn->pram->dqnNActions;
-    n_observations      = domn->pram->dqnNObserv;
-    n_neurons_per_layer = domn->pram->dqnNeuronsPerLayer;
-    batch_size          = domn->pram->dqnBatchSize;
-    eps_start           = domn->pram->dqnEpsStart;
-    eps_end             = domn->pram->dqnEpsEnd;
-    eps_decay           = domn->pram->dqnEpsDecay;
-    tau                 = domn->pram->dqnTau;
-
-    // define the device
-    // initialize with CPU as default
-    torch::Device device(torch::kCPU); 
-    // check if GPU is available and set device to GPU
-    if (torch::cuda::is_available()) {
-        device = torch::Device(torch::kCUDA);
-    }
+    batch_size = domn->pram->dqnBatchSize;
+    eps_start  = domn->pram->dqnEpsStart;
+    eps_end    = domn->pram->dqnEpsEnd;
+    eps_decay  = domn->pram->dqnEpsDecay;
+    tau        = domn->pram->dqnTau;
 
     // define policy & target networks
-    policy_net = dqn(n_observations, n_actions, n_neurons_per_layer).to(device);
-    target_net = dqn(n_observations, n_actions, n_neurons_per_layer).to(device);
+    policy_net = dqn(domn->pram->dqnNObserv, domn->pram->dqnNActions, domn->pram->dqnNeuronsPerLayer).to(device);
+    target_net = dqn(domn->pram->dqnNObserv, domn->pram->dqnNActions, domn->pram->dqnNeuronsPerLayer).to(device);
     target_net.load_state_dict(policy_net.state_dict());
 
-    optimizer  = torch::optim::AdamW(policy_net.parameters(), lr=domn->pram->dqnLr, amsgrad=True);
+    optimizer  = torch::optim::AdamW(policy_net.parameters(), lr=domn->pram->dqnLr, amsgrad=true);
     memory     = replayMemory(10000);
 
     steps_done = 0;
 
 }
+
+
+///////////////////////////////////////////////////////////////////////////////
+/**Model constructor
+ * 
+*/
+model::model() : device(torch::kCPU) {
+
+    // Device
+    // check if GPU is available and set device to GPU
+    if (torch::cuda::is_available()) {
+        device = torch::Device(torch::kCUDA);
+    }
+}
+
 
 ///////////////////////////////////////////////////////////////////////////////
 /** Select Action
@@ -94,7 +91,7 @@ int model::select_action(torch::Tensor state) {
         return result[1].item<int>();
     } else {
         // sample action with (random) uniform probability
-        std::uniform_int_distribution<int> action_dist(0, n_actions - 1);
+        std::uniform_int_distribution<int> action_dist(0, domn->pram->dqnNActions - 1);
         return action_dist(gen);
     }
 

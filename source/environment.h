@@ -8,6 +8,7 @@
 #include <vector>
 #include <string>
 #include <torch/torch.h>
+#include "model.h"
 
 class domain;
 

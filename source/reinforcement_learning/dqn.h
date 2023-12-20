@@ -41,7 +41,7 @@ struct dqn : public torch::nn::Module {
 
     //////////////////// CONSTRUCTOR FUNCTIONS /////////////////
 
+        dqn(){};
         dqn(int n_observations, int n_actions, int n_neurons_per_layer);
-        void init(domain *line);
 
 };

@@ -21,16 +21,6 @@ using namespace std;
  * each action given the current input.  
  */
 
-///////////////////////////////////////////////////////////////////////////////
-/** dqn initializer
- *
- * @param p_domn  \input set domain pointer with.
- */
-
-void dqn::init(domain *p_domn) {
-    domn    = p_domn;
-}
-
 
 ///////////////////////////////////////////////////////////////////////////////
 /** dqn constructor

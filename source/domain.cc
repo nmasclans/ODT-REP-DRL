@@ -55,22 +55,24 @@ void domain::init(inputoutput           *p_io,
                   randomGenerator       *p_rand,
                   eigenDecomposition    *p_eigdec,
                   environment           *p_env,
-                  bool               LisEddyDomain) {
+                  model                 *p_rlmodel,
+                  bool                   LisEddyDomain) {
 
     //----------------------
 
-    io     = p_io;
-    mesher = p_mesher;
-    gas    = p_gas;
-    tran   = p_tran;
-    strm   = p_strm;
-    mimx   = p_mimx;
-    ed     = p_ed;
-    eddl   = p_eddl;
-    solv   = p_solv;
-    rand   = p_rand;
-    eigdec = p_eigdec;
-    env    = p_env;
+    io      = p_io;
+    mesher  = p_mesher;
+    gas     = p_gas;
+    tran    = p_tran;
+    strm    = p_strm;
+    mimx    = p_mimx;
+    ed      = p_ed;
+    eddl    = p_eddl;
+    solv    = p_solv;
+    rand    = p_rand;
+    eigdec  = p_eigdec;
+    env     = p_env;
+    rlmodel = p_rlmodel;
 
     //----------------------
 
@@ -90,6 +92,7 @@ void domain::init(inputoutput           *p_io,
     ed->init(this, eddl);
     solv->init(this);
     eigdec->init(this);
+    rlmodel->init(this);
     // mesher is init below in caseinit for phi
     // strm is init below in caseinit  (domc), (if needed)
     // mimx is init below since it needs v[] set for cvode

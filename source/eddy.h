@@ -44,7 +44,7 @@ class eddy {
         double              esdp3;
         double              esdp4;
 
-        vector<double> cca,ccb,ccc,ccd;                 ///< polynomial coefficient arrays for cylindricalAnomalyHack
+        vector<double>      cca,ccb,ccc,ccd;    ///< polynomial coefficient arrays for cylindricalAnomalyHack
 
     //////////////////// MEMBER FUNCTIONS /////////////////
 

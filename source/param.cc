@@ -67,9 +67,9 @@ param::param(inputoutput *p_io) {
     xmapTarget1        = io->params["xmapTarget1"]        ? io->params["xmapTarget1"].as<double>()     : 0.0;
     xmapTarget2        = io->params["xmapTarget2"]        ? io->params["xmapTarget2"].as<double>()     : 0.0;
     
-    dqnNObserv         = io->params["dqnNObserv"]         ? io->params["dqnNObserv"].as<int>()         : 0;
-    dqnNActions        = io->params["dqnNActions"]        ? io->params["dqnNActions"].as<int>()        : 0;
-    dqnNeuronsPerLayer = io->params["dqnNeuronsPerLayer"] ? io->params["dqnNeuronsPerLayer"].as<int>() : 0;
+    dqnNObserv         = io->params["dqnNObserv"]         ? io->params["dqnNObserv"].as<int>()         : 1;
+    dqnNActions        = io->params["dqnNActions"]        ? io->params["dqnNActions"].as<int>()        : 1;
+    dqnNeuronsPerLayer = io->params["dqnNeuronsPerLayer"] ? io->params["dqnNeuronsPerLayer"].as<int>() : 5;
     dqnNPL             = io->params["dqnNPL"]             ? io->params["dqnNPL"].as<int>()             : 0;
     dqnBatchSize       = io->params["dqnBatchSize"]       ? io->params["dqnBatchSize"].as<int>()       : 0;
     dqnGamma           = io->params["dqnGamma"]           ? io->params["dqnGamma"].as<double>()        : 0.0;

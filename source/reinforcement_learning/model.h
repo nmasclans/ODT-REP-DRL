@@ -36,9 +36,6 @@ class model {
         dqn                 target_net;
         torch::optim::AdamW optimizer;
         replayMemory        memory;
-        int                 n_actions;
-        int                 n_observations;
-        int                 n_neurons_per_layer;
         int                 batch_size;
         int                 steps_done;
         double              eps_start;
@@ -59,8 +56,10 @@ class model {
 
     //////////////////// CONSTRUCTOR FUNCTIONS /////////////////
 
-        model();
+    public: 
+
+        model(){}
         void init(domain *line);
-        virtual ~model(){};
+        virtual ~model(){}
 
 };
