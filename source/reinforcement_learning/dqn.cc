@@ -1,9 +1,9 @@
 /**
- * @file dqnImpl.cc
- * @brief Source file for class dqnImpl
+ * @file dqn.cc
+ * @brief Source file for class dqn
  */
 
-#include "dqnImpl.h"
+#include "dqn.h"
 #include "domain.h"
 
 #include <torch/torch.h>
@@ -27,7 +27,7 @@ using namespace std;
  * @param p_domn  \input set domain pointer with.
  */
 
-void dqnImpl::init(domain *p_domn) {
+void dqn::init(domain *p_domn) {
     domn    = p_domn;
 }
 
@@ -35,7 +35,7 @@ void dqnImpl::init(domain *p_domn) {
 ///////////////////////////////////////////////////////////////////////////////
 /** dqn constructor
  */
-dqnImpl::dqnImpl(int n_observations, int n_actions, int n_neurons_per_layer)
+dqn::dqn(int n_observations, int n_actions, int n_neurons_per_layer)
     : layer1(torch::nn::Linear(n_observations, n_neurons_per_layer)),
       layer2(torch::nn::Linear(n_neurons_per_layer, n_neurons_per_layer)),
       layer3(torch::nn::Linear(n_neurons_per_layer, n_neurons_per_layer)) {
@@ -59,7 +59,7 @@ dqnImpl::dqnImpl(int n_observations, int n_actions, int n_neurons_per_layer)
  * Returns:
  * tensor([[left0exp,right0exp]...]).
  */
-torch::Tensor dqnImpl::forward(torch::Tensor x) {
+torch::Tensor dqn::forward(torch::Tensor x) {
     x = torch::relu(layer1->forward(x));
     x = torch::relu(layer2->forward(x));
     x = layer3->forward(x);

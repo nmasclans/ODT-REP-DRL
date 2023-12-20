@@ -5,7 +5,7 @@
 #include <random>
 #include <vector>
 
-#include "dqnImpl.h"
+#include "dqn.h"
 
 class domain;
 
@@ -31,8 +31,8 @@ class model {
     private:
 
         torch::Device       device;
-        dqnImpl             policy_net;
-        dqnImpl             target_net;
+        dqn                 policy_net;
+        dqn                 target_net;
         torch::optim::AdamW optimizer;
         replayMemory        memory;
         int                 n_actions;
@@ -53,7 +53,7 @@ class model {
     private:
 
         int     select_action(torch::Tensor state); //, dqn &policy_net);
-        void    optimize(); // (vector<Transition> &memory, DQN &policy_net, DQN &target_net);
+        void    optimize(); // (vector<Transition> &memory, dqn &policy_net, dqn &target_net);
 
     //////////////////// CONSTRUCTOR FUNCTIONS /////////////////
 

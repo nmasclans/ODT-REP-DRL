@@ -47,8 +47,8 @@ model::model() {
     }
 
     // define policy & target networks
-    policy_net = DQN(n_observations, n_actions).to(device);
-    target_net = DQN(n_observations, n_actions).to(device);
+    policy_net = dqn(n_observations, n_actions).to(device);
+    target_net = dqn(n_observations, n_actions).to(device);
     target_net.load_state_dict(policy_net.state_dict());
 
     optimizer  = torch::optim::AdamW(policy_net.parameters(), lr=domn->pram->dqnLr, amsgrad=True);
@@ -68,7 +68,7 @@ model::model() {
  *  rate of decay.
  * 
  * @param state         \input (torch::Tensor)
- * @param policy_net    \input (DQN)
+ * @param policy_net    \input (dqn)
  * 
  * @return index of the action choosen
  */

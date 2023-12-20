@@ -1,6 +1,6 @@
 /**
- * @file dqnImpl.h
- * @brief Header file for class dqnImpl
+ * @file dqn.h
+ * @brief Header file for class dqn
  */
 
 #pragma once
@@ -20,7 +20,7 @@ using namespace std;
  *  @author Núria Masclans
  */
 
-struct dqnImpl : public torch::nn::Module {
+struct dqn : public torch::nn::Module {
 
 
     //////////////////// DATA MEMBERS //////////////////////
@@ -41,10 +41,7 @@ struct dqnImpl : public torch::nn::Module {
 
     //////////////////// CONSTRUCTOR FUNCTIONS /////////////////
 
-        dqnImpl(int n_observations, int n_actions, int n_neurons_per_layer);
+        dqn(int n_observations, int n_actions, int n_neurons_per_layer);
         void init(domain *line);
 
 };
-
-// TORCH_MODULE is a macro provided by PyTorch to define a TorchScript module.
-TORCH_MODULE(dqnImpl);
