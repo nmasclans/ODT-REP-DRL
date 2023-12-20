@@ -30,13 +30,14 @@ void model::init(domain *p_domn) {
 model::model() {
 
     // get network hyperparameters 
-    n_actions       = domn->pram->dqnNActions;
-    n_observations  = domn->pram->dqnNObserv;
-    batch_size      = domn->pram->dqnBatchSize;
-    eps_start       = domn->pram->dqnEpsStart;
-    eps_end         = domn->pram->dqnEpsEnd;
-    eps_decay       = domn->pram->dqnEpsDecay;
-    tau             = domn->pram->dqnTau;
+    n_actions           = domn->pram->dqnNActions;
+    n_observations      = domn->pram->dqnNObserv;
+    n_neurons_per_layer = domn->pram->dqnNeuronsPerLayer;
+    batch_size          = domn->pram->dqnBatchSize;
+    eps_start           = domn->pram->dqnEpsStart;
+    eps_end             = domn->pram->dqnEpsEnd;
+    eps_decay           = domn->pram->dqnEpsDecay;
+    tau                 = domn->pram->dqnTau;
 
     // define the device
     // initialize with CPU as default
@@ -47,8 +48,8 @@ model::model() {
     }
 
     // define policy & target networks
-    policy_net = dqn(n_observations, n_actions).to(device);
-    target_net = dqn(n_observations, n_actions).to(device);
+    policy_net = dqn(n_observations, n_actions, n_neurons_per_layer).to(device);
+    target_net = dqn(n_observations, n_actions, n_neurons_per_layer).to(device);
     target_net.load_state_dict(policy_net.state_dict());
 
     optimizer  = torch::optim::AdamW(policy_net.parameters(), lr=domn->pram->dqnLr, amsgrad=True);

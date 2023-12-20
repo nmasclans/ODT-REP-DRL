@@ -75,6 +75,7 @@ class param {
         
         int     dqnNObserv;      ///<  (DQN) observation dimensionality, number of observers placed in the domain for observation collection
         int     dqnNActions;     ///<  (DQN) action dimensionality, number of actuators
+        int     dqnNeuronsPerLayer //< (DQN) number of neurons per hidden layer, in policy and target networks
         int     dqnNPL;          ///<  (DQN) number of neurons per hidden layer
         int     dqnBatchSize;    ///<  (DQN) number of transitions sampled from the replay buffer
         double  dqnGamma;        ///<  (DQN) discount factor, between 0 and 1

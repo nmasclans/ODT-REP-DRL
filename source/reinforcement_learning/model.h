@@ -6,6 +6,7 @@
 #include <vector>
 
 #include "dqn.h"
+#include "replayMemory.h"
 
 class domain;
 
@@ -37,6 +38,7 @@ class model {
         replayMemory        memory;
         int                 n_actions;
         int                 n_observations;
+        int                 n_neurons_per_layer;
         int                 batch_size;
         int                 steps_done;
         double              eps_start;
