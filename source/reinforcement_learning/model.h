@@ -31,17 +31,17 @@ class model {
         
     private:
 
-        torch::Device       device;
-        dqn                 policy_net;
-        dqn                 target_net;
-        torch::optim::AdamW optimizer;
-        replayMemory        memory;
-        int                 batch_size;
-        int                 steps_done;
-        double              eps_start;
-        double              eps_end;
-        double              eps_decay;
-        double              tau;
+        torch::Device        device;
+        dqn                 *policy_net;
+        dqn                 *target_net;
+        torch::optim::AdamW *optimizer;
+        replayMemory        *memory;
+        int                  batch_size;
+        int                  steps_done;
+        double               eps_start;
+        double               eps_end;
+        double               eps_decay;
+        double               tau;
 
     //////////////////// MEMBER FUNCTIONS /////////////////
 
@@ -51,14 +51,14 @@ class model {
 
     private:
 
-        int     select_action(torch::Tensor state); //, dqn &policy_net);
+        int64_t select_action(torch::Tensor state); //, dqn &policy_net);
         void    optimize(); // (vector<Transition> &memory, dqn &policy_net, dqn &target_net);
 
     //////////////////// CONSTRUCTOR FUNCTIONS /////////////////
 
     public: 
 
-        model(){}
+        model();
         void init(domain *line);
         virtual ~model(){}
 

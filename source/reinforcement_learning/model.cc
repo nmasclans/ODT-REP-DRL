@@ -29,14 +29,31 @@ void model::init(domain *p_domn) {
     eps_decay  = domn->pram->dqnEpsDecay;
     tau        = domn->pram->dqnTau;
 
-    // define policy & target networks
-    policy_net = dqn(domn->pram->dqnNObserv, domn->pram->dqnNActions, domn->pram->dqnNeuronsPerLayer).to(device);
-    target_net = dqn(domn->pram->dqnNObserv, domn->pram->dqnNActions, domn->pram->dqnNeuronsPerLayer).to(device);
-    target_net.load_state_dict(policy_net.state_dict());
+    // construct policy & target networks
+    policy_net = new dqn(domn->pram->dqnNObserv, domn->pram->dqnNActions, domn->pram->dqnNeuronsPerLayer);
+    target_net = new dqn(domn->pram->dqnNObserv, domn->pram->dqnNActions, domn->pram->dqnNeuronsPerLayer);
+    
+    // clone policy_net into target_net
+    /**Original python code:
+     * load_state_dict()
+     * state_dict()
+     * target_net.load_state_dict(policy_net.state_dict())
+     * Code transformed to C++ API (https://github.com/pytorch/pytorch/issues/36577): */
+    std::stringstream stream;
+    torch::save(policy_net, stream);
+    torch::load(target_net, stream);
 
-    optimizer  = torch::optim::AdamW(policy_net.parameters(), lr=domn->pram->dqnLr, amsgrad=true);
-    memory     = replayMemory(10000);
+    // send networks to 'device'
+    policy_net->to(device);
+    target_net->to(device);
 
+    // construct optimizer & memory objects
+    optimizer  = new torch::optim::AdamW(
+        policy_net->parameters(),
+        torch::optim::AdamWOptions().lr(domn->pram->dqnLr).amsgrad(true));
+    memory     = new replayMemory(10000);
+
+    // steps counter
     steps_done = 0;
 
 }
@@ -46,13 +63,18 @@ void model::init(domain *p_domn) {
 /**Model constructor
  * 
 */
-model::model() : device(torch::kCPU) {
+model::model() : device(torch::kCPU),
+                 policy_net(nullptr),
+                 target_net(nullptr),
+                 optimizer(nullptr),
+                 memory(nullptr) {
 
     // Device
     // check if GPU is available and set device to GPU
     if (torch::cuda::is_available()) {
         device = torch::Device(torch::kCUDA);
     }
+
 }
 
 
@@ -70,7 +92,7 @@ model::model() : device(torch::kCPU) {
  * 
  * @return index of the action choosen
  */
-int model::select_action(torch::Tensor state) {
+int64_t model::select_action(torch::Tensor state) {
      
     // rd: non-deterministic random number generator based on hardware entropy sources 
     random_device  rd;
@@ -86,12 +108,18 @@ int model::select_action(torch::Tensor state) {
 
     if (sample > eps_threshold) {
         // use policy model for chosing the action
-        torch::NoGradGuard no_grad;
-        auto result = policy_net(state).max(1, true);
-        return result[1].item<int>();
+        torch::NoGradGuard  no_grad;
+        auto result = policy_net->forward(state).max(1, true);   
+        /** result: maximum values & indices of policy_net->forward(state) along dimension 1
+         *  1st arg (int)  = 1    : perform maximum along dimension 1
+         *  2nd arg (bool) = true : whether the operation should keep the dimension that was reduced as a singleton dimensional in the output
+         *      if policy_net->forward(state) has dimension [batch_size, n]
+         *      max. calculates maximum value and idx along dimension 1, thus result has size [batch_size, 2], with
+         *      second dimension storing both maximum values and indices for each batch item */ 
+        return result[1].item<int64_t>();
     } else {
         // sample action with (random) uniform probability
-        std::uniform_int_distribution<int> action_dist(0, domn->pram->dqnNActions - 1);
+        std::uniform_int_distribution<int64_t> action_dist(0, domn->pram->dqnNActions - 1);
         return action_dist(gen);
     }
 
@@ -113,45 +141,19 @@ int model::select_action(torch::Tensor state) {
  */
 void model::optimize() {
 
-    if (memory.size() < batch_size)
+    if (memory->size() < batch_size)
         return;
 
-    // Sample transitions
-    vector<Transition> transitions = sample(memory, batch_size);
-    /* Transpose batch of transitions:
-     * This converts batch-array of Transitions to Transition of batch-arrays
-     * see https://stackoverflow.com/a/19343/3343043 for detailed explanation)
-     */
-    Transition batch = transpose(transitions);
-
+    // Sample transitions in a batch, and
     // Compute a mask of non-final states and concatenate the batch elements
     // (a final state would've been the one after which simulation ended)
-    vector<bool>          non_final_mask;
-    vector<torch::Tensor> non_final_next_states;
-    vector<torch::Tensor> state_batch;
-    vector<torch::Tensor> action_batch;
-    vector<torch::Tensor> reward_batch;
-
-    // fill the vectors of tensors along the batches
-    for (size_t i = 0; i < batch.next_state.size(); ++i) {
-        if (!batch.next_state[i].defined()) {
-            non_final_mask.push_back(false);
-        } else {
-            non_final_mask.push_back(true);
-            non_final_next_states.push_back(batch.next_state[i]);
-        }
-        state_batch.push_back(batch.state[i]);
-        action_batch.push_back(batch.action[i]);
-        reward_batch.push_back(batch.reward[i]);
-    }
-    
-    // transform to torch:tensors
-    torch::Tensor non_final_mask_tensor = torch::tensor(non_final_mask, torch::kBool);  // creates a boolean tensor from non_final_mask vector
-    // 'cat' concatenates a vector of tensors along the (default) 0 dimension
-    torch::Tensor non_final_next_states_tensor = torch::cat(non_final_next_states);     
-    torch::Tensor state_batch_tensor    = torch::cat(state_batch);                      
-    torch::Tensor action_batch_tensor   = torch::cat(action_batch);
-    torch::Tensor reward_batch_tensor   = torch::cat(reward_batch);
+    torch::Tensor non_final_mask, state_batch, action_batch, non_final_next_state_batch, reward_batch;
+    memory->sample(batch_size, non_final_mask, state_batch, action_batch, non_final_next_state_batch, reward_batch);
+    non_final_mask.to(torch::kBool).to(device);
+    state_batch.to(torch::kFloat32).to(device);
+    action_batch.to(torch::kInt64).to(device);
+    non_final_next_state_batch.to(torch::kFloat32).to(device);
+    reward_batch.to(torch::kFloat32).to(device);
 
     // Compute Q(s_t, a)
     /* The model computes Q(s_t), then we select the columns of actions taken. These are
@@ -204,7 +206,7 @@ void model::train(int num_episodes) {
     vector<int>     episode_durations;
     vector<double>  state_;
     stepResult      step_result;
-    int             action_idx;
+    int64_t         action_idx;
 
     for (int i_episode = 0; i_episode < num_episodes; ++i_episode) {
         
@@ -233,7 +235,7 @@ void model::train(int num_episodes) {
             }
             
             // store transition in memory
-            memory.push(state, action, next_state, reward);
+            memory->push(state, action, next_state, reward);
             
             // move to the next state (update next_state)
             state = next_state.clone();

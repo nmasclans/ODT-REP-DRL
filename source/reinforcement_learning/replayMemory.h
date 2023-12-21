@@ -61,13 +61,23 @@ class replayMemory {
     
     public:
     
-        void push(torch::Tensor state, torch::Tensor action, torch::Tensor next_state, torch::Tensor reward);
+        void    push(torch::Tensor state, torch::Tensor action, torch::Tensor next_state, torch::Tensor reward);
 
-        vector<Transition> sample(size_t batch_size);
-
-        size_t size() const;
+        size_t  size() const;
         // 'const': the method does not modify the internal state of the object;
         // calling size() won't change any member variables of the 'replayMemory' instance it's called on
+
+        void    sample(const size_t  &batch_size,
+                       torch::Tensor &non_final_mask, 
+                       torch::Tensor &state_batch,
+                       torch::Tensor &action_batch,
+                       torch::Tensor &non_final_next_state_batch,
+                       torch::Tensor &reward_batch);
+
+    private:
+
+        vector<Transition>  sample_vector_of_transitions(const size_t &batch_size);
+
 
 
     //////////////////// CONSTRUCTOR FUNCTIONS /////////////////
