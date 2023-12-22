@@ -40,8 +40,8 @@ void model::init(domain *p_domn) {
      * target_net.load_state_dict(policy_net.state_dict())
      * Code transformed to C++ API (https://github.com/pytorch/pytorch/issues/36577): */
     std::stringstream stream;
-    torch::save(policy_net, stream);
-    torch::load(target_net, stream);
+    torch::save(*policy_net, stream);
+    torch::load(*target_net, stream);
 
     // send networks to 'device'
     policy_net->to(device);
@@ -109,14 +109,20 @@ int64_t model::select_action(torch::Tensor state) {
     if (sample > eps_threshold) {
         // use policy model for chosing the action
         torch::NoGradGuard  no_grad;
-        auto result = policy_net->forward(state).max(1, true);   
+        std::tuple result = policy_net->forward(state).max(1, true);   // TODO: keepdim=true as python, but consider using false
+        // policy_net->forward(state) returns torch::Tensor
+        // policy_net->forward(state).max(1,true) returns std::tuple
         /** result: maximum values & indices of policy_net->forward(state) along dimension 1
-         *  1st arg (int)  = 1    : perform maximum along dimension 1
-         *  2nd arg (bool) = true : whether the operation should keep the dimension that was reduced as a singleton dimensional in the output
-         *      if policy_net->forward(state) has dimension [batch_size, n]
-         *      max. calculates maximum value and idx along dimension 1, thus result has size [batch_size, 2], with
-         *      second dimension storing both maximum values and indices for each batch item */ 
-        return result[1].item<int64_t>();
+         *  1st arg (int)  1    : perform maximum along dimension 1
+         *  2nd arg (bool) true : whether the operation should keep the dimension that was reduced as a singleton dimensional in the output
+         *  i.e. if policy_net->forward(state) = torch::tensor({{0.1, 0.5, 0.3},
+         *                                                      {0.2, 0.7, 0.8},
+         *                                                      {0.9, 0.4, 0.7}}),
+         *       then result = std::tuple({0.5,0.8,0.9},{1,2,0}),
+         *       with 1st tuple element: std::get<0>(result)=torch::Tensor({0.5,0.8,0.9}) max. values along dim 1
+         *            2nd tuple element: std::get<1>(result)=torch::Tensor({1,2,0}) indices of the max. values along dim 1
+         */ 
+        return std::get<1>(result).item<int64_t>();;
     } else {
         // sample action with (random) uniform probability
         std::uniform_int_distribution<int64_t> action_dist(0, domn->pram->dqnNActions - 1);
@@ -149,11 +155,11 @@ void model::optimize() {
     // (a final state would've been the one after which simulation ended)
     torch::Tensor non_final_mask, state_batch, action_batch, non_final_next_state_batch, reward_batch;
     memory->sample(batch_size, non_final_mask, state_batch, action_batch, non_final_next_state_batch, reward_batch);
-    non_final_mask.to(torch::kBool).to(device);
-    state_batch.to(torch::kFloat32).to(device);
-    action_batch.to(torch::kInt64).to(device);
-    non_final_next_state_batch.to(torch::kFloat32).to(device);
-    reward_batch.to(torch::kFloat32).to(device);
+    non_final_mask.to(device);
+    state_batch.to(device);
+    action_batch.to(device);
+    non_final_next_state_batch.to(device);
+    reward_batch.to(device);
 
     // Compute Q(s_t, a)
     /* The model computes Q(s_t), then we select the columns of actions taken. These are
@@ -164,7 +170,7 @@ void model::optimize() {
      * 'action_batch_tensor' contains the indices of the actions taken in each correspoinding state, so
      * 'state_action_values' selects the Q-values of the actions taken 
      */
-    torch::Tensor state_action_values = policy_net(state_batch_tensor).gather(1, action_batch_tensor);
+    torch::Tensor state_action_values = policy_net->forward(state_batch).gather(1, action_batch);
 
     /* Compute V(s_{t+1}) for all next states
      * Expected values of actions for non_final_next_states are computed based 
@@ -176,14 +182,15 @@ void model::optimize() {
     {
         torch::NoGradGuard no_grad;     // temporally disables gradient calculation within {} 
         // 'target_values' are the maximum Q-value for each next state using the target network
-        torch::Tensor target_values = target_net(non_final_next_states_tensor).max(1).values;  
+        // (syntax error) torch::Tensor target_values = target_net->forward(non_final_next_state_batch).max(1).values;  
+        torch::Tensor target_values = std::get<0>(target_net->forward(non_final_next_state_batch).max(1, false)); // used default python argument keepdim=false
         // update 'next_state_values' tensor using indexes provided by 'non_final_mask_tensor' 
         // with the values from 'target_values' 
-        next_state_values.index_put_({non_final_mask_tensor}, target_values);
+        next_state_values.index_put_({non_final_mask}, target_values);
     }
 
     // Compute expected Q values
-    torch::Tensor expected_state_action_values = (next_state_values * domn->pram->dqnGamma) + reward_batch_tensor;
+    torch::Tensor expected_state_action_values = (next_state_values * domn->pram->dqnGamma) + reward_batch;
 
     // Compute Huber loss
     // 'unsqueeze(1)' adds a singleton dimension (of size 1) at the specified position (1 in this case)
@@ -191,10 +198,10 @@ void model::optimize() {
     torch::Tensor loss = criterion(state_action_values, expected_state_action_values.unsqueeze(1)); 
 
     // Optimize the model
-    optimizer.zero_grad();      // clears the gradients of all optimized tensors
+    optimizer->zero_grad();      // clears the gradients of all optimized tensors
     loss.backward();            // computes gradients of loss w.r.t. model parameters
     torch::nn::utils::clip_grad_value_(policy_net->parameters(), 100);  // clips gradient norms to prevent explosion (maxim value 100?)
-    optimizer.step();           // updates the model's wieghts based on computed gradients
+    optimizer->step();           // updates the model's wieghts based on computed gradients
 
 }
 
@@ -215,7 +222,7 @@ void model::train(int num_episodes) {
         // -> get initial state
         state_ = domn->env->reset();
         // -> convert state to torch::Tensor type float32
-        state  = torch::from_blob(state_.data(), {1, state_.size()}, torch::kFloat32).clone().to(device);
+        state  = torch::from_blob(state_.data(), {1, static_cast<long int>(state_.size())}, torch::kFloat32).clone().to(device);
         
         for (int64_t t=0; ; ++t) {
 
@@ -225,13 +232,13 @@ void model::train(int num_episodes) {
             
             // perform action, advance environment
             step_result     = domn->env->step(action_idx);
-            reward          = torch::from_blob(step_result.reward.data(), {1, step_result.reward.size()}, torch::kFloat32).clone().to(device);
+            reward          = torch::from_blob(step_result.reward.data(), {1, static_cast<long int>(step_result.reward.size())}, torch::kFloat32).clone().to(device);
             
             // get next state
             if (step_result.terminated) {
                 next_state  = torch::Tensor();
             } else {
-                next_state  = torch::from_blob(step_result.observation.data(), {1, step_result.observation.size()}, torch::kFloat32).clone().to(device);
+                next_state  = torch::from_blob(step_result.observation.data(), {1, static_cast<long int>(step_result.observation.size())}, torch::kFloat32).clone().to(device);
             }
             
             // store transition in memory
@@ -243,20 +250,39 @@ void model::train(int num_episodes) {
             // perform one optimization step (on the policy network, policy_net)
             optimize();
 
-            // soft update of the target network's weights (target_net)
-            // θ′ ← τ θ + (1 − τ ) θ′, with θ  the policy_net weights, 
-            //                              θ' the target_net weights.
-            // -> retrive the state dictionary of the policy & target networks
-            auto policy_net_state_dict = policy_net->state_dict();
-            auto target_net_state_dict = target_net->state_dict();
-            // -> calculate updated weights of target_net using soft update strategy
-            for (const auto &key : policy_net_state_dict.keys()) {
-                target_net_state_dict[key] = 
-                    policy_net_state_dict[key] * tau + 
-                    target_net_state_dict[key] * (1 - tau);
+            /** soft update of the target network's weights (target_net)
+             *  θ′ ← τ θ + (1 − τ ) θ′, with θ  the policy_net weights, 
+             *                               θ' the target_net weights.
+             * -> retrive the state dictionary of the policy & target networks
+            /** C++ Libtorch API has not yet implemented state_dict() and load_state_dict() torch methods
+             *  As a consequence, following python-based lines would not work: 
+             * 
+             *  // get the parameters of both networks
+             *  auto policy_net_state_dict = policy_net->state_dict();
+             *  auto target_net_state_dict = target_net->state_dict();
+             *  // calculate updated weights of target_net using soft update strategy
+             *  for (const auto &key : policy_net_state_dict.keys()) {
+             *      target_net_state_dict[key] = policy_net_state_dict[key] * tau + target_net_state_dict[key] * (1 - tau);
+             *  }
+             *  // update target_net
+             *  target_net->load_state_dict(target_net_state_dict);
+             * 
+             *  Alternatively, the network parameters are accessed directly using .parameters().
+             */
+            // TODO: check if this update of parameters is correct, by:
+            // TODO: print the target_net (should change according to soft-update equation) and policy_net (should remain constant) prior and after the target_net update.
+            // get the parameters of both networks
+            vector<torch::Tensor> policy_params = policy_net->parameters();
+            vector<torch::Tensor> target_params = target_net->parameters();
+            // calculate updated weights of target_net using soft update strategy
+            for (size_t i = 0; i < policy_params.size(); ++i) {
+                // update target_net params based on policy_net params
+                target_params[i].data().mul_(1 - tau).add_(policy_params[i].data().mul_(tau));
             }
-            // -> update target_net
-            target_net->load_state_dict(target_net_state_dict);
+            // update target_net
+            for (size_t i = 0; i < target_params.size(); ++i) {
+                target_net->parameters()[i].data().copy_(target_params[i].data());
+            }
 
             if (step_result.terminated || step_result.truncated) {
                 episode_durations.push_back(t + 1);

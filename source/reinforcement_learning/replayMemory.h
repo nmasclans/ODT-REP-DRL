@@ -82,6 +82,8 @@ class replayMemory {
 
     //////////////////// CONSTRUCTOR FUNCTIONS /////////////////
 
+    public:
+
         explicit replayMemory(size_t capacity);
 
 };

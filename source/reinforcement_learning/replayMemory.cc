@@ -121,11 +121,11 @@ void replayMemory::sample(const size_t  &batch_size,
     }
 
     // tensor concanation
-    non_final_mask              =  torch::tensor(v_non_final_mask, torch::kBool);
-    state_batch                 =  torch::cat(v_state_batch);
-    action_batch                =  torch::cat(v_action_batch);
-    non_final_next_state_batch  =  torch::cat(v_non_final_next_state_batch);
-    reward_batch                =  torch::cat(v_reward_batch);
+    non_final_mask              =  torch::tensor(v_non_final_mask, torch::kBool).to(torch::kBool);
+    state_batch                 =  torch::cat(v_state_batch).to(torch::kFloat32);
+    action_batch                =  torch::cat(v_action_batch).to(torch::kInt64);
+    non_final_next_state_batch  =  torch::cat(v_non_final_next_state_batch).to(torch::kFloat32);
+    reward_batch                =  torch::cat(v_reward_batch).to(torch::kFloat32);
 
 }
 
