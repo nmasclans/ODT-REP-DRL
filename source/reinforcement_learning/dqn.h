@@ -9,8 +9,6 @@
 #include <vector>
 #include <torch/torch.h>
 
-class domain;
-
 using namespace std;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -22,13 +20,8 @@ using namespace std;
 
 struct dqn : public torch::nn::Module {
 
-
     //////////////////// DATA MEMBERS //////////////////////
 
-    public: 
-
-        domain              *domn;              //< pointer to domain object
-    
     private:
 
         torch::nn::Linear layer1{nullptr}, layer2{nullptr}, layer3{nullptr};
@@ -41,7 +34,7 @@ struct dqn : public torch::nn::Module {
 
     //////////////////// CONSTRUCTOR FUNCTIONS /////////////////
 
-        dqn(){};
+        //dqn(){};
         dqn(int n_observations, int n_actions, int n_neurons_per_layer);
 
 };

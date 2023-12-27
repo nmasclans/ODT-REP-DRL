@@ -4,7 +4,6 @@
  */
 
 #include "dqn.h"
-#include "domain.h"
 
 #include <torch/torch.h>
 
@@ -25,15 +24,12 @@ using namespace std;
 ///////////////////////////////////////////////////////////////////////////////
 /** dqn constructor
  */
-dqn::dqn(int n_observations, int n_actions, int n_neurons_per_layer)
-    : layer1(torch::nn::Linear(n_observations, n_neurons_per_layer)),
-      layer2(torch::nn::Linear(n_neurons_per_layer, n_neurons_per_layer)),
-      layer3(torch::nn::Linear(n_neurons_per_layer, n_neurons_per_layer)) {
+dqn::dqn(int n_observations, int n_actions, int n_neurons_per_layer) {
     
     // register_module() is needed if we want to use the parameters() method later on
-    register_module("layer1", layer1);
-    register_module("layer2", layer2);
-    register_module("layer3", layer3);
+    layer1 = register_module("layer1", torch::nn::Linear(n_observations, n_neurons_per_layer));
+    layer2 = register_module("layer2", torch::nn::Linear(n_neurons_per_layer, n_neurons_per_layer));
+    layer3 = register_module("layer3", torch::nn::Linear(n_neurons_per_layer, n_neurons_per_layer));
 
 }
 
