@@ -4,6 +4,7 @@
 #include <cmath>
 #include <random>
 #include <vector>
+#include <memory>           // for std::shared_ptr 
 
 #include "dqn.h"
 #include "replayMemory.h"
@@ -31,17 +32,17 @@ class model {
         
     private:
 
-        torch::Device        device;
-        dqn                 *policy_net;
-        dqn                 *target_net;
-        torch::optim::AdamW *optimizer;
-        replayMemory        *memory;
-        int                  batch_size;
-        int                  steps_done;
-        double               eps_start;
-        double               eps_end;
-        double               eps_decay;
-        double               tau;
+        torch::Device                    device;
+        shared_ptr<dqn>                  policy_net;
+        shared_ptr<dqn>                  target_net;
+        shared_ptr<torch::optim::AdamW>  optimizer;
+        shared_ptr<replayMemory>         memory;
+        int                              batch_size;
+        int                              steps_done;
+        double                           eps_start;
+        double                           eps_end;
+        double                           eps_decay;
+        double                           tau;
 
     //////////////////// MEMBER FUNCTIONS /////////////////
 

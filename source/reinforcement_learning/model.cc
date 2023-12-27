@@ -30,9 +30,9 @@ void model::init(domain *p_domn) {
     tau        = domn->pram->dqnTau;
 
     // construct policy & target networks
-    policy_net = new dqn(domn->pram->dqnNObserv, domn->pram->dqnNActions, domn->pram->dqnNeuronsPerLayer);
-    target_net = new dqn(domn->pram->dqnNObserv, domn->pram->dqnNActions, domn->pram->dqnNeuronsPerLayer);
-    
+    policy_net = make_shared<dqn>(domn->pram->dqnNObserv, domn->pram->dqnNActions, domn->pram->dqnNeuronsPerLayer);
+    target_net = make_shared<dqn>(domn->pram->dqnNObserv, domn->pram->dqnNActions, domn->pram->dqnNeuronsPerLayer);
+
     // clone policy_net into target_net
     /**Original python code:
      * load_state_dict()
@@ -40,18 +40,19 @@ void model::init(domain *p_domn) {
      * target_net.load_state_dict(policy_net.state_dict())
      * Code transformed to C++ API (https://github.com/pytorch/pytorch/issues/36577): */
     std::stringstream stream;
-    torch::save(*policy_net, stream);
-    torch::load(*target_net, stream);
+    torch::save(policy_net, stream);
+    torch::load(target_net, stream);
 
     // send networks to 'device'
     policy_net->to(device);
     target_net->to(device);
 
     // construct optimizer & memory objects
-    optimizer  = new torch::optim::AdamW(
+    optimizer  = make_shared<torch::optim::AdamW>(
         policy_net->parameters(),
-        torch::optim::AdamWOptions().lr(domn->pram->dqnLr).amsgrad(true));
-    memory     = new replayMemory(10000);
+        torch::optim::AdamWOptions().lr(domn->pram->dqnLr).amsgrad(true)
+        );
+    memory     = make_shared<replayMemory>(10000);
 
     // steps counter
     steps_done = 0;
