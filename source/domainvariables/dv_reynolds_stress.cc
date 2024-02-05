@@ -91,12 +91,6 @@ dv_reynolds_stress::dv_reynolds_stress(domain    *line,
     // Target barycentric map coordinates and eigenvalues
     eigValTarget = vector<double>(3, 0.0);
     getInverseBarycentricMapping(xmapTarget, eigValTarget);
-    
-    // cout target values
-    cout << endl;
-    coutVector(xmapTarget,   "Target xmap");
-    coutVector(eigValTarget, "Target eigen-values");
-    cout << endl;
 
 }
 
