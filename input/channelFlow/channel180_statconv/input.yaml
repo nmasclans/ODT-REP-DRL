@@ -33,7 +33,8 @@ params:
     #----------------------------------------------------------------------------------
     bcType:         WALL           #  OUTFLOW, WALL, PERIODIC, WALL_OUT
     cCoord:         1              #  1 = planar, 2 = cylindrical, 3 = spherical
-    Lrestart:       false          #  restart case (restart.dat): true, false
+    Lrestart:       true           #  restart case (restart.dat): true, false
+                                   #  if true, restart file must be in: ../../data/<caseName>/input/restart.dat 
     #----------------------------------------------------------------------------------
     gDens:          30             #  grid density for mesher
     dxmin:          0.00006945     #  min grid spacing: = dxmin / domain length
