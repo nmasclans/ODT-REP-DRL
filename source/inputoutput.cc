@@ -439,6 +439,8 @@ void inputoutput::loadVarsFromRestartFile() {
     stringstream ss1;
     string       s1;
 
+    // --- initial checks
+    // to restart, a transported variable (L_transported=true) requires saved value (L_output=true) 
     for(int k=0; k<domn->v.size(); k++) {
         if(domn->v[k]->L_transported && !domn->v[k]->L_output) {
             cout << endl << "ERROR: to restart, all transported variables need to be in the restart file" << endl;
@@ -446,14 +448,18 @@ void inputoutput::loadVarsFromRestartFile() {
         }
     }
 
+    // --- set restart filepath
+    // channelFlow: rstType == "single" by default
+    // inputFleDir = "../data/"+caseName+"/input/";
     if(domn->pram->rstType == "multiple") {
         ss1.clear(); ss1 << setfill('0') << setw(5) << proc.myid;
         fname = inputFileDir + "restart/restart_" + ss1.str() + ".dat";
     }
-    else
+    else // channelFlow
         fname = inputFileDir + "/restart.dat";
-
     ifstream ifile(fname.c_str());
+
+    // --- check restart file exists
     if(!ifile) {
         cout << endl << "ERROR: reading restart file " << fname << endl;
         exit(0);
@@ -461,40 +467,49 @@ void inputoutput::loadVarsFromRestartFile() {
 
     //------------- Get file header information
 
-    getline(ifile, s1);                        // read line "# time = 1.1" (this is the restart time
+    // set restart time: trst
+    getline(ifile, s1);                        // read 1st line "# time = 1.1" (1.1 is the restart time), and stores line in string 's1'
+    ss1.clear();                               // clear state flags of the stringstream 'ss1'
+    ss1.str(s1);                               // initialize stringstream 'ss1' with the content of string 's1'
+    ss1 >> s1 >> s1 >> s1 >> domn->pram->trst; // set domn->pram->trst value as read in restart file
+                                               // -> reads four space-separated values from the stringstream 'ss1', and assigns them to string 's1',
+                                               // 3 times (essentially skipping the first 3 values), and assigns the 4th value to 'trst' parameter
+
+    // set number of grid points: ngrd & ngrdf
+    getline(ifile, s1);                        // read 2nd line "# Grid points = 100"
     ss1.clear();
     ss1.str(s1);
-    ss1 >> s1 >> s1 >> s1 >> domn->pram->trst;
+    ss1 >> s1 >> s1 >> s1 >> s1 >> domn->ngrd; // set domn->ngrd, as read in restart file
+    domn->ngrdf = domn->ngrd+1;                // set domn->ngrdf, as read in restart file
 
-    getline(ifile, s1);                        // read line "# Grid points = 100"
-    ss1.clear();
-    ss1.str(s1);
-    ss1 >> s1 >> s1 >> s1 >> s1 >> domn->ngrd;
-    domn->ngrdf = domn->ngrd+1;
-
-    getline(ifile, s1);                        // read line "# Domain Size = 2" (don't use)
-    getline(ifile, s1);                        // read line "# Pressure (Pa) = 101325
-    getline(ifile, s1);                        // read line "# column headers
+    // get next lines, information not used
+    getline(ifile, s1);                        // read 3rd line "# Pressure (Pa) = 101325
+    getline(ifile, s1);                        // read 4th line "# column headers
 
     //------------- Get file data columns
 
+    // rezise domain variables as ngrd, ngrdf
     for(int k=0; k<domn->v.size(); k++)
         domn->v[k]->d.resize(domn->ngrd);
     domn->posf->d.resize(domn->ngrdf);
 
-    for(int i=0; i<domn->ngrd; i++) {
-        for(int k=0; k<domn->v.size(); k++) {
-            if(!domn->v[k]->L_output)
+    // load restart values of domain variables that have L_output = true
+    // channelFlow:     domn->v[k]->name:          pos,   posf,  rho,   dvisc, uvel, vvel, wvel
+    //                  domn->v[k]->Loutput:       true,  true,  false, false, true, true, true
+    //                  domn->v[k]->L_transported: false, false, false, false, true, true, true   
+    for(int i=0; i<domn->ngrd; i++) {           // loop over restart file lines, i.e. grid points along domain
+        for(int k=0; k<domn->v.size(); k++) {   // loop over domain variables, 
+            if(!domn->v[k]->L_output)           // only domain variables with L_output=true, whose values are saved as columns in the restart file
                 continue;
-            ifile >> domn->v[k]->d[i];
+            ifile >> domn->v[k]->d[i];          // set domain variables values, for k-th domain varriable, i-th grid point
         }
     }
 
-    domn->posf->d[domn->ngrd] = domn->posf->d[0] + domn->pram->domainLength; 
+    domn->posf->d[domn->ngrd] = domn->posf->d[0] + domn->pram->domainLength; // set last domain boundary point of ngrdf, value not saved in restart file 
 
     //------------- Set the variables
 
     for(int k=0; k<domn->v.size(); k++)
-        domn->v[k]->setVar();
+        domn->v[k]->setVar();                   // channelFlow: only defined for dv_pos (remains idem.), rho_const, dvisc_const (set ct. value as in input file)
 
 }
