@@ -456,7 +456,7 @@ void inputoutput::loadVarsFromRestartFile() {
         fname = inputFileDir + "restart/restart_" + ss1.str() + ".dat";
     }
     else // channelFlow
-        fname = inputFileDir + "/restart.dat";
+        fname = inputFileDir + "restart.dat";
     ifstream ifile(fname.c_str());
 
     // --- check restart file exists
