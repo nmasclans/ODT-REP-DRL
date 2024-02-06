@@ -1,0 +1,57 @@
+#!/bin/bash
+
+# Single realization run
+# run as "./runOneRlz.sh" <caseName>
+# note it requires a single input argument: caseName
+
+###############################################################################
+echo "the start time is"
+date
+###############################################################################
+
+inputDir="../input/channelFlow/$1"
+caseName="$1"
+
+###############################################################################
+
+runCase () {
+
+    cp     "$inputDir/"*        "../data/$caseName/input/" > /dev/null 2>&1
+    cp -r  "$inputDir/restart"* "../data/$caseName/input/" > /dev/null 2>&1
+
+    #--------------------------------------------------------------------------
+
+    echo "*** RUNNING ***"
+    echo "Output is being written to ../$caseName/runtime/runtime_* and ../$caseName/data"
+    ./odt.x $caseName 0          # 0 is the shift (realization # here)
+
+}
+
+###############################################################################
+
+rebuild () {
+  echo '*** REBUILDING ***'
+  cd ../build
+  make -j8
+  if [ $? -ne 0 ] ; then
+    echo ; echo 'FATAL: error in the build' ; echo
+    exit 0
+  fi
+  echo '*** DONE REBUILDING ***'
+  cd ../run
+}
+
+###############################################################################
+
+if [ "$1" == "-r" ]; then rebuild; fi
+
+runCase "$caseName"
+
+###############################################################################
+echo
+echo "the end simulation time is"
+date
+###############################################################################
+
+exit 0
+

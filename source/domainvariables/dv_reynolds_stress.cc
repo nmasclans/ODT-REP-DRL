@@ -24,6 +24,8 @@ dv_reynolds_stress::dv_reynolds_stress(domain    *line,
                                        const bool Lt,
                                        const bool Lo) : dv(line, s, Lt, Lo) {
 
+    L_output_stat   = true;
+
     // Parameters
     factEigValPert = domn->pram->factEigValPert;
     xmapTarget     = vector<double>{domn->pram->xmapTarget1,domn->pram->xmapTarget2};

@@ -97,26 +97,35 @@ void solver::calculateSolution() {
 
     //-------------------------------------------------------------------------
 
+    cout << "[solver] time = " << time << ", tEnd = " << domn->pram->tEnd << endl;
     while(time <= domn->pram->tEnd) {
 
+        //cout << "[solver] inside while loop" << endl;
         diffusionCatchUpIfNeeded();
+        //cout << "[solver] diffusionCatchUpIfNeeded done" << endl;
 
         domn->mesher->adaptAfterSufficientDiffTime(time, tLastDA, cLastDA, dtCUmax);
+        //cout << "[solver] adaptAfterSufficientDiffTime done" << endl;
 
         computeDtCUmax();
+        //cout << "[solver] computeDtCUmax done" << endl;
 
         LeddyAccepted = sampleEddyAndImplementIfAccepted();  // ODT may reduce dtSmean; sets Pa
+        //cout << "[solver] sampleEddyAndImplementIfAccepted done" << endl;
 
         iEtrials++;
 
         //----------------------
 
+        //cout << "[solver] to check LeddyAccepted" << endl;
         if(LeddyAccepted) {
 
+            //cout << "[solver] eddy accepted!" << endl;
             if(++neddies % (domn->pram->modDisp*50) == 0)
                 domn->io->outputHeader();
             if(neddies   % domn->pram->modDisp ==0)
                 domn->io->outputProgress();
+            //cout << "[solver] eddy output done" << endl;
 
             //if (neddies % domn->pram->modDump == 0) {
             //    ss1.clear();  ss1 << setfill('0') << setw(4) << neddies; ss1 >> s1;
@@ -124,13 +133,14 @@ void solver::calculateSolution() {
             //}
 
             domn->mesher->adaptEddyRegionOfMesh(time, tLastDA, cLastDA);
-
+            //cout << "[solver] adaptEddyRegionOfMesh done" << endl;
             //if (neddies % domn->pram->modDump == 0) {
             //    ss1.clear();  ss1 << setfill('0') << setw(4) << neddies; ss1 >> s1;
             //    domn->io->writeDataFile("odt_"+s1+"_adptEd.dat", time);
             //}
 
             diffusionCatchUpIfNeeded(true);
+            //cout << "[solver] diffusionCatchUpIfNeeded done" << endl;
 
             //if (neddies % domn->pram->modDump == 0) {
             //    ss1.clear();  ss1 << setfill('0') << setw(4) << neddies; ss1 >> s1;
@@ -138,6 +148,7 @@ void solver::calculateSolution() {
             //}
 
             domn->mesher->adaptEddyRegionOfMesh(time, tLastDA, cLastDA);
+            //cout << "[solver] adaptEddyRegionOfMesh done" << endl;
             
             if (neddies % domn->pram->modDump == 0) {
                 ss1.clear();  ss1 << setfill('0') << setw(4) << neddies; ss1 >> s1;
@@ -148,11 +159,12 @@ void solver::calculateSolution() {
 
         //----------------------
 
-        //cout << "tLast: " << time << ", "; 
         time    += sampleDt();          // advance the time
-        //cout << "tNew = " << time << endl;
 
         raiseDtSmean();                 // may reset PaSum, nPaSum, dtSmean
+
+        *domn->io->ostrm << endl << "time = " << time;
+
     }
 
     time = domn->pram->tEnd;

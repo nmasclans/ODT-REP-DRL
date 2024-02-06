@@ -74,6 +74,9 @@ class inputoutput {
 
     private:
 
+        bool directoryExists(const string& path);
+        bool isDirectoryEmpty(const string& path);
+        
 
     //////////////////// CONSTRUCTOR FUNCTIONS /////////////////
 

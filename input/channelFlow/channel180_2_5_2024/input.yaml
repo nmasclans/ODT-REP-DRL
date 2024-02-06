@@ -4,7 +4,7 @@
 params:
 
     seed:           22             #  random number generator seed (negative to randomize it)
-    tEnd:           150.0          #  ending time of realization (s)
+    tEnd:           155.0          #  ending time of realization (s)
     domainLength:   2.0            #  length of domain (m)
     ngrd0:          200            #  initial grid points
     rho0:           1.0            #  initial uniform density (kg/m^3)
@@ -71,5 +71,5 @@ bcCond:
 dumpTimesGen:
 
     dTimeStart:     50.0     # make < 0 to ignore dumpTimesGen and use dumpTimes (if present)
-    dTimeEnd:       150.0
-    dTimeStep:      5.0
+    dTimeEnd:       160.0
+    dTimeStep:      0.01

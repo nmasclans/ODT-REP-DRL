@@ -6,13 +6,14 @@
 #include "inputoutput.h"
 #include "domain.h"
 #include "processor.h"
-#include <sys/stat.h>             // for mkdir
-#include <iostream>
-#include <iomanip>
+#include <sys/stat.h>               // retrieve information about a file by stat function and structure
+#include <iostream>                 // input and output operations: std::cout, std::endl
+#include <iomanip>                  // input and output manipulations: std:setfill, std::setw
 #include <fstream>
-#include <sstream>
+#include <sstream>                  // construct strings with formated data: std::stringstream
 #include <cstdlib>
-#include <algorithm>               // max_element
+#include <algorithm>                // max_element
+#include <dirent.h>                 // directory traversal operations: DIR, dirent, opendir(), readdir(), closedir()
 
 extern processor proc;
 
@@ -83,17 +84,24 @@ inputoutput::inputoutput(const string p_caseName, const int p_nShift){
     dataDir     = "../data/"+caseName+"/data/data_" + s1 + "/";   // e.g., "../data_00001", etc.
     dataDirStat = "../data/"+caseName+"/data/data_" + s1 + "/statistics/";
 
-    int iflag = mkdir(dataDir.c_str(), 0755);
-    if(iflag != 0) {
-        cout << "\n********** Error, process " << proc.myid << "failed to create "
-            << dataDir << ", or it was already there" << endl;
-        exit(0);
+     if (!directoryExists(dataDir) || isDirectoryEmpty(dataDir)) {
+        int iflag = mkdir(dataDir.c_str(), 0755);
+        if (iflag != 0) {
+            cout << "\n********** Error, process " << proc.myid << " failed to create " << dataDir << endl;
+            exit(0);
+        }
+    } else {
+        cout << "\nDirectory " << dataDir << " already exists and is not empty. Doing nothing." << endl;
     }
-    iflag = mkdir(dataDirStat.c_str(), 0755);
-    if(iflag != 0) {
-        cout << "\n********** Error, process " << proc.myid << "failed to create "
-            << dataDirStat << ", or it was already there" << endl;
-        exit(0);
+
+    if (!directoryExists(dataDirStat) || isDirectoryEmpty(dataDirStat)) {
+        int iflag = mkdir(dataDirStat.c_str(), 0755);
+        if (iflag != 0) {
+            cout << "\n********** Error, process " << proc.myid << " failed to create " << dataDirStat << endl;
+            exit(0);
+        }
+    } else {
+        cout << "\nDirectory " << dataDirStat << " already exists and is not empty. Doing nothing." << endl;
     }
 
     fname = "../data/"+caseName+"/runtime/runtime_" + s1;
@@ -246,7 +254,7 @@ void inputoutput::outputProperties(const string fname, const double time) {
             ofileStat << setw(18-var_name_F_statConv.length()) << j++ << "_" << var_name_F_statConv;
         }
     }
-    if (domn->Rij->L_output) {
+    if (domn->Rij->L_output_stat) {
         // Reynolds stress tensor
         ofileStat << setw(15) << j++ << "_Rxx";
         ofileStat << setw(15) << j++ << "_Ryy";
@@ -299,7 +307,7 @@ void inputoutput::outputProperties(const string fname, const double time) {
                 ofileStat << setw(19) << domn->v.at(k)->FstatConvUnif.at(i);
             }
         }
-        if (domn->Rij->L_output) {
+        if (domn->Rij->L_output_stat) {
             // Reynolds stress tensor
             ofileStat << setw(19) << domn->Rij->Rxx.at(i);
             ofileStat << setw(19) << domn->Rij->Ryy.at(i);
@@ -326,11 +334,15 @@ void inputoutput::outputProperties(const string fname, const double time) {
 
 void inputoutput::set_iNextDumpTime(double time) {
 
-    for(int i=0; i<dumpTimes.size(); i++)
+    for(int i=0; i<dumpTimes.size(); i++) {
         if(dumpTimes[i] > time) {   //set this greater-than dump at the start time
             iNextDumpTime = i;
+            cout << "[inputoutput] pram->trst = " << time << endl;
+            cout << "[inputoutput] iNextDumpTime = " << iNextDumpTime << endl;
             break;
         }
+    }
+
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -435,9 +447,9 @@ void inputoutput::outputProgress() {
 
 void inputoutput::loadVarsFromRestartFile() {
 
-    string fname;
-    stringstream ss1;
-    string       s1;
+    string fname, fnameStat;
+    stringstream ss1, ss2;
+    string       s1,  s2;
 
     // --- initial checks
     // to restart, a transported variable (L_transported=true) requires saved value (L_output=true) 
@@ -453,20 +465,28 @@ void inputoutput::loadVarsFromRestartFile() {
     // inputFleDir = "../data/"+caseName+"/input/";
     if(domn->pram->rstType == "multiple") {
         ss1.clear(); ss1 << setfill('0') << setw(5) << proc.myid;
-        fname = inputFileDir + "restart/restart_" + ss1.str() + ".dat";
+        fname     = inputFileDir + "restart/restart_" + ss1.str() + ".dat";
+        fnameStat = inputFileDir + "restart/restartStat_" + ss1.str() + ".dat";
     }
     else // channelFlow
-        fname = inputFileDir + "restart.dat";
+        fname     = inputFileDir + "restart.dat";
+        fnameStat = inputFileDir + "restartStat.dat";
     ifstream ifile(fname.c_str());
+    ifstream ifileStat(fnameStat.c_str());
 
     // --- check restart file exists
     if(!ifile) {
         cout << endl << "ERROR: reading restart file " << fname << endl;
         exit(0);
     }
+    if(!ifileStat) {
+        cout << endl << "ERROR: reading statistics restart file " << fnameStat << endl;
+        exit(0);
+    }
 
     //------------- Get file header information
 
+    // --- restart file of instantaneous information
     // set restart time: trst
     getline(ifile, s1);                        // read 1st line "# time = 1.1" (1.1 is the restart time), and stores line in string 's1'
     ss1.clear();                               // clear state flags of the stringstream 'ss1'
@@ -486,13 +506,23 @@ void inputoutput::loadVarsFromRestartFile() {
     getline(ifile, s1);                        // read 3rd line "# Pressure (Pa) = 101325
     getline(ifile, s1);                        // read 4th line "# column headers
 
+    // --- restart file of statistical information
+    getline(ifileStat, s2);                    // read 1st line (not of use)
+    getline(ifileStat, s2);                    // read 2nd line
+    getline(ifileStat, s2);                    // read 3rd line
+    getline(ifileStat, s2);                    // read 4th line
+    
+
     //------------- Get file data columns
 
-    // rezise domain variables as ngrd, ngrdf
+    // --- resize
+    // resize domain variables as ngrd, ngrdf
     for(int k=0; k<domn->v.size(); k++)
         domn->v[k]->d.resize(domn->ngrd);
     domn->posf->d.resize(domn->ngrdf);
+    // resize statistics variables -> not necessary, contant grid of size domn->pram->nunif
 
+    // --- load values
     // load restart values of domain variables that have L_output = true
     // channelFlow:     domn->v[k]->name:          pos,   posf,  rho,   dvisc, uvel, vvel, wvel
     //                  domn->v[k]->Loutput:       true,  true,  false, false, true, true, true
@@ -504,12 +534,55 @@ void inputoutput::loadVarsFromRestartFile() {
             ifile >> domn->v[k]->d[i];          // set domain variables values, for k-th domain varriable, i-th grid point
         }
     }
-
     domn->posf->d[domn->ngrd] = domn->posf->d[0] + domn->pram->domainLength; // set last domain boundary point of ngrdf, value not saved in restart file 
+    
+    // load restart values of statistical quantities
+    // channelFlow stat columns: 1_posUnif        2_uvel_mean        3_uvel_rmsf       4_uvel_Fpert        5_vvel_mean        6_vvel_rmsf       7_vvel_Fpert        8_wvel_mean        9_wvel_rmsf      10_wvel_Fpert             11_Rxx             12_Ryy             13_Rzz             14_Rxy             15_Rxz             16_Ryz         17_lambda0         18_lambda1         19_lambda2           20_xmap1           21_xmap2
+    double aux;
+    for (int i=0; i<domn->pram->nunif; i++){
+        // pass value 1_posUnif - no use
+        ifileStat >> aux;
+        for (int k=0; k<domn->v.size(); k++){
+            if (!domn->v.at(k)->L_output_stat)
+                continue;
+            ifileStat >> domn->v.at(k)->davg.at(i);
+            ifileStat >> domn->v.at(k)->drmsf.at(i);
+            ifileStat >> domn->v.at(k)->FstatConvUnif.at(i);
+        }
+        if (domn->Rij->L_output_stat) {
+            ifileStat >> domn->Rij->Rxx.at(i);
+            ifileStat >> domn->Rij->Ryy.at(i);
+            ifileStat >> domn->Rij->Rzz.at(i);
+            ifileStat >> domn->Rij->Rxy.at(i);
+            ifileStat >> domn->Rij->Rxz.at(i);
+            ifileStat >> domn->Rij->Ryz.at(i);
+        }
+    }
 
     //------------- Set the variables
 
     for(int k=0; k<domn->v.size(); k++)
         domn->v[k]->setVar();                   // channelFlow: only defined for dv_pos (remains idem.), rho_const, dvisc_const (set ct. value as in input file)
 
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+/* Managing directories
+*/
+
+bool inputoutput::directoryExists(const string& path) {
+    struct stat info;
+    return stat(path.c_str(), &info) == 0 && S_ISDIR(info.st_mode);
+}
+
+bool inputoutput::isDirectoryEmpty(const string& path) {
+    DIR* dir = opendir(path.c_str());
+    if (dir != nullptr) {
+        dirent* entry = readdir(dir);
+        dirent* nextEntry = readdir(dir);
+        closedir(dir);
+        return entry == nullptr && nextEntry == nullptr;
+    }
+    return true; // Assume it's empty if we can't open the directory
 }
