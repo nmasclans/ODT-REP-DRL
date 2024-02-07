@@ -337,8 +337,8 @@ void inputoutput::set_iNextDumpTime(double time) {
     for(int i=0; i<dumpTimes.size(); i++) {
         if(dumpTimes[i] > time) {   //set this greater-than dump at the start time
             iNextDumpTime = i;
-            cout << "[inputoutput] pram->trst = " << time << endl;
-            cout << "[inputoutput] iNextDumpTime = " << iNextDumpTime << endl;
+            cout << endl << "[inputoutput] pram->trst = " << time;
+            cout << endl << "[inputoutput] iNextDumpTime = " << iNextDumpTime;
             break;
         }
     }

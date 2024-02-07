@@ -88,8 +88,62 @@ void solver::calculateSolution() {
     computeDtCUmax();
 
     domn->io->writeDataFile("odt_init.dat", time);
+    // correct up until here!
+    
+    // ------ checks -----
+    cout << endl << endl << "[solver] ---------------- PRIOR TO GRID ADAPTATION ----------------";
+    cout << endl << "[solver-prior] " << "ngrd = " << domn->ngrd << endl;
+    cout << endl << "[solver-prior] " << "ngrdf = " << domn->ngrdf << endl;
+    cout << endl << "[solver-prior] pos size = " << domn->pos->d.size();
+    cout << endl << "[solver-prior] pos = ";
+    for (int i=0; i<domn->ngrd; i++)
+        cout << domn->pos->d.at(i) << ", ";
+    cout << endl << "[solver-prior] posf size = " << domn->posf->d.size();
+    cout << endl << "[solver-prior] posf = ";
+    for (int i=0; i<domn->ngrdf; i++)
+        cout << domn->posf->d.at(i) << ", ";
+    cout << endl << "[solver-prior] uvel size = " << domn->uvel->d.size();
+    cout << endl << "[solver-prior] uvel = ";
+    for (int i=0; i<domn->ngrd; i++)
+        cout << domn->uvel->d.at(i) << ", ";
+    cout << endl << "[solver-prior] rho size = " << domn->rho->d.size();
+    cout << endl << "[solver-prior] rho = ";
+    for (int i=0; i<domn->ngrd; i++)
+        cout << domn->rho->d.at(i) << ", ";
+    cout << endl << "[solver-prior] dvisc size = " << domn->dvisc->d.size();
+    cout << endl << "[solver-prior] dvisc = ";
+    for (int i=0; i<domn->ngrd; i++)
+        cout << domn->dvisc->d.at(i) << ", ";
+    // ------ checks -----
 
     domn->mesher->adaptGrid(0, domn->ngrd-1);
+    // error occurs here! -> uvel, vvel, wvel have nan values
+    
+    // ------ checks -----
+    cout << endl << endl << "[solver] ---------------- AFTER GRID ADAPTATION ----------------";
+    cout << endl << "[solver-after] " << "ngrd = " << domn->ngrd << endl;
+    cout << endl << "[solver-after] " << "ngrdf = " << domn->ngrdf << endl;    
+    cout << endl << "[solver-after] pos size = " << domn->pos->d.size();
+    cout << endl << "[solver-after] pos = ";
+    for (int i=0; i<domn->ngrd; i++)
+        cout << domn->pos->d.at(i) << ", ";
+    cout << endl << "[solver-after] posf size = " << domn->posf->d.size();
+    cout << endl << "[solver-after] posf = ";
+    for (int i=0; i<domn->ngrdf; i++)
+        cout << domn->posf->d.at(i) << ", ";
+    cout << endl << "[solver-after] uvel size = " << domn->uvel->d.size();
+    cout << endl << "[solver-after] uvel = ";
+    for (int i=0; i<domn->ngrd; i++)
+        cout << domn->uvel->d.at(i) << ", ";
+    cout << endl << "[solver-after] rho size = " << domn->rho->d.size();
+    cout << endl << "[solver-after] rho = ";
+    for (int i=0; i<domn->ngrd; i++)
+        cout << domn->rho->d.at(i) << ", ";
+    cout << endl << "[solver-after] dvisc size = " << domn->dvisc->d.size();
+    cout << endl << "[solver-after] dvisc = ";
+    for (int i=0; i<domn->ngrd; i++)
+        cout << domn->dvisc->d.at(i) << ", ";
+    // ------ checks -----
 
     domn->io->writeDataFile("odt_init_adpt.dat", time);
 
@@ -98,6 +152,7 @@ void solver::calculateSolution() {
     //-------------------------------------------------------------------------
 
     cout << "[solver] time = " << time << ", tEnd = " << domn->pram->tEnd << endl;
+    
     while(time <= domn->pram->tEnd) {
 
         //cout << "[solver] inside while loop" << endl;

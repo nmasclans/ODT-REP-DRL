@@ -59,6 +59,8 @@ void dv_rho_const::setVar(const int ipt){
     }
 
     d.resize(domn->ngrd, domn->pram->rho0);
+    for (int i=0; i<domn->ngrd; i++)
+        d.at(i) = domn->pram->rho0;
 
 }
 

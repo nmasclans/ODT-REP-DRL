@@ -62,5 +62,8 @@ void dv_dvisc_const::setVar(const int ipt){
         exit(0);
     }
     d.resize(domn->ngrd, domn->pram->kvisc0 * domn->pram->rho0);
+    for (int i=0; i<domn->ngrd; i++)
+        d.at(i) = domn->pram->kvisc0 * domn->pram->rho0;
+        
 }
 
