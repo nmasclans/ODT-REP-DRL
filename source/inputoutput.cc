@@ -540,7 +540,7 @@ void inputoutput::loadVarsFromRestartFile() {
     // channelFlow stat columns: 1_posUnif        2_uvel_mean        3_uvel_rmsf       4_uvel_Fpert        5_vvel_mean        6_vvel_rmsf       7_vvel_Fpert        8_wvel_mean        9_wvel_rmsf      10_wvel_Fpert             11_Rxx             12_Ryy             13_Rzz             14_Rxy             15_Rxz             16_Ryz         17_lambda0         18_lambda1         19_lambda2           20_xmap1           21_xmap2
     double aux;
     for (int i=0; i<domn->pram->nunif; i++){
-        // pass value 1_posUnif - no use
+        // pass value 1_posUnif - not used, set properly in dv initialization from pram->nunif
         ifileStat >> aux;
         for (int k=0; k<domn->v.size(); k++){
             if (!domn->v.at(k)->L_output_stat)
@@ -550,12 +550,19 @@ void inputoutput::loadVarsFromRestartFile() {
             ifileStat >> domn->v.at(k)->FstatConvUnif.at(i);
         }
         if (domn->Rij->L_output_stat) {
+            // Reynolds stress tensor
             ifileStat >> domn->Rij->Rxx.at(i);
             ifileStat >> domn->Rij->Ryy.at(i);
             ifileStat >> domn->Rij->Rzz.at(i);
             ifileStat >> domn->Rij->Rxy.at(i);
             ifileStat >> domn->Rij->Rxz.at(i);
             ifileStat >> domn->Rij->Ryz.at(i);
+            // Anisotropy stress - eigenvalues & barycentric map
+            ifileStat >> domn->Rij->eigVal.at(i).at(0);
+            ifileStat >> domn->Rij->eigVal.at(i).at(1);
+            ifileStat >> domn->Rij->eigVal.at(i).at(2);
+            ifileStat >> domn->Rij->xmap.at(i).at(0);
+            ifileStat >> domn->Rij->xmap.at(i).at(1);
         }
     }
 
