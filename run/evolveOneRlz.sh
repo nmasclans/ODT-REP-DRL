@@ -52,9 +52,9 @@ evolveCase () {
 
     #--------------------------------------------------------------------------
 
-    #echo "*** RUNNING ***"
-    #echo "Output is being written to ../$caseName/runtime/runtime_* and ../$caseName/data"
-    #./odt.x $caseName 0          # 0 is the shift (realization # here)
+    echo "*** EVOLVING ***"
+    echo "Output is being written to ../$caseName/runtime/runtime_* and ../$caseName/data"
+    ./odt.x $caseName 0          # 0 is the shift (realization # here)
 
 }
 
