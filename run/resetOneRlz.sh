@@ -18,6 +18,9 @@ tEndIncrement=1.0
 
 resetCase () {
 
+    # Format the realizationNum with leading zeros to a total of 5 digits
+    formattedRealizationNum=$(printf "%05d" "$realizationNum")
+    rm -rf "../data/$caseName/data/data_$formattedRealizationNum" > /dev/null 2>&1
     cp     "$inputDir/"*        "../data/$caseName/input/" > /dev/null 2>&1
 
     #--------------------------------------------------------------------------
