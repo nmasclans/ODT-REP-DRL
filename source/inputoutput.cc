@@ -16,6 +16,7 @@
 #include <dirent.h>                 // directory traversal operations: DIR, dirent, opendir(), readdir(), closedir()
 
 extern processor proc;
+using namespace std;
 
 ///////////////////////////////////////////////////////////////////////////////
 /** inputoutput initialization function
@@ -81,8 +82,9 @@ inputoutput::inputoutput(const string p_caseName, const int p_nShift){
 
     ss1.clear(); ss1 << setfill('0') << setw(5) << proc.myid + nShift;
     s1 = ss1.str();
-    dataDir     = "../data/"+caseName+"/data/data_" + s1 + "/";   // e.g., "../data_00001", etc.
-    dataDirStat = "../data/"+caseName+"/data/data_" + s1 + "/statistics/";
+    dataDir      = "../data/"+caseName+"/data/data_" + s1 + "/";   // e.g., "../data_00001", etc.
+    dataDirStat  = "../data/"+caseName+"/data/data_" + s1 + "/statistics/";
+    dataDirState = "../data/"+caseName+"/data/data_" + s1 + "/state/";
 
      if (!directoryExists(dataDir) || isDirectoryEmpty(dataDir)) {
         int iflag = mkdir(dataDir.c_str(), 0755);
@@ -102,6 +104,16 @@ inputoutput::inputoutput(const string p_caseName, const int p_nShift){
         }
     } else {
         cout << "\nDirectory " << dataDirStat << " already exists and is not empty. Doing nothing." << endl;
+    }
+
+    if (!directoryExists(dataDirState) || isDirectoryEmpty(dataDirState)) {
+        int iflag = mkdir(dataDirState.c_str(), 0755);
+        if (iflag != 0) {
+            cout << "\n********** Error, process " << proc.myid << " failed to create " << dataDirState << endl;
+            exit(0);
+        }
+    } else {
+        cout << "\nDirectory " << dataDirState << " already exists and is not empty. Doing nothing." << endl;
     }
 
     fname = "../data/"+caseName+"/runtime/runtime_" + s1;
@@ -176,20 +188,27 @@ void inputoutput::outputProperties(const string fname, const double time) {
 
     ofstream ofile(fname.c_str());
 
-    // Filepath and ofstream of statistics from 'fname' filepath of instantaneous data
+    // Filepath and ofstream of statistics and state from 'fname' filepath of instantaneous data
     size_t dotPos = fname.rfind('.');
     string fnameStat = fname.substr(0,dotPos) + "_stat" +  fname.substr(dotPos);
-    // add subdirectory for statistics only
+    string fnameState = fname.substr(0,dotPos) + "_state" + fname.substr(dotPos);
+    // add subdirectory for statistics and state
     size_t barPos = fnameStat.rfind("/");
     fnameStat.insert(barPos+1, "statistics/");
+    fnameState.insert(barPos+1, "state/");
     ofstream ofileStat(fnameStat.c_str());
+    ofstream ofileState(fnameState.c_str());
 
     if(!ofile) {
         *ostrm << "\n\n***************** ERROR OPENING FILE " << fname << endl << endl;
         exit(0);
     }
     if(!ofileStat) {
-        *ostrm << "\n\n***************** ERROR OPENING FILE " << fname << endl << endl;
+        *ostrm << "\n\n***************** ERROR OPENING FILE " << fnameStat << endl << endl;
+        exit(0);
+    }
+    if(!ofileState) {
+        *ostrm << "\n\n***************** ERROR OPENING FILE " << fnameState << endl << endl;
         exit(0);
     }
 
@@ -198,23 +217,28 @@ void inputoutput::outputProperties(const string fname, const double time) {
 
     //--------------------------
 
-    ofile     << "# time = "   << time;
-    ofileStat << "# time = "   << time;
+    ofile      << "# time = "   << time;
+    ofileStat  << "# time = "   << time;
+    ofileState << "# time = "   << time;
 
-    ofile     << "\n# Grid points = "   << domn->ngrd;
-    ofileStat << "\n# FINE UNIFORM Grid points = "   << domn->pram->nunif;
+    ofile      << "\n# Grid points = "   << domn->ngrd;
+    ofileStat  << "\n# FINE UNIFORM Grid points = "   << domn->pram->nunif;
+    ofileState << "\n# FINE UNIFORM Grid points = "   << domn->pram->nunif;
 
-    ofile     << "\n# Pressure (Pa) = " << domn->pram->pres << endl;
-    ofileStat << "\n# Pressure (Pa) = " << domn->pram->pres << endl;
+    ofile      << "\n# Pressure (Pa) = " << domn->pram->pres << endl;
+    ofileStat  << "\n# Pressure (Pa) = " << domn->pram->pres << endl;
+    ofileState << "\n# Pressure (Pa) = " << domn->pram->pres << endl;
 
     // HEWSON setting tecplot friendly output
     // channelFlow: Ltecplot is set to false
     if (domn->pram->Ltecplot) {
-        ofile     << "VARIABLES =";
-        ofileStat << "VARIABLES =";
+        ofile      << "VARIABLES =";
+        ofileStat  << "VARIABLES =";
+        ofileState << "VARIABLES =";
     } else {
-        ofile     << "#";
-        ofileStat << "#";
+        ofile      << "#";
+        ofileStat  << "#";
+        ofileState << "#";
     }
 
     // Write header: text row of variables names, for each output variable column 
@@ -269,7 +293,15 @@ void inputoutput::outputProperties(const string fname, const double time) {
         ofileStat << setw(13) << j++ << "_xmap1";
         ofileStat << setw(13) << j++ << "_xmap2";
     }
-
+    // -> state variables names
+    j = 1;
+    vector<string> stateVarName = { "Rkk", "eulerZ", "eulerY", "eulerX", "xmap1", "xmap2" };
+    for (const auto& varName : stateVarName) {
+        strLength = varName.length();
+        if (j == 1) {strLength++;}
+        ofileState << setw(18-strLength) << j++ << "_" << varName;
+    }
+    
     // Write data
     // -> instantaneous data
     ofile << scientific;
@@ -324,6 +356,21 @@ void inputoutput::outputProperties(const string fname, const double time) {
         }
     }
     ofileStat.close();
+
+    // -> state variables data
+    ofileState << scientific;
+    ofileState << setprecision(10);
+    for(int i=0; i<domn->pram->nunif; i++) {
+        ofileState << endl;
+        // -> output data
+        ofileState << setw(19) << domn->Rij->Rkk.at(i);
+        ofileState << setw(19) << domn->Rij->eulerAng.at(i).at(0);
+        ofileState << setw(19) << domn->Rij->eulerAng.at(i).at(1);
+        ofileState << setw(19) << domn->Rij->eulerAng.at(i).at(2);
+        ofileState << setw(19) << domn->Rij->xmap.at(i).at(0);
+        ofileState << setw(19) << domn->Rij->xmap.at(i).at(1);
+    }
+    ofileState.close();
 
 }
 
@@ -563,6 +610,7 @@ void inputoutput::loadVarsFromRestartFile() {
             ifileStat >> domn->Rij->xmap.at(i).at(1);
         }
     }
+    // TODO: load also values of /state dmp file? necessary?
 
     //------------- Set the variables
 
