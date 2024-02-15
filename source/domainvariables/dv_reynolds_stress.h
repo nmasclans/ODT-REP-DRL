@@ -32,7 +32,6 @@ private:
 
     double                          factEigValPert;
     vector<double>                  b;
-    vector<double>                  Rkk;
     vector<double>                  x1c;
     vector<double>                  x2c;
     vector<double>                  x3c;

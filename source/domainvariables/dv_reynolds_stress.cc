@@ -172,7 +172,7 @@ void dv_reynolds_stress::updateTimeAveragedQuantities(const double &delta_t, con
         getDirectBarycentricMapping(eigVal[i], xmap[i]);
 
         // Rotation angles: from eigenvectors to rotation angles (3 dof)
-        getEulerAngles(eigVect[i], eulerAng[i]);
+        getEulerAnglesFromRotationMatrix(eigVect[i], eulerAng[i]);
 
     }
 
