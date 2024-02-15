@@ -60,6 +60,7 @@ private:
 
     virtual void getDirectBarycentricMapping(const vector<double> &eigenvalues, vector<double> &xmapping);
     virtual void getInverseBarycentricMapping(const vector<double> &xmapping, vector<double> &eigenvalues);
+    virtual void getEulerAnglesFromRotationMatrix(const vector<vector<double>> &rotationMatrix, vector<double> &eulerAngles);
     virtual void getPerturbedTrace(const double &Rkk, double &RkkPert);
     virtual void getPerturbedEigenValuesMatrix(const vector<double> &eigVal, vector<vector<double>> &DijPert);
     virtual void getPerturbedEigenVectorsMatrix(const vector<vector<double>> &eigVect, vector<vector<double>> &QijPert);

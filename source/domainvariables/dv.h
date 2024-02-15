@@ -71,6 +71,7 @@ class dv {
         // anisotropy tensor eigenvalues & barycentric map coordinates
         vector<vector<double>>        eigVal;
         vector<vector<double>>        xmap;
+        vector<vector<double>>        eulerAng;
 
     //////////////////// MEMBER FUNCTIONS /////////////////
 

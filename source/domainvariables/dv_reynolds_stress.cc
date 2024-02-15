@@ -47,11 +47,14 @@ dv_reynolds_stress::dv_reynolds_stress(domain    *line,
     // -> eigenvectors, shape [nunif, neig, ndim] = [nunif, 3, 3]
     eigVect = vector<vector<vector<double>>>(nunif, vector<vector<double>>(3, vector<double>(3, 0.0)));
 
-    // barycentric map - coordinates
+    // barycentric map - coordinates (2 dof)
     x1c     = vector<double>{1.0, 0.0};                               // corner x1c
     x2c     = vector<double>{0.0, 0.0};                               // corner x2c
     x3c     = vector<double>{0.5, sqrt(3.0) / 2.0};                   // corner x3c
     xmap    = vector<vector<double>>(nunif, vector<double>(2, 0.0)); // coordinates sampled points (unif. fine grid)
+
+    // rotation angles (3 dof)
+    eulerAng  = vector<vector<double>>(nunif, vector<double>(3, 0.0)); 
 
     // Perturbed & Delta anisotropy tensor dof (in uniform fine grid)
     RxxDelta     = vector<double>(domn->ngrd, 0.0);
@@ -130,7 +133,7 @@ void dv_reynolds_stress::updateTimeAveragedQuantities(const double &delta_t, con
 
         // ----------------- update anisotropy tensor -----------------
 
-        // reynolds stress tensor trace (equal to 2*TKE)
+        // reynolds stress tensor trace (equal to 2*TKE) (1 dof)
         Rkk.at(i) = Rxx.at(i) + Ryy.at(i) + Rzz.at(i);
         Rkk_inv = 1.0 / Rkk.at(i);
 
@@ -165,9 +168,12 @@ void dv_reynolds_stress::updateTimeAveragedQuantities(const double &delta_t, con
             }
         }
 
-        // Direct barycentric mapping: from eigenvalues to coordinates
+        // Direct barycentric mapping: from eigenvalues to coordinates (2 dof)
         getDirectBarycentricMapping(eigVal[i], xmap[i]);
-    
+
+        // Rotation angles: from eigenvectors to rotation angles (3 dof)
+        getEulerAngles(eigVect[i], eulerAng[i]);
+
     }
 
 }
@@ -224,6 +230,28 @@ void dv_reynolds_stress::getInverseBarycentricMapping(const vector<double> &xmap
         }
     }
     eigenvalues[2] = - eigenvalues[0] - eigenvalues[1]; // by constrain: sum(eigenvalues) = 0
+}
+
+
+// Calculate rotation angles from rotation matrix of eigenvectors
+/* Attention: the rotation matrix of eigen-vectors must be indeed a proper rotation matrix. 
+   A proper rotation matrix is orthogonal (meaning its inverse is its transpose) and has a determinant of +1.
+   This ensures that the matrix represents a rotation without improper reflection or scaling.
+   This has been check to be satisfied (+ computational error) at 15 feb. 2024 
+*/
+void dv_reynolds_stress::getEulerAnglesFromRotationMatrix(const vector<vector<double>> &rotationMatrix, vector<double> &eulerAngles){
+    double pitch, yaw, roll;
+    pitch = std::asin(-rotationMatrix[2][0]);
+    if (std::cos(pitch) != 0) { // Avoid gimbal lock
+        yaw = std::atan2(rotationMatrix[1][0], rotationMatrix[0][0]);
+        roll = std::atan2(rotationMatrix[2][1], rotationMatrix[2][2]);
+    } else {    // Gimbal lock, set yaw to 0 and calculate roll
+        yaw = 0;
+        roll = std::atan2(-rotationMatrix[0][1], rotationMatrix[1][1]);
+    }
+    eulerAngles[0] = yaw;
+    eulerAngles[1] = pitch;
+    eulerAngles[2] = roll;
 }
 
 
