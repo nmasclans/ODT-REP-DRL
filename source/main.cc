@@ -12,8 +12,6 @@
 #include "eddy.h"
 #include "solver.h"
 #include "randomGenerator.h"
-#include "environment.h"
-#include "model.h"
 #include "cantera/thermo/IdealGasPhase.h"
 #include "cantera/transport.h"
 
@@ -65,8 +63,6 @@ int main(int argc, char*argv[]) {
     solver                *solv;
     micromixer            *mimx;
     eigenDecomposition    eigdec;
-    environment           env;
-    model                 rlmodel;
     solv = new solver();
     mimx = new micromixer();
 
@@ -78,8 +74,8 @@ int main(int argc, char*argv[]) {
     randomGenerator rand(pram.seed);
 
     // Domain and eddy domain initialization
-    domn.init(&io,  &mesher, &strm, &gas, tran, mimx, &ed, &eddl, solv, &rand, &eigdec, &env, &rlmodel);
-    eddl.init(NULL, NULL,    NULL,  NULL, NULL, NULL, NULL,NULL,  NULL, NULL,  NULL,    NULL, NULL,    true);
+    domn.init(&io,  &mesher, &strm, &gas, tran, mimx, &ed, &eddl, solv, &rand, &eigdec);
+    eddl.init(NULL, NULL,    NULL,  NULL, NULL, NULL, NULL,NULL,  NULL, NULL,  NULL,   true);
     
     //-------------------
 
