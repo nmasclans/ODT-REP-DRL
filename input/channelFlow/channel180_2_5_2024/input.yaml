@@ -4,7 +4,7 @@
 params:
 
     seed:           22             #  random number generator seed (negative to randomize it)
-    tEnd:           155.0          #  ending time of realization (s)
+    tEnd:           51.0           #  ending time of realization (s)
     domainLength:   2.0            #  length of domain (m)
     ngrd0:          200            #  initial grid points
     rho0:           1.0            #  initial uniform density (kg/m^3)
@@ -33,8 +33,8 @@ params:
     #----------------------------------------------------------------------------------
     bcType:         WALL           #  OUTFLOW, WALL, PERIODIC, WALL_OUT
     cCoord:         1              #  1 = planar, 2 = cylindrical, 3 = spherical
-    Lrestart:       true           #  restart case (restart.dat): true, false
-                                   #  if true, restart file must be in: ../../data/<caseName>/input/restart.dat 
+    Lrestart:       false          #  flag to restart case
+                                   #  if true, restart file must be in: ../../data/<caseName>/input/restart.dat, restartStat.dat 
     #----------------------------------------------------------------------------------
     gDens:          30             #  grid density for mesher
     dxmin:          0.00006945     #  min grid spacing: = dxmin / domain length
@@ -71,5 +71,5 @@ bcCond:
 dumpTimesGen:
 
     dTimeStart:     50.0     # make < 0 to ignore dumpTimesGen and use dumpTimes (if present)
-    dTimeEnd:       160.0
-    dTimeStep:      0.01
+    dTimeEnd:       150.0
+    dTimeStep:      0.5
