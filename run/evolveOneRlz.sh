@@ -11,6 +11,7 @@ date
 
 inputDir="../input/channelFlow/$1"
 caseName="$1"
+realizationNum="$2"
 tEndIncrement=1.0
 
 ###############################################################################
@@ -54,13 +55,13 @@ evolveCase () {
 
     echo "*** EVOLVING ***"
     echo "Output is being written to ../$caseName/runtime/runtime_* and ../$caseName/data"
-    ./odt.x $caseName 0          # 0 is the shift (realization # here)
+    ./odt.x $caseName $realizationNum          # realizationNum is the shift (realization # here)
 
 }
 
 ###############################################################################
 
-evolveCase "$caseName"
+evolveCase
 
 ###############################################################################
 echo
