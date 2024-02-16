@@ -295,7 +295,7 @@ void inputoutput::outputProperties(const string fname, const double time) {
     }
     // -> state variables names
     j = 1;
-    vector<string> stateVarName = { "Rkk", "eulerZ", "eulerY", "eulerX", "xmap1", "xmap2" };
+    vector<string> stateVarName = { "posUnif", "Rkk", "eulerZ", "eulerY", "eulerX", "xmap1", "xmap2" };
     for (const auto& varName : stateVarName) {
         strLength = varName.length();
         if (j == 1) {strLength++;}
@@ -363,6 +363,7 @@ void inputoutput::outputProperties(const string fname, const double time) {
     for(int i=0; i<domn->pram->nunif; i++) {
         ofileState << endl;
         // -> output data
+        ofileState << setw(19) << domn->Rij->posUnif.at(i);
         ofileState << setw(19) << domn->Rij->Rkk.at(i);
         ofileState << setw(19) << domn->Rij->eulerAng.at(i).at(0);
         ofileState << setw(19) << domn->Rij->eulerAng.at(i).at(1);
