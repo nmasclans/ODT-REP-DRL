@@ -71,10 +71,12 @@ class dv {
         // anisotropy tensor eigenvalues
         vector<vector<double>>        eigVal;
 
-        // Rij DOF: trace (1 dof, Rkk), shape (2 dof, xmap), orientation (3 dof, eulerAng)
+        // Rij DOF: trace (1 dof, Rkk), shape (2 dof, xmap), orientation (3 dof, euler angles thetaZ, thetaY, thetaX)
         vector<double>                Rkk;
+        vector<double>                thetaZ;
+        vector<double>                thetaY;
+        vector<double>                thetaX;
         vector<vector<double>>        xmap;
-        vector<vector<double>>        eulerAng;
 
     //////////////////// MEMBER FUNCTIONS /////////////////
 

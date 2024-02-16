@@ -54,7 +54,9 @@ dv_reynolds_stress::dv_reynolds_stress(domain    *line,
     xmap    = vector<vector<double>>(nunif, vector<double>(2, 0.0)); // coordinates sampled points (unif. fine grid)
 
     // rotation angles (3 dof)
-    eulerAng  = vector<vector<double>>(nunif, vector<double>(3, 0.0)); 
+    thetaZ  = vector<double>(nunif, 0.0); 
+    thetaY  = vector<double>(nunif, 0.0); 
+    thetaX  = vector<double>(nunif, 0.0); 
 
     // Perturbed & Delta anisotropy tensor dof (in uniform fine grid)
     RxxDelta     = vector<double>(domn->ngrd, 0.0);
@@ -172,7 +174,7 @@ void dv_reynolds_stress::updateTimeAveragedQuantities(const double &delta_t, con
         getDirectBarycentricMapping(eigVal[i], xmap[i]);
 
         // Rotation angles: from eigenvectors to rotation angles (3 dof)
-        getEulerAnglesFromRotationMatrix(eigVect[i], eulerAng[i]);
+        getEulerAnglesFromRotationMatrix(eigVect[i], thetaZ[i], thetaY[i], thetaX[i]);
 
     }
 
@@ -239,19 +241,15 @@ void dv_reynolds_stress::getInverseBarycentricMapping(const vector<double> &xmap
    This ensures that the matrix represents a rotation without improper reflection or scaling.
    This has been check to be satisfied (+ computational error) at 15 feb. 2024 
 */
-void dv_reynolds_stress::getEulerAnglesFromRotationMatrix(const vector<vector<double>> &rotationMatrix, vector<double> &eulerAngles){
-    double pitch, yaw, roll;
-    pitch = std::asin(-rotationMatrix[2][0]);
-    if (std::cos(pitch) != 0) { // Avoid gimbal lock
-        yaw = std::atan2(rotationMatrix[1][0], rotationMatrix[0][0]);
-        roll = std::atan2(rotationMatrix[2][1], rotationMatrix[2][2]);
+void dv_reynolds_stress::getEulerAnglesFromRotationMatrix(const vector<vector<double>> &rotationMatrix, double &thetaZ_i, double &thetaY_i, double &thetaX_i){
+    thetaY_i = std::asin(-rotationMatrix[2][0]);
+    if (std::cos(thetaY_i) != 0) { // Avoid gimbal lock
+        thetaZ_i = std::atan2(rotationMatrix[1][0], rotationMatrix[0][0]);
+        thetaX_i = std::atan2(rotationMatrix[2][1], rotationMatrix[2][2]);
     } else {    // Gimbal lock, set yaw to 0 and calculate roll
-        yaw = 0;
-        roll = std::atan2(-rotationMatrix[0][1], rotationMatrix[1][1]);
+        thetaZ_i = 0;
+        thetaX_i = std::atan2(-rotationMatrix[0][1], rotationMatrix[1][1]);
     }
-    eulerAngles[0] = yaw;
-    eulerAngles[1] = pitch;
-    eulerAngles[2] = roll;
 }
 
 
