@@ -12,46 +12,57 @@ date
 inputDir="../input/channelFlow/$1"
 caseName="$1"
 realizationNum="$2"
+formattedRealizationNum=$(printf "%05d" "$realizationNum")
 tEndIncrement=1.0
 
 ###############################################################################
 
 evolveCase () {
 
-    formattedRealizationNum=$(printf "%05d" "$realizationNum")
-    
     # Task 1: Set Lrestart to true in input.yaml
     input_yaml_path="../data/$caseName/input/input.yaml"
     sed -i 's/Lrestart:.*/Lrestart:       true/' "$input_yaml_path"
 
-    # Task 2: Find and copy the file with the highest number in the data folder
+    # Task 2: Find and copy the end files in the data folder to 'input' folder
     cp  ../data/$caseName/data/data_$formattedRealizationNum/odt_end.dat ../data/$caseName/input/restart.dat
     cp ../data/$caseName/data/data_$formattedRealizationNum/statistics/stat_odt_end.dat ../data/$caseName/input/restartStat.dat
     cp ../data/$caseName/data/data_$formattedRealizationNum/state/state_odt_end.dat ../data/$caseName/input/restartState.dat
-    ### retartAction.dat file should already be in the 'input' folder, placed there by the RL framework
+    
+    # Task 3: Copy the action values file from 'input' folder to the data folder, for later inverstigation
+    dmp_last=$(ls -1v ../data/$caseName/data/data_$formattedRealizationNum/dmp_*.dat | grep -oE '[0-9]+' | tail -n 1) 
+    cp ../data/$caseName/input/restartAction.dat ../data/$caseName/data/data_$formattedRealizationNum/action/action_dmp_$dmp_last.dat 
 
-    # Task 3: Extract and compare the time value of last data snapshot with tEnd input parameter
-    time_value=$(head -n 1 ../data/$caseName/input/restart.dat | grep -oP '# time = \K[0-9.]+')
-    yaml_tEnd=$(awk '/tEnd:/ {print $2}' "$input_yaml_path")
+    # Task 4: Extract and compare the time value of last data snapshot with tEnd input parameter
+    # -> tEnd from data
+    tEnd_data=$(head -n 1 ../data/$caseName/input/restart.dat | grep -oP '# time = \K[0-9.]+(\.[0-9]+)?')
+    # Check if there is no decimal point, append ".0"
+    if ! [[ "$tEnd_data" =~ \. ]]; then
+        tEnd_data="$tEnd_data.0"
+    fi
+    # > tEnd from input
+    tEnd_input=$(awk '/tEnd:/ {print $2}' "$input_yaml_path")
     # Check if tEnd is a valid number
-    if ! [[ "$yaml_tEnd" =~ ^[0-9]+(\.[0-9]+)?$ ]]; then
+    if ! [[ "$tEnd_input" =~ ^[0-9]+(\.[0-9]+)?$ ]]; then
         echo "Error: Invalid tEnd format in input.yaml"
         exit 1
     fi
-    # Check if time_value and tEnd parameter are equal
-    compare_result=$(echo "$time_value == $yaml_tEnd" | bc)
+    # Check if tEnd from data & input are equal
+    compare_result=$(echo "$tEnd_data == $tEnd_input" | bc)
     if [ "$compare_result" -ne 1 ]; then
         echo "Error: Time value in restart file does not match params.tEnd in input.yaml"
         exit 1
     fi
-    # Increment tEnd by tEndIncrement
-    new_tEnd=$(echo "$yaml_tEnd + $tEndIncrement" | bc)
+    # Increment tEnd by tEndIncrementç
+    tEnd_new=$(echo "$tEnd_input + $tEndIncrement" | bc)
     # Update tEnd value in input.yaml
-    sed -i "s/tEnd:           $yaml_tEnd/tEnd:           $new_tEnd/" "$input_yaml_path"
+    sed -i "s/tEnd:           $tEnd_input/tEnd:           $tEnd_new/" "$input_yaml_path"
     
-    # Task 4: update dTimeEnd as tEnd, to produce output data for additional simulation time
+    # Task 5: update dTimeEnd as tEnd, to produce output data for additional simulation time
     dTimeEnd=$(awk '/dTimeEnd:/ {print $2}' "$input_yaml_path")
-    sed -i "s/dTimeEnd:       $dTimeEnd/dTimeEnd:       $new_tEnd/" "$input_yaml_path"
+    sed -i "s/dTimeEnd:       $dTimeEnd/dTimeEnd:       $tEnd_new/" "$input_yaml_path"
+
+    # Task 6: remove output from previous ODT simulation
+    rm "../data/$caseName/output/"*
 
     #--------------------------------------------------------------------------
 
@@ -61,8 +72,12 @@ evolveCase () {
 
     #--------------------------------------------------------------------------
 
-    # Task 5: copy last state to output folder for the RL framework
-    cp ../data/$caseName/data/data_$formattedRealizationNum/state/state_odt_end.dat ../data/$caseName/output/state_odt_end.dat
+    # Task 7: copy data to 'output' directory for RL framework
+    cp ../data/$caseName/data/data_$formattedRealizationNum/statistics/stat_odt_end.dat ../data/$caseName/output/statistics.dat
+    cp ../data/$caseName/data/data_$formattedRealizationNum/state/state_odt_end.dat ../data/$caseName/output/state.dat
+
+    # Task 8: remove input from previous ODT simulation
+    rm "../data/$caseName/input/restart"*
 
 }
 
