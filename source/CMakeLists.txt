@@ -11,6 +11,8 @@ set(CMAKE_INCLUDE_DIRECTORY ../include)     # Nuria
 
 add_executable(odt.x "")
 
+set_property(TARGET odt.x PROPERTY CXX_STANDARD 17)
+
 #################### preprocessor directives
 
 if(PARALLEL STREQUAL "yes")
