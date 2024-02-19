@@ -18,6 +18,7 @@ caseName="test_03"
 
 mkdir -p "../data/$caseName/data"
 mkdir -p "../data/$caseName/input"
+mkdir -p "../data/$caseName/output"
 mkdir -p "../data/$caseName/runtime"
 if [ ! -f "../data/$caseName/input/odt_input.yaml" ]; then
     cp     "$inputDir/"*        "../data/$caseName/input/" > /dev/null 2>&1
