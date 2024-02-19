@@ -34,11 +34,6 @@ private:
     vector<double>                  x1c;
     vector<double>                  x2c;
     vector<double>                  x3c;
-    vector<double>                  RkkDelta;
-    vector<double>                  thetaZDelta;
-    vector<double>                  thetaYDelta;
-    vector<double>                  thetaXDelta;
-    vector<vector<double>>          xmapDelta;
     vector<double>                  RxxDeltaUnif;                 
     vector<double>                  RxyDeltaUnif;                 
     vector<double>                  RxzDeltaUnif;                 

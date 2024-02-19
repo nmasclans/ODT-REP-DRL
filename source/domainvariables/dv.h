@@ -77,6 +77,13 @@ class dv {
         vector<double>                thetaY;
         vector<double>                thetaX;
         vector<vector<double>>        xmap;
+        
+        // Rij DOF Delta, from RL
+        vector<double>                RkkDelta;
+        vector<double>                thetaZDelta;
+        vector<double>                thetaYDelta;
+        vector<double>                thetaXDelta;
+        vector<vector<double>>        xmapDelta;
 
     //////////////////// MEMBER FUNCTIONS /////////////////
 
