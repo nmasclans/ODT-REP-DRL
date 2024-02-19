@@ -28,7 +28,7 @@ class dv_uvw : public dv {
 
     private: 
 
-        double tBeginStatConv;
+        double tfRL;
 
     //////////////////// MEMBER FUNCTIONS /////////////////
 

@@ -34,7 +34,7 @@ dv_uvw::dv_uvw(domain  *line,
     // parameters
     L_converge_stat = Lcs;
     L_output_stat   = true;
-    tBeginStatConv  = domn->pram->tBeginStatConv;
+    tfRL            = domn->pram->trst + domn->pram->dtActionRL;
     
     // -> N-S Eq data members 
     rhsSrc          = vector<double>(domn->ngrd, 0.0);
@@ -269,10 +269,10 @@ void dv_uvw::getRhsStatConv(const vector<double> &gf,
     rhsStatConv.resize(domn->ngrd, 0.0); 
 
     // update the rhs term for statistics convergence 'rhsStatConv'
-    if(L_converge_stat & (time > tBeginStatConv)){
+    if(L_converge_stat & (time < tfRL)){
 
         // get updated RijDelta (in adaptative grid)
-        domn->Rij->getReynoldsStressDelta(); // updates RijDelta class data members
+        domn->Rij->getReynoldsStressDelta(); // updates RijDelta
 
         // interpolate RijDelta from adaptative cells centers (size ngrd) to faces (size ngrd+1)
         vector<double> RixDelta;

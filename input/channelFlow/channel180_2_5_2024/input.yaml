@@ -26,7 +26,7 @@ params:
     #----------------------------------------------------------------------------------
     Lstatconv:      false          #  flag to turn on statistics convergence (by added source term)
     nunif:          361
-    tBeginStatConv: 55.0
+    dtActionRL:     0.1
     #----------------------------------------------------------------------------------
     bcType:         WALL           #  OUTFLOW, WALL, PERIODIC, WALL_OUT
     cCoord:         1              #  1 = planar, 2 = cylindrical, 3 = spherical

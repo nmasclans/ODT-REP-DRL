@@ -62,7 +62,7 @@ param::param(inputoutput *p_io) {
 
     Lstatconv          = io->params["Lstatconv"]          ? io->params["Lstatconv"].as<bool>()         : false;
     nunif              = io->params["nunif"]              ? io->params["nunif"].as<int>()              : 1000;
-    tBeginStatConv     = io->params["tBeginStatConv"]     ? io->params["tBeginStatConv"].as<double>()  : 0.0;
+    dtActionRL         = io->params["dtActionRL"]         ? io->params["dtActionRL"].as<double>()      : 0.0;
     
     dqnNObserv         = io->params["dqnNObserv"]         ? io->params["dqnNObserv"].as<int>()         : 1;
     dqnNActions        = io->params["dqnNActions"]        ? io->params["dqnNActions"].as<int>()        : 1;
