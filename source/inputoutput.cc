@@ -451,9 +451,9 @@ void inputoutput::outputProgress() {
 
 void inputoutput::loadVarsFromRestartFile() {
 
-    string fname, fnameStat, fnameAction;
+    string fname, fnameStat, fnameState, fnameAction;
     stringstream ss1, ss2;
-    string       s1,  s2, s3;
+    string       s1,  s2, s3, s4;
 
     // --- initial checks
     // to restart, a transported variable (L_transported=true) requires saved value (L_output=true) 
@@ -471,14 +471,17 @@ void inputoutput::loadVarsFromRestartFile() {
         ss1.clear(); ss1 << setfill('0') << setw(5) << proc.myid;
         fname       = inputFileDir + "restart/restart_" + ss1.str() + ".dat";
         fnameStat   = inputFileDir + "restart/restartStat_" + ss1.str() + ".dat";
+        fnameState  = inputFileDir + "restart/restartState_" + ss1.str() + ".dat";
         fnameAction = inputFileDir + "restart/restartAction_" + ss1.str() + ".dat";
     }
     else // channelFlow
         fname       = inputFileDir + "restart.dat";
         fnameStat   = inputFileDir + "restartStat.dat";
+        fnameState  = inputFileDir + "restartState.dat";
         fnameAction = inputFileDir + "restartAction.dat";
     ifstream ifile(fname.c_str());
     ifstream ifileStat(fnameStat.c_str());
+    ifstream ifileState(fnameState.c_str());
     ifstream ifileAction(fnameAction.c_str());
 
     // --- check restart file exists
@@ -488,6 +491,10 @@ void inputoutput::loadVarsFromRestartFile() {
     }
     if(!ifileStat) {
         cout << endl << "ERROR: reading statistics restart file " << fnameStat << endl;
+        exit(0);
+    }
+    if(!ifileState) {
+        cout << endl << "ERROR: reading state restart file " << fnameState << endl;
         exit(0);
     }
     if(!ifileAction) {
@@ -523,11 +530,17 @@ void inputoutput::loadVarsFromRestartFile() {
     getline(ifileStat, s2);                    // read 3rd line
     getline(ifileStat, s2);                    // read 4th line
 
+    // --- restart file of state information
+    getline(ifileState, s3);                   // read 1st line (not of use)
+    getline(ifileState, s3);                   // read 2nd line
+    getline(ifileState, s3);                   // read 3rd line
+    getline(ifileState, s3);                   // read 4th line
+
     // --- restart file of action information
-    getline(ifileAction, s3);                  // read 1st line (not of use)
-    getline(ifileAction, s3);                  // read 2nd line
-    getline(ifileAction, s3);                  // read 3rd line
-    getline(ifileAction, s3);                  // read 4th line
+    getline(ifileAction, s4);                  // read 1st line (not of use)
+    getline(ifileAction, s4);                  // read 2nd line
+    getline(ifileAction, s4);                  // read 3rd line
+    getline(ifileAction, s4);                  // read 4th line
     
     //------------- Get file data columns
 
@@ -575,7 +588,19 @@ void inputoutput::loadVarsFromRestartFile() {
             ifileStat >> domn->Rij->Ryz.at(i);
         }
     }
-    // TODO: load also values of /state dmp file? necessary?
+
+    // load restart state values
+    // channelFlow state columns: #         1_posUnif              2_Rkk           3_thetaZ           4_thetaY           5_thetaX            6_xmap1            7_xmap2
+    for (int i=0; i<domn->pram->nunif; i++){
+        // pass value 1_posUnif - not used, set properly in dv initialization from pram->nunif
+        ifileState >> aux;
+        ifileState >> domn->Rij->Rkk.at(i);
+        ifileState >> domn->Rij->thetaZ.at(i);
+        ifileState >> domn->Rij->thetaY.at(i);
+        ifileState >> domn->Rij->thetaX.at(i);
+        ifileState >> domn->Rij->xmap1.at(i);
+        ifileState >> domn->Rij->xmap2.at(i);
+    }
 
     // load restart values of action quantities from RL step
     // channelFlow action columns: #         1_posUnif         2_RkkDelta      3_thetaZDelta      4_thetaYDelta      5_thetaXDelta       6_xmap1Delta       7_xmap2Delta
