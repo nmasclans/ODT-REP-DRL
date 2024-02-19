@@ -11,6 +11,7 @@ date
 
 inputDir="../input/channelFlow/$1"
 caseName="$1"
+realizationNum="$2"
 
 ###############################################################################
 
@@ -28,29 +29,13 @@ runCase () {
 
     echo "*** RUNNING ***"
     echo "Output is being written to ../$caseName/runtime/runtime_* and ../$caseName/data"
-    ./odt.x $caseName 0          # 0 is the shift (realization # here)
+    ./odt.x $caseName $realizationNum          # $realizationNum is the shift (realization # here)
 
 }
 
 ###############################################################################
 
-rebuild () {
-  echo '*** REBUILDING ***'
-  cd ../build
-  make -j8
-  if [ $? -ne 0 ] ; then
-    echo ; echo 'FATAL: error in the build' ; echo
-    exit 0
-  fi
-  echo '*** DONE REBUILDING ***'
-  cd ../run
-}
-
-###############################################################################
-
-if [ "$1" == "-r" ]; then rebuild; fi
-
-runCase "$caseName"
+runCase
 
 ###############################################################################
 echo

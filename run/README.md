@@ -12,7 +12,7 @@ For each script, edit the input file being used and provide an arbitrary output 
 
 From this location, run in terminal: 
 ```
-cd ../build; make clean; cmake -C user_config ../source; make -j8; cd ../run; ./runOneRlz.sh <case_name>;
+cd ../build; make clean; cmake -C user_config ../source; make -j8; cd ../run; ./runOneRlz.sh <case_name> <rlz_number>;
 ```
 In case you are compiling & running the code in a docker container (built as specified in main [README](./../README.md)), use the specific ```user_config_dockerContainer``` configuration:
 ```
