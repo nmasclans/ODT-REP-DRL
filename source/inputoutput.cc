@@ -165,7 +165,7 @@ void inputoutput::outputProperties(const string fname, const double time) {
 
     // Filepath and ofstream of statistics and state from 'fname' filepath of instantaneous data
     // add subdirectory for statistics and state
-    size_t barPos      = fname.rfind("/");
+    size_t barPos      = fname.rfind("/")+1;
     string fnameStat   = fname.substr(0,barPos) + "statistics/stat_" + fname.substr(barPos);
     string fnameState  = fname.substr(0,barPos) + "state/state_"     + fname.substr(barPos);
     ofstream ofileStat(fnameStat.c_str());
