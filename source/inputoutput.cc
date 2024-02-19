@@ -383,8 +383,7 @@ void inputoutput::dumpDomainIfNeeded(){
     // update gnufile of instantaneous vel. with dump file
     gnufile_inst << "plot '" << fnameRaw << "' us 1:3; pause -1;" << endl;
     // update gnufile of statistics with dump file
-    size_t dotPos = fnameRaw.rfind('.');
-    string fnameRawStat = fnameRaw.substr(0,dotPos) + "_stat" +  fnameRaw.substr(dotPos);
+    string fnameRawStat = "stat_" +  fnameRaw;
     gnufile_stat << "plot '" << fnameRawStat << "' us 1:2; pause -1;" << endl;
 
 }
