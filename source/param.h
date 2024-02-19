@@ -67,11 +67,7 @@ class param {
         
         bool    Lstatconv;       ///<  flag to turn on statistics convergence (by added source term)
         int     nunif;           ///<  number of sampled points in uniform fine grid to evaluate & store the statistics (statistics convergence)
-        double  factEigValPert;  ///<  factor of eigen-values perturbation to reach target xmap coordinate (statistics convergence)
         double  tBeginStatConv;  ///<  time instant from which it is applied the F-perturbation statistics convergence 
-        double  xmapTarget1;     ///<  xmap target, 1st coordinate (statistics convergence)
-        double  xmapTarget2;     ///<  xmap target, 2nd coordinate (statistics convergence)
-        
         
         int     dqnNObserv;      ///<  (DQN) observation dimensionality, number of observers placed in the domain for observation collection
         int     dqnNActions;     ///<  (DQN) action dimensionality, number of actuators

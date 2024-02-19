@@ -26,9 +26,6 @@ params:
     #----------------------------------------------------------------------------------
     Lstatconv:      false          #  flag to turn on statistics convergence (by added source term)
     nunif:          361
-    factEigValPert: 0.1
-    xmapTarget1:    1.0
-    xmapTarget2:    0.0
     tBeginStatConv: 55.0
     #----------------------------------------------------------------------------------
     bcType:         WALL           #  OUTFLOW, WALL, PERIODIC, WALL_OUT

@@ -26,10 +26,6 @@ dv_reynolds_stress::dv_reynolds_stress(domain    *line,
 
     L_output_stat   = true;
 
-    // Parameters
-    factEigValPert = domn->pram->factEigValPert;
-    xmapTarget     = vector<double>{domn->pram->xmapTarget1,domn->pram->xmapTarget2};
-
     // Reynolds stress terms
     Rxx     = vector<double>(nunif, 0.0);
     Ryy     = vector<double>(nunif, 0.0);
@@ -94,10 +90,6 @@ dv_reynolds_stress::dv_reynolds_stress(domain    *line,
     Deltaij[0][0] = 1.0;
     Deltaij[1][1] = 1.0;
     Deltaij[2][2] = 1.0;
-
-    // Target barycentric map coordinates and eigenvalues
-    eigValTarget = vector<double>(3, 0.0);
-    getInverseBarycentricMapping(xmapTarget, eigValTarget);
 
 }
 
@@ -253,6 +245,32 @@ void dv_reynolds_stress::getEulerAnglesFromRotationMatrix(const vector<vector<do
 }
 
 
+void dv_reynolds_stress::getRotationMatrixFromEulerAngles(const double &thetaZ_i, const double &thetaY_i, const double &thetaX_i, vector<vector<double>> &rotationMatrix){
+    // Check if rotationMatrix has the expected shape [3][3]
+    if (rotationMatrix.size() != 3 || rotationMatrix[0].size() != 3 || rotationMatrix[1].size() != 3 || rotationMatrix[2].size() != 3) {
+        cerr << "Error: rotationMatrix must be of shape [3][3]." << endl;
+        return;
+    }
+    // Calculate trigonometric values
+    double cz = cos(thetaZ_i);
+    double sz = sin(thetaZ_i);
+    double cy = cos(thetaY_i);
+    double sy = sin(thetaY_i);
+    double cx = cos(thetaX_i);
+    double sx = sin(thetaX_i);
+    // Calculate the elements of the rotation matrix
+    rotationMatrix[0][0] = cy * cz;
+    rotationMatrix[0][1] = cy * sz;
+    rotationMatrix[0][2] = -sy;
+    rotationMatrix[1][0] = (sx * sy * cz) - (cx * sz);
+    rotationMatrix[1][1] = (sx * sy * sz) + (cx * cz);
+    rotationMatrix[1][2] = sx * cy;
+    rotationMatrix[2][0] = (cx * sy * cz) + (sx * sz);
+    rotationMatrix[2][1] = (cx * sy * sz) - (sx * cz);
+    rotationMatrix[2][2] = cx * cy;
+}
+
+
 void dv_reynolds_stress::getPerturbedTrace(const double &Rkk, double &RkkPert){
     RkkPert = Rkk;
 }
@@ -260,7 +278,7 @@ void dv_reynolds_stress::getPerturbedTrace(const double &Rkk, double &RkkPert){
 
 void dv_reynolds_stress::getPerturbedEigenValuesMatrix(const vector<double> &eigVal, vector<vector<double>> &DijPert){
     for (int q = 0; q < 3; q++){
-        DijPert[q][q] = (1 - factEigValPert) * eigVal[q] + factEigValPert * eigValTarget[q];
+        DijPert[q][q] = eigVal[q];
     }
 }
 

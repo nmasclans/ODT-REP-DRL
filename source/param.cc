@@ -62,10 +62,7 @@ param::param(inputoutput *p_io) {
 
     Lstatconv          = io->params["Lstatconv"]          ? io->params["Lstatconv"].as<bool>()         : false;
     nunif              = io->params["nunif"]              ? io->params["nunif"].as<int>()              : 1000;
-    factEigValPert     = io->params["factEigValPert"]     ? io->params["factEigValPert"].as<double>()  : 0.0;
     tBeginStatConv     = io->params["tBeginStatConv"]     ? io->params["tBeginStatConv"].as<double>()  : 0.0;
-    xmapTarget1        = io->params["xmapTarget1"]        ? io->params["xmapTarget1"].as<double>()     : 0.0;
-    xmapTarget2        = io->params["xmapTarget2"]        ? io->params["xmapTarget2"].as<double>()     : 0.0;
     
     dqnNObserv         = io->params["dqnNObserv"]         ? io->params["dqnNObserv"].as<int>()         : 1;
     dqnNActions        = io->params["dqnNActions"]        ? io->params["dqnNActions"].as<int>()        : 1;
