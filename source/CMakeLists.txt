@@ -76,13 +76,6 @@ find_library(FMT_LIB fmt REQUIRED HINTS ${FMT_LIB_DIR})
 target_link_libraries(odt.x ${FMT_LIB})
 # --- Nuria (End) ---
 
-# --- Nuria (Begin): link Libtorch-CPU local library ---
-find_package(Torch REQUIRED PATHS "${CMAKE_INCLUDE_DIRECTORY}/libtorch_CUDA12_1/share/cmake/Torch")
-target_link_libraries(odt.x "${TORCH_LIBRARIES}")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TORCH_CXX_FLAGS}")
-set_property(TARGET odt.x PROPERTY CXX_STANDARD 17)
-# --- Nuria (End)
-
 #################### Local source files
 
 target_include_directories(odt.x PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
