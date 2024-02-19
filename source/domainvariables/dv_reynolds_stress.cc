@@ -54,6 +54,13 @@ dv_reynolds_stress::dv_reynolds_stress(domain    *line,
     thetaY  = vector<double>(nunif, 0.0); 
     thetaX  = vector<double>(nunif, 0.0); 
 
+    // Delta Rij dof
+    RkkDelta     = vector<double>(nunif, 0.0);
+    thetaZDelta  = vector<double>(nunif, 0.0); 
+    thetaYDelta  = vector<double>(nunif, 0.0); 
+    thetaXDelta  = vector<double>(nunif, 0.0); 
+    xmapDelta    = vector<vector<double>>(nunif, vector<double>(2, 0.0)); 
+
     // Perturbed & Delta anisotropy tensor dof (in uniform fine grid)
     RxxDelta     = vector<double>(domn->ngrd, 0.0);
     RxyDelta     = vector<double>(domn->ngrd, 0.0);
@@ -175,32 +182,41 @@ void dv_reynolds_stress::updateTimeAveragedQuantities(const double &delta_t, con
 void dv_reynolds_stress::getReynoldsStressDelta(){
 
     // perturbed dof of anisotropy tensor
-    double RkkPert = 0.0;
+    double RkkPert, thetaZPert, thetaYPert, thetaXPert;
+    vector<double> xmapPert(2, 0.0); 
+    vector<double> eigValPert(3, 0.0);
     vector<vector<double>> DijPert(3, vector<double>(3, 0.0)); // diag. matrix of eigen-values
     vector<vector<double>> QijPert(3, vector<double>(3, 0.0)); // matrix of eigen-vectors
     vector<vector<double>> RijPert(3, vector<double>(3, 0.0));
 
     for (int i = 0; i < nunif; i++){
 
-        // perturbed TKE - not implemented, same as current
-        getPerturbedTrace(Rkk[i], RkkPert); // update RkkPert
+        // perturbed TKE, from RkkDelta
+        RkkPert = Rkk[i] + RkkDelta[i];                     // update RkkPert
 
-        // perturbed eigenvalues - implemented
-        getPerturbedEigenValuesMatrix(eigVal[i], DijPert); // updates eigValPert
+        // perturbed eigenvalues, from xmapDelta
+        for (int j = 0; j < 2; j++)
+            xmapPert[j] = xmap[i][j] + xmapDelta[i][j];    
+        getInverseBarycentricMapping(xmapPert, eigValPert);
+        for (int q = 0; q < 3; q++)
+            DijPert[q][q] = eigValPert[q];                  // update DijPert
 
-        // perturbed eigenvectors - not implemented, same as current
-        getPerturbedEigenVectorsMatrix(eigVect[i], QijPert); // update eigVectPert
+        // perturbed eigenvectors, from thetaZDelta, thetaYDelta, thetaXDelta
+        thetaZPert = thetaZ[i] + thetaZDelta[i];
+        thetaYPert = thetaY[i] + thetaYDelta[i];
+        thetaXPert = thetaX[i] + thetaXDelta[i]; 
+        getRotationMatrixFromEulerAngles(thetaZPert, thetaYPert, thetaXPert, QijPert);  // update QijPert
 
         // perturbed Rij
         getPerturbedReynoldsStresses(RkkPert, DijPert, QijPert, RijPert); // update RijPert
 
         // Delta Rij (uniform grid)
-        getReynoldsStressesDeltaUnif(RijPert, i); // update RijDeltaUnif
+        getReynoldsStressesDeltaUnif(RijPert, i);           // update RijDeltaUnif
 
     }
 
     // Delta Rij (adaptative grid)
-    interpRijDeltaUniformToAdaptativeGrid();
+    interpRijDeltaUniformToAdaptativeGrid();                // update RijDelta
 
 }
 
@@ -268,27 +284,6 @@ void dv_reynolds_stress::getRotationMatrixFromEulerAngles(const double &thetaZ_i
     rotationMatrix[2][0] = (cx * sy * cz) + (sx * sz);
     rotationMatrix[2][1] = (cx * sy * sz) - (sx * cz);
     rotationMatrix[2][2] = cx * cy;
-}
-
-
-void dv_reynolds_stress::getPerturbedTrace(const double &Rkk, double &RkkPert){
-    RkkPert = Rkk;
-}
-
-
-void dv_reynolds_stress::getPerturbedEigenValuesMatrix(const vector<double> &eigVal, vector<vector<double>> &DijPert){
-    for (int q = 0; q < 3; q++){
-        DijPert[q][q] = eigVal[q];
-    }
-}
-
-
-void dv_reynolds_stress::getPerturbedEigenVectorsMatrix(const vector<vector<double>> &eigVect, vector<vector<double>> &QijPert){
-    for (int q = 0; q < 3; q++){
-        for (int r = 0; r < 3; r++){
-            QijPert[q][r] = eigVect[q][r];
-        }
-    }
 }
 
 

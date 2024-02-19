@@ -34,6 +34,11 @@ private:
     vector<double>                  x1c;
     vector<double>                  x2c;
     vector<double>                  x3c;
+    vector<double>                  RkkDelta;
+    vector<double>                  thetaZDelta;
+    vector<double>                  thetaYDelta;
+    vector<double>                  thetaXDelta;
+    vector<vector<double>>          xmapDelta;
     vector<double>                  RxxDeltaUnif;                 
     vector<double>                  RxyDeltaUnif;                 
     vector<double>                  RxzDeltaUnif;                 
@@ -58,9 +63,6 @@ private:
     virtual void getInverseBarycentricMapping(const vector<double> &xmapping, vector<double> &eigenvalues);
     virtual void getEulerAnglesFromRotationMatrix(const vector<vector<double>> &rotationMatrix, double &thetaZ_i, double &thetaY_i, double &thetaX_i);
     virtual void getRotationMatrixFromEulerAngles(const double &thetaZ_i, const double &thetaY_i, const double &thetaX_i, vector<vector<double>> &rotationMatrix);    
-    virtual void getPerturbedTrace(const double &Rkk, double &RkkPert);
-    virtual void getPerturbedEigenValuesMatrix(const vector<double> &eigVal, vector<vector<double>> &DijPert);
-    virtual void getPerturbedEigenVectorsMatrix(const vector<vector<double>> &eigVect, vector<vector<double>> &QijPert);
     virtual void getPerturbedReynoldsStresses(const double &RkkPert, const vector<vector<double>> &DijPert, const vector<vector<double>> &QijPert, vector<vector<double>> &RijPert);
     virtual void getReynoldsStressesDeltaUnif(const vector<vector<double>> &RijPert, const int &i);
     virtual void interpRijDeltaUniformToAdaptativeGrid();
