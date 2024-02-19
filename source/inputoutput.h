@@ -37,6 +37,7 @@ class inputoutput {
         string                   dataDir;        ///< data directory (output of instantaneous data)
         string                   dataDirStat;    ///< data directory (output of statistics)
         string                   dataDirState;   ///< data directory (output of state)
+        string                   dataDirAction;  ///< data directory (input of action from RL)
 
         YAML::Node               inputFile;      ///< yaml input file object base node
         YAML::Node               params;         ///< yaml sub node
@@ -77,6 +78,7 @@ class inputoutput {
 
         bool directoryExists(const string& path);
         bool isDirectoryEmpty(const string& path);
+        void createDirectoryIfNeeded(const string& directory, int procId);
         
 
     //////////////////// CONSTRUCTOR FUNCTIONS /////////////////

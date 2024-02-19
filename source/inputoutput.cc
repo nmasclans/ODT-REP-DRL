@@ -82,38 +82,13 @@ inputoutput::inputoutput(const string p_caseName, const int p_nShift){
 
     ss1.clear(); ss1 << setfill('0') << setw(5) << proc.myid + nShift;
     s1 = ss1.str();
-    dataDir      = "../data/"+caseName+"/data/data_" + s1 + "/";   // e.g., "../data_00001", etc.
-    dataDirStat  = "../data/"+caseName+"/data/data_" + s1 + "/statistics/";
-    dataDirState = "../data/"+caseName+"/data/data_" + s1 + "/state/";
-
-     if (!directoryExists(dataDir) || isDirectoryEmpty(dataDir)) {
-        int iflag = mkdir(dataDir.c_str(), 0755);
-        if (iflag != 0) {
-            cout << "\n********** Error, process " << proc.myid << " failed to create " << dataDir << endl;
-            exit(0);
-        }
-    } else {
-        cout << "\nDirectory " << dataDir << " already exists and is not empty. Doing nothing." << endl;
-    }
-
-    if (!directoryExists(dataDirStat) || isDirectoryEmpty(dataDirStat)) {
-        int iflag = mkdir(dataDirStat.c_str(), 0755);
-        if (iflag != 0) {
-            cout << "\n********** Error, process " << proc.myid << " failed to create " << dataDirStat << endl;
-            exit(0);
-        }
-    } else {
-        cout << "\nDirectory " << dataDirStat << " already exists and is not empty. Doing nothing." << endl;
-    }
-
-    if (!directoryExists(dataDirState) || isDirectoryEmpty(dataDirState)) {
-        int iflag = mkdir(dataDirState.c_str(), 0755);
-        if (iflag != 0) {
-            cout << "\n********** Error, process " << proc.myid << " failed to create " << dataDirState << endl;
-            exit(0);
-        }
-    } else {
-        cout << "\nDirectory " << dataDirState << " already exists and is not empty. Doing nothing." << endl;
+    dataDir       = "../data/"+caseName+"/data/data_" + s1 + "/";   // e.g., "../data_00001", etc.
+    dataDirStat   = "../data/"+caseName+"/data/data_" + s1 + "/statistics/";
+    dataDirState  = "../data/"+caseName+"/data/data_" + s1 + "/state/";
+    dataDirAction = "../data/"+caseName+"/data/data_" + s1 + "/action/";
+    vector<string> directories = { dataDir, dataDirStat, dataDirState, dataDirAction };
+    for (const auto& directory : directories) {
+        createDirectoryIfNeeded(directory, proc.myid);
     }
 
     fname = "../data/"+caseName+"/runtime/runtime_" + s1;
@@ -639,4 +614,17 @@ bool inputoutput::isDirectoryEmpty(const string& path) {
         return entry == nullptr && nextEntry == nullptr;
     }
     return true; // Assume it's empty if we can't open the directory
+}
+
+void inputoutput::createDirectoryIfNeeded(const string& directory, int procId) {
+    if (!directoryExists(directory) || isDirectoryEmpty(directory)) {
+        int iflag = mkdir(directory.c_str(), 0755);
+        if (iflag != 0) {
+            cout << "\n********** Error, process " << procId << " failed to create "
+                 << directory << ", or it was already there" << endl;
+            exit(0);
+        }
+    } else {
+        cout << "\nDirectory " << directory << " already exists and is not empty. Doing nothing." << endl;
+    }
 }
