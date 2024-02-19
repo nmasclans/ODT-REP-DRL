@@ -207,12 +207,12 @@ void dv_reynolds_stress::getReynoldsStressDelta(){
 
 // Direct barycentric mapping: from eigenvalues to barycentric coordinates
 void dv_reynolds_stress::getDirectBarycentricMapping(const vector<vector<double>> &Dij, double &xmapping1, double &xmapping2){
-    vector<double> xmapping = {xmapping1, xmapping2};
-    for (int i=0; i<2; i++) {
-        xmapping[i] = x1c[i] * (    Dij[0][0] - Dij[1][1]) \
-                    + x2c[i] * (2.0*Dij[1][1] - 2.0*Dij[2][2]) \
-                    + x3c[i] * (3.0*Dij[2][2] + 1.0);
-    }
+    xmapping1 = x1c[0] * (    Dij[0][0] - Dij[1][1]) \
+              + x2c[0] * (2.0*Dij[1][1] - 2.0*Dij[2][2]) \
+              + x3c[0] * (3.0*Dij[2][2] + 1.0);
+    xmapping2 = x1c[1] * (    Dij[0][0] - Dij[1][1]) \
+              + x2c[1] * (2.0*Dij[1][1] - 2.0*Dij[2][2]) \
+              + x3c[1] * (3.0*Dij[2][2] + 1.0);
 }
 
 
