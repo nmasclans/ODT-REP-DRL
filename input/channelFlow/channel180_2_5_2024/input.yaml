@@ -3,7 +3,7 @@
 
 params:
 
-    seed:           22             #  random number generator seed (negative to randomize it)
+    seed:           -1             #  random number generator seed (negative to randomize it)
     tEnd:           51.0           #  ending time of realization (s)
     domainLength:   2.0            #  length of domain (m)
     ngrd0:          200            #  initial grid points
