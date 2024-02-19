@@ -34,25 +34,18 @@ dv_reynolds_stress::dv_reynolds_stress(domain    *line,
     Rxz     = vector<double>(nunif, 0.0);
     Ryz     = vector<double>(nunif, 0.0);
 
-    // todo: change variable names eigVal eigVect to diagDij and Qij everywhere for consistency
     // anisotropy tensor
     // -> trace = 2*TKE
     Rkk     = vector<double>(nunif, 0.0);
-    // -> eigenvalues, shape [nunif, neig] = [nunif, 3]
-    eigVal  = vector<vector<double>>(nunif, vector<double>(3, 0.0));
-    // -> eigenvectors, shape [nunif, neig, ndim] = [nunif, 3, 3]
-    eigVect = vector<vector<vector<double>>>(nunif, vector<vector<double>>(3, vector<double>(3, 0.0)));
-
-    // barycentric map - coordinates (2 dof)
+    // -> eigenvectors -> rotation angles (3 dof)
+    thetaZ  = vector<double>(nunif, 0.0); 
+    thetaY  = vector<double>(nunif, 0.0); 
+    thetaX  = vector<double>(nunif, 0.0);
+    // -> eigenvalues -> barycentric map - coordinates (2 dof)
     x1c     = vector<double>{1.0, 0.0};                               // corner x1c
     x2c     = vector<double>{0.0, 0.0};                               // corner x2c
     x3c     = vector<double>{0.5, sqrt(3.0) / 2.0};                   // corner x3c
-    xmap    = vector<vector<double>>(nunif, vector<double>(2, 0.0)); // coordinates sampled points (unif. fine grid)
-
-    // rotation angles (3 dof)
-    thetaZ  = vector<double>(nunif, 0.0); 
-    thetaY  = vector<double>(nunif, 0.0); 
-    thetaX  = vector<double>(nunif, 0.0); 
+    xmap    = vector<vector<double>>(nunif, vector<double>(2, 0.0)); // coordinates sampled points (unif. fine grid) 
 
     // Delta Rij dof
     RkkDelta     = vector<double>(nunif, 0.0);
@@ -161,19 +154,12 @@ void dv_reynolds_stress::updateTimeAveragedQuantities(const double &delta_t, con
         domn->eigdec->sym_diagonalize(Aij, Qij, Dij);
         // sort eigenvectors and eigenvalues, with eigenvalues in decreasing order
         domn->eigdec->sortEigenValuesAndEigenVectors(Qij, Dij);
-        // store eigenvectors and eigenvalues
-        for (int q=0; q<3; q++){
-            eigVal[i][q] = Dij[q][q];
-            for (int r = 0; r < 3; r++){
-                eigVect[i][q][r] = Qij[q][r];
-            }
-        }
 
-        // Direct barycentric mapping: from eigenvalues to coordinates (2 dof)
-        getDirectBarycentricMapping(eigVal[i], xmap[i]);
+        // Direct barycentric mapping: from eigenvalues matrix to coordinates (2 dof)
+        getDirectBarycentricMapping(Dij, xmap[i]);  // update xmap, from Dij eigenvalues matrix
 
         // Rotation angles: from eigenvectors to rotation angles (3 dof)
-        getEulerAnglesFromRotationMatrix(eigVect[i], thetaZ[i], thetaY[i], thetaX[i]);
+        getEulerAnglesFromRotationMatrix(Qij, thetaZ[i], thetaY[i], thetaX[i]); // update thetaZ, thetaY, thetaX euler angles, from Qij eigenvectors matrix
 
     }
 
@@ -184,7 +170,6 @@ void dv_reynolds_stress::getReynoldsStressDelta(){
     // perturbed dof of anisotropy tensor
     double RkkPert, thetaZPert, thetaYPert, thetaXPert;
     vector<double> xmapPert(2, 0.0); 
-    vector<double> eigValPert(3, 0.0);
     vector<vector<double>> DijPert(3, vector<double>(3, 0.0)); // diag. matrix of eigen-values
     vector<vector<double>> QijPert(3, vector<double>(3, 0.0)); // matrix of eigen-vectors
     vector<vector<double>> RijPert(3, vector<double>(3, 0.0));
@@ -197,9 +182,7 @@ void dv_reynolds_stress::getReynoldsStressDelta(){
         // perturbed eigenvalues, from xmapDelta
         for (int j = 0; j < 2; j++)
             xmapPert[j] = xmap[i][j] + xmapDelta[i][j];    
-        getInverseBarycentricMapping(xmapPert, eigValPert);
-        for (int q = 0; q < 3; q++)
-            DijPert[q][q] = eigValPert[q];                  // update DijPert
+        getInverseBarycentricMapping(xmapPert, DijPert);    // update DijPert
 
         // perturbed eigenvectors, from thetaZDelta, thetaYDelta, thetaXDelta
         thetaZPert = thetaZ[i] + thetaZDelta[i];
@@ -222,24 +205,24 @@ void dv_reynolds_stress::getReynoldsStressDelta(){
 
 
 // Direct barycentric mapping: from eigenvalues to barycentric coordinates
-void dv_reynolds_stress::getDirectBarycentricMapping(const vector<double> &eigenvalues, vector<double> &xmapping){
+void dv_reynolds_stress::getDirectBarycentricMapping(const vector<vector<double>> &Dij, vector<double> &xmapping){
     for (int i=0; i<2; i++) {
-        xmapping[i] = x1c[i] * (    eigenvalues[0] - eigenvalues[1]) \
-                    + x2c[i] * (2.0*eigenvalues[1] - 2.0*eigenvalues[2]) \
-                    + x3c[i] * (3.0*eigenvalues[2] + 1.0);
+        xmapping[i] = x1c[i] * (    Dij[0][0] - Dij[1][1]) \
+                    + x2c[i] * (2.0*Dij[1][1] - 2.0*Dij[2][2]) \
+                    + x3c[i] * (3.0*Dij[2][2] + 1.0);
     }
 }
 
 
 // Inverse barycentric mapping: from barycentric coordinates to eigenvalues
-void dv_reynolds_stress::getInverseBarycentricMapping(const vector<double> &xmapping, vector<double> &eigenvalues){
+void dv_reynolds_stress::getInverseBarycentricMapping(const vector<double> &xmapping, vector<vector<double>> &Dij){
     for (int i = 0; i < 2; i++){
-        eigenvalues[i] = 0.0;
+        Dij[i][i] = 0.0;
         for (int j = 0; j < 2; j++){
-            eigenvalues[i] += Binv[i][j] * (xmapping[j] - b[j]);
+            Dij[i][i] += Binv[i][j] * (xmapping[j] - b[j]);
         }
     }
-    eigenvalues[2] = - eigenvalues[0] - eigenvalues[1]; // by constrain: sum(eigenvalues) = 0
+    Dij[2][2] = - Dij[0][0] - Dij[1][1]; // by constrain: sum(eigenvalues) = 0
 }
 
 

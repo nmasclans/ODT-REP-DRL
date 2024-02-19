@@ -68,9 +68,6 @@ class dv {
         vector<double>                RyzDelta;
         vector<double>                RzzDelta;
         
-        // anisotropy tensor eigenvalues
-        vector<vector<double>>        eigVal;
-
         // Rij DOF: trace (1 dof, Rkk), shape (2 dof, xmap), orientation (3 dof, euler angles thetaZ, thetaY, thetaX)
         vector<double>                Rkk;
         vector<double>                thetaZ;

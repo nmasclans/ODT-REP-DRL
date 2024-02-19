@@ -257,12 +257,6 @@ void inputoutput::outputProperties(const string fname, const double time) {
         ofileStat << setw(15) << j++ << "_Rxy";
         ofileStat << setw(15) << j++ << "_Rxz";
         ofileStat << setw(15) << j++ << "_Ryz";
-        // Anisotropy stress - eigenvalues & barycentric map
-        ofileStat << setw(11) << j++ << "_lambda0";
-        ofileStat << setw(11) << j++ << "_lambda1";
-        ofileStat << setw(11) << j++ << "_lambda2";
-        ofileStat << setw(13) << j++ << "_xmap1";
-        ofileStat << setw(13) << j++ << "_xmap2";
     }
     // -> state variables names
     j = 1;
@@ -318,12 +312,6 @@ void inputoutput::outputProperties(const string fname, const double time) {
             ofileStat << setw(19) << domn->Rij->Rxy.at(i);
             ofileStat << setw(19) << domn->Rij->Rxz.at(i);
             ofileStat << setw(19) << domn->Rij->Ryz.at(i);
-            // Anisotropy stress - eigenvalues & barycentric map
-            ofileStat << setw(19) << domn->Rij->eigVal.at(i).at(0);
-            ofileStat << setw(19) << domn->Rij->eigVal.at(i).at(1);
-            ofileStat << setw(19) << domn->Rij->eigVal.at(i).at(2);
-            ofileStat << setw(19) << domn->Rij->xmap.at(i).at(0);
-            ofileStat << setw(19) << domn->Rij->xmap.at(i).at(1);
         }
     }
     ofileStat.close();
@@ -565,7 +553,7 @@ void inputoutput::loadVarsFromRestartFile() {
     domn->posf->d[domn->ngrd] = domn->posf->d[0] + domn->pram->domainLength; // set last domain boundary point of ngrdf, value not saved in restart file 
     
     // load restart values of statistical quantities
-    // channelFlow stat columns: 1_posUnif        2_uvel_mean        3_uvel_rmsf       4_uvel_Fpert        5_vvel_mean        6_vvel_rmsf       7_vvel_Fpert        8_wvel_mean        9_wvel_rmsf      10_wvel_Fpert             11_Rxx             12_Ryy             13_Rzz             14_Rxy             15_Rxz             16_Ryz         17_lambda0         18_lambda1         19_lambda2           20_xmap1           21_xmap2
+    // channelFlow stat columns: 1_posUnif        2_uvel_mean        3_uvel_rmsf       4_uvel_Fpert        5_vvel_mean        6_vvel_rmsf       7_vvel_Fpert        8_wvel_mean        9_wvel_rmsf      10_wvel_Fpert             11_Rxx             12_Ryy             13_Rzz             14_Rxy             15_Rxz             16_Ryz
     double aux;
     for (int i=0; i<domn->pram->nunif; i++){
         // pass value 1_posUnif - not used, set properly in dv initialization from pram->nunif
@@ -585,12 +573,6 @@ void inputoutput::loadVarsFromRestartFile() {
             ifileStat >> domn->Rij->Rxy.at(i);
             ifileStat >> domn->Rij->Rxz.at(i);
             ifileStat >> domn->Rij->Ryz.at(i);
-            // Anisotropy stress - eigenvalues & barycentric map
-            ifileStat >> domn->Rij->eigVal.at(i).at(0);
-            ifileStat >> domn->Rij->eigVal.at(i).at(1);
-            ifileStat >> domn->Rij->eigVal.at(i).at(2);
-            ifileStat >> domn->Rij->xmap.at(i).at(0);
-            ifileStat >> domn->Rij->xmap.at(i).at(1);
         }
     }
     // TODO: load also values of /state dmp file? necessary?
