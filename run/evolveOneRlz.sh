@@ -25,14 +25,10 @@ evolveCase () {
     sed -i 's/Lrestart:.*/Lrestart:       true/' "$input_yaml_path"
 
     # Task 2: Find and copy the file with the highest number in the data folder
-    last_file=$(ls -1v ../data/$caseName/data/data_$formattedRealizationNum/dmp_*.dat | tail -n 1)
-    last_file_stat=$(ls -1v ../data/$caseName/data/data_$formattedRealizationNum/statistics/stat_dmp_*.dat | tail -n 1)
-    last_file_state=$(ls -1v ../data/$caseName/data/data_$formattedRealizationNum/state/state_dmp_*.dat | tail -n 1)
-    last_file_action=$(ls -1v ../data/$caseName/data/data_$formattedRealizationNum/action/action_dmp_*.dat | tail -n 1)
-    cp "$last_file" ../data/$caseName/input/restart.dat
-    cp "$last_file_stat" ../data/$caseName/input/restartStat.dat
-    cp "$last_file_state" ../data/$caseName/input/restartState.dat
-    cp "$last_file_action" ../data/$caseName/input/restartAction.dat
+    cp  ../data/$caseName/data/data_$formattedRealizationNum/odt_end.dat ../data/$caseName/input/restart.dat
+    cp ../data/$caseName/data/data_$formattedRealizationNum/statistics/stat_odt_end.dat ../data/$caseName/input/restartStat.dat
+    cp ../data/$caseName/data/data_$formattedRealizationNum/state/state_odt_end.dat ../data/$caseName/input/restartState.dat
+    ### retartAction.dat file should already be in the 'input' folder, placed there by the RL framework
 
     # Task 3: Extract and compare the time value of last data snapshot with tEnd input parameter
     time_value=$(head -n 1 ../data/$caseName/input/restart.dat | grep -oP '# time = \K[0-9.]+')
@@ -66,9 +62,7 @@ evolveCase () {
     #--------------------------------------------------------------------------
 
     # Task 5: copy last state to output folder for the RL framework
-    last_file_state_after_simulation=$(ls -1v ../data/$caseName/data/data_$formattedRealizationNum/state/state_dmp_*.dat | tail -n 1)
-    cp "$last_file_state_after_simulation" ../data/$caseName/input/state_odt_end.dat
-
+    cp ../data/$caseName/data/data_$formattedRealizationNum/state/state_odt_end.dat ../data/$caseName/output/state_odt_end.dat
 
 }
 
