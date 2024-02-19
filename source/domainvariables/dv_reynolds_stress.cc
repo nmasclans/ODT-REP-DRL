@@ -45,14 +45,16 @@ dv_reynolds_stress::dv_reynolds_stress(domain    *line,
     x1c     = vector<double>{1.0, 0.0};                               // corner x1c
     x2c     = vector<double>{0.0, 0.0};                               // corner x2c
     x3c     = vector<double>{0.5, sqrt(3.0) / 2.0};                   // corner x3c
-    xmap    = vector<vector<double>>(nunif, vector<double>(2, 0.0)); // coordinates sampled points (unif. fine grid) 
+    xmap1   = vector<double>(nunif, 0.0); // coordinates sampled points (unif. fine grid) 
+    xmap2   = vector<double>(nunif, 0.0); // coordinates sampled points (unif. fine grid) 
 
     // Delta Rij dof
     RkkDelta     = vector<double>(nunif, 0.0);
     thetaZDelta  = vector<double>(nunif, 0.0); 
     thetaYDelta  = vector<double>(nunif, 0.0); 
     thetaXDelta  = vector<double>(nunif, 0.0); 
-    xmapDelta    = vector<vector<double>>(nunif, vector<double>(2, 0.0)); 
+    xmap1Delta   = vector<double>(nunif, 0.0); 
+    xmap2Delta   = vector<double>(nunif, 0.0); 
 
     // Perturbed & Delta anisotropy tensor dof (in uniform fine grid)
     RxxDelta     = vector<double>(domn->ngrd, 0.0);
@@ -156,7 +158,7 @@ void dv_reynolds_stress::updateTimeAveragedQuantities(const double &delta_t, con
         domn->eigdec->sortEigenValuesAndEigenVectors(Qij, Dij);
 
         // Direct barycentric mapping: from eigenvalues matrix to coordinates (2 dof)
-        getDirectBarycentricMapping(Dij, xmap[i]);  // update xmap, from Dij eigenvalues matrix
+        getDirectBarycentricMapping(Dij, xmap1[i], xmap2[i]);  // update xmap, from Dij eigenvalues matrix
 
         // Rotation angles: from eigenvectors to rotation angles (3 dof)
         getEulerAnglesFromRotationMatrix(Qij, thetaZ[i], thetaY[i], thetaX[i]); // update thetaZ, thetaY, thetaX euler angles, from Qij eigenvectors matrix
@@ -168,8 +170,7 @@ void dv_reynolds_stress::updateTimeAveragedQuantities(const double &delta_t, con
 void dv_reynolds_stress::getReynoldsStressDelta(){
 
     // perturbed dof of anisotropy tensor
-    double RkkPert, thetaZPert, thetaYPert, thetaXPert;
-    vector<double> xmapPert(2, 0.0); 
+    double RkkPert, thetaZPert, thetaYPert, thetaXPert, xmap1Pert, xmap2Pert; 
     vector<vector<double>> DijPert(3, vector<double>(3, 0.0)); // diag. matrix of eigen-values
     vector<vector<double>> QijPert(3, vector<double>(3, 0.0)); // matrix of eigen-vectors
     vector<vector<double>> RijPert(3, vector<double>(3, 0.0));
@@ -180,9 +181,9 @@ void dv_reynolds_stress::getReynoldsStressDelta(){
         RkkPert = Rkk[i] + RkkDelta[i];                     // update RkkPert
 
         // perturbed eigenvalues, from xmapDelta
-        for (int j = 0; j < 2; j++)
-            xmapPert[j] = xmap[i][j] + xmapDelta[i][j];    
-        getInverseBarycentricMapping(xmapPert, DijPert);    // update DijPert
+        xmap1Pert = xmap1[i] + xmap1Delta[i];    
+        xmap2Pert = xmap2[i] + xmap2Delta[i];    
+        getInverseBarycentricMapping(xmap1Pert, xmap2Pert, DijPert);    // update DijPert
 
         // perturbed eigenvectors, from thetaZDelta, thetaYDelta, thetaXDelta
         thetaZPert = thetaZ[i] + thetaZDelta[i];
@@ -205,7 +206,8 @@ void dv_reynolds_stress::getReynoldsStressDelta(){
 
 
 // Direct barycentric mapping: from eigenvalues to barycentric coordinates
-void dv_reynolds_stress::getDirectBarycentricMapping(const vector<vector<double>> &Dij, vector<double> &xmapping){
+void dv_reynolds_stress::getDirectBarycentricMapping(const vector<vector<double>> &Dij, double &xmapping1, double &xmapping2){
+    vector<double> xmapping = {xmapping1, xmapping2};
     for (int i=0; i<2; i++) {
         xmapping[i] = x1c[i] * (    Dij[0][0] - Dij[1][1]) \
                     + x2c[i] * (2.0*Dij[1][1] - 2.0*Dij[2][2]) \
@@ -215,7 +217,8 @@ void dv_reynolds_stress::getDirectBarycentricMapping(const vector<vector<double>
 
 
 // Inverse barycentric mapping: from barycentric coordinates to eigenvalues
-void dv_reynolds_stress::getInverseBarycentricMapping(const vector<double> &xmapping, vector<vector<double>> &Dij){
+void dv_reynolds_stress::getInverseBarycentricMapping(const double &xmapping1, const double &xmapping2, vector<vector<double>> &Dij){
+    vector<double> xmapping = {xmapping1, xmapping2};
     for (int i = 0; i < 2; i++){
         Dij[i][i] = 0.0;
         for (int j = 0; j < 2; j++){

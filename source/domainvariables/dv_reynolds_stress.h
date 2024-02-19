@@ -54,8 +54,8 @@ public:
 
 private:
 
-    virtual void getDirectBarycentricMapping(const vector<vector<double>> &Dij, vector<double> &xmapping);
-    virtual void getInverseBarycentricMapping(const vector<double> &xmapping, vector<vector<double>> &Dij);
+    virtual void getDirectBarycentricMapping(const vector<vector<double>> &Dij, double &xmapping1, double &xmapping2);
+    virtual void getInverseBarycentricMapping(const double &xmapping1, const double &xmapping2, vector<vector<double>> &Dij);
     virtual void getEulerAnglesFromRotationMatrix(const vector<vector<double>> &rotationMatrix, double &thetaZ_i, double &thetaY_i, double &thetaX_i);
     virtual void getRotationMatrixFromEulerAngles(const double &thetaZ_i, const double &thetaY_i, const double &thetaX_i, vector<vector<double>> &rotationMatrix);    
     virtual void getPerturbedReynoldsStresses(const double &RkkPert, const vector<vector<double>> &DijPert, const vector<vector<double>> &QijPert, vector<vector<double>> &RijPert);

@@ -327,8 +327,8 @@ void inputoutput::outputProperties(const string fname, const double time) {
         ofileState << setw(19) << domn->Rij->thetaZ.at(i);
         ofileState << setw(19) << domn->Rij->thetaY.at(i);
         ofileState << setw(19) << domn->Rij->thetaX.at(i);
-        ofileState << setw(19) << domn->Rij->xmap.at(i).at(0);
-        ofileState << setw(19) << domn->Rij->xmap.at(i).at(1);
+        ofileState << setw(19) << domn->Rij->xmap1.at(i);
+        ofileState << setw(19) << domn->Rij->xmap2.at(i);
     }
     ofileState.close();
 
@@ -586,8 +586,8 @@ void inputoutput::loadVarsFromRestartFile() {
         ifileAction >> domn->Rij->thetaZDelta.at(i);
         ifileAction >> domn->Rij->thetaYDelta.at(i);
         ifileAction >> domn->Rij->thetaXDelta.at(i);
-        ifileAction >> domn->Rij->xmapDelta.at(i).at(0);
-        ifileAction >> domn->Rij->xmapDelta.at(i).at(1);
+        ifileAction >> domn->Rij->xmap1Delta.at(i);
+        ifileAction >> domn->Rij->xmap2Delta.at(i);
     }
 
     //------------- Set the variables
