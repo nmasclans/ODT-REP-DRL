@@ -18,19 +18,21 @@ tEndIncrement=1.0
 
 evolveCase () {
 
+    formattedRealizationNum=$(printf "%05d" "$realizationNum")
+    
     # Task 1: Set Lrestart to true in input.yaml
     input_yaml_path="../data/$caseName/input/input.yaml"
     sed -i 's/Lrestart:.*/Lrestart:       true/' "$input_yaml_path"
 
     # Task 2: Find and copy the file with the highest number in the data folder
-    highest_file=$(ls -1v ../data/$caseName/data/data_00000/dmp_*.dat | tail -n 1)
-    highest_file_stat=$(ls -1v ../data/$caseName/data/data_00000/statistics/stat_dmp_*.dat | tail -n 1)
-    highest_file_state=$(ls -1v ../data/$caseName/data/data_00000/state/state_dmp_*.dat | tail -n 1)
-    highest_file_action=$(ls -1v ../data/$caseName/data/data_00000/action/action_dmp_*.dat | tail -n 1)
-    cp "$highest_file" ../data/$caseName/input/restart.dat
-    cp "$highest_file_stat" ../data/$caseName/input/restartStat.dat
-    cp "$highest_file_state" ../data/$caseName/input/restartState.dat
-    cp "$highest_file_action" ../data/$caseName/input/restartAction.dat
+    last_file=$(ls -1v ../data/$caseName/data/data_$formattedRealizationNum/dmp_*.dat | tail -n 1)
+    last_file_stat=$(ls -1v ../data/$caseName/data/data_$formattedRealizationNum/statistics/stat_dmp_*.dat | tail -n 1)
+    last_file_state=$(ls -1v ../data/$caseName/data/data_$formattedRealizationNum/state/state_dmp_*.dat | tail -n 1)
+    last_file_action=$(ls -1v ../data/$caseName/data/data_$formattedRealizationNum/action/action_dmp_*.dat | tail -n 1)
+    cp "$last_file" ../data/$caseName/input/restart.dat
+    cp "$last_file_stat" ../data/$caseName/input/restartStat.dat
+    cp "$last_file_state" ../data/$caseName/input/restartState.dat
+    cp "$last_file_action" ../data/$caseName/input/restartAction.dat
 
     # Task 3: Extract and compare the time value of last data snapshot with tEnd input parameter
     time_value=$(head -n 1 ../data/$caseName/input/restart.dat | grep -oP '# time = \K[0-9.]+')
@@ -60,6 +62,13 @@ evolveCase () {
     echo "*** EVOLVING ***"
     echo "Output is being written to ../$caseName/runtime/runtime_* and ../$caseName/data"
     ./odt.x $caseName $realizationNum          # realizationNum is the shift (realization # here)
+
+    #--------------------------------------------------------------------------
+
+    # Task 5: copy last state to output folder for the RL framework
+    last_file_state_after_simulation=$(ls -1v ../data/$caseName/data/data_$formattedRealizationNum/state/state_dmp_*.dat | tail -n 1)
+    cp "$last_file_state_after_simulation" ../data/$caseName/input/state_odt_end.dat
+
 
 }
 
