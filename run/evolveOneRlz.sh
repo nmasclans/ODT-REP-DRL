@@ -24,7 +24,7 @@ evolveCase () {
 
     # Task 2: Find and copy the file with the highest number in the data folder
     highest_file=$(ls -1v ../data/$caseName/data/data_00000/dmp_*.dat | tail -n 1)
-    highest_file_stat=$(ls -1v ../data/$caseName/data/data_00000/statistics/dmp_*_stat.dat | tail -n 1)
+    highest_file_stat=$(ls -1v ../data/$caseName/data/data_00000/statistics/stat_dmp_*.dat | tail -n 1)
     cp "$highest_file" ../data/$caseName/input/restart.dat
     cp "$highest_file_stat" ../data/$caseName/input/restartStat.dat
 
