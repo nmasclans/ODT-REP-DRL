@@ -28,6 +28,11 @@ resetCase () {
     echo "*** RESET, NEW REALIZATION ***"
     echo "Output is being written to ../$caseName/runtime/runtime_* and ../$caseName/data"
     ./odt.x $caseName $realizationNum          # realizationNum is the shift (realization # here)
+    
+    #--------------------------------------------------------------------------
+    # copy data to 'output' directory for RL framework
+    cp ../data/$caseName/data/data_$formattedRealizationNum/statistics/stat_odt_end.dat ../data/$caseName/output/statistics.dat
+    cp ../data/$caseName/data/data_$formattedRealizationNum/state/state_odt_end.dat ../data/$caseName/output/state.dat
 
 }
 
