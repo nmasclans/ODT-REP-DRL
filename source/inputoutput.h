@@ -79,6 +79,7 @@ class inputoutput {
         bool directoryExists(const string& path);
         bool isDirectoryEmpty(const string& path);
         void createDirectoryIfNeeded(const string& directory, int procId);
+        void getOdtPath(string &odtPath);
         
 
     //////////////////// CONSTRUCTOR FUNCTIONS /////////////////

@@ -10,7 +10,13 @@ For each script, edit the input file being used and provide an arbitrary output 
 
 ### Run one realization of a channel flow case
 
-From this location, run in terminal: 
+First, define `ODT_PATH` environment variable by running in bash terminal: 
+```
+export ODT_PATH=$(readlink -f ..)
+```
+You may add this path in the ./bashrc file.
+
+Next, from this location, run in terminal: 
 ```
 cd ../build; make clean; cmake -C user_config ../source; make -j8; cd ../run; ./runOneRlz.sh <case_name> <rlz_number>;
 ```

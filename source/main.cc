@@ -43,9 +43,18 @@ int main(int argc, char*argv[]) {
         cout << endl << "ERROR: code needs caseName and shift arguments" << endl; // character output by std:cout, from <iostream> library, part of 'std' namespace
         return 1;                                                                 // indicating an error
     }
+
+    // export ODT_PATH environment variable
+    string odtPath; 
+    char* odtPath_ = getenv("ODT_PATH");
+    if (odtPath_ != nullptr) {
+        odtPath = odtPath_;
+    } else {
+        throw runtime_error("ODT_PATH environment variable is not set.");
+    }
     
     // Arguments extraction
-    string caseName= argv[1];           // example: temporalJet (../input/temporalJet, without the ../input/)
+    string caseName= argv[1];           // example: temporalJet (<odtPath>/input/temporalJet, without the <odtPath>/input/)
 
     int nShiftFileNumbers = 0;
     stringstream ss1;                   // 'stringstream' object is a stream that operates on strings, used to convert between strings and other data types     
@@ -56,7 +65,7 @@ int main(int argc, char*argv[]) {
     inputoutput           io(caseName, nShiftFileNumbers);
     param                 pram(&io);
     streams               strm;
-    IdealGasPhase         gas("../input/gas_mechanisms/"+pram.chemMechFile);
+    IdealGasPhase         gas(odtPath+"/input/gas_mechanisms/"+pram.chemMechFile);
     Transport             *tran = newTransportMgr("Mix", &gas);
     eddy                  ed;
     meshManager           mesher;
@@ -92,7 +101,7 @@ int main(int argc, char*argv[]) {
     // Solution calculation
     domn.solv->calculateSolution();
 
-    //domn.io->outputProperties("../data/init.dat", 0.0); //doldb
+    //domn.io->outputProperties "<odtPath>/data/init.dat", 0.0); //doldb
     //domn.mimx->advanceOdt(0.0, domn.pram->tEnd);        //doldb
     //delete mimx;
     //delete solv;

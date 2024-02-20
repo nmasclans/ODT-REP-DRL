@@ -38,20 +38,24 @@ void inputoutput::init(domain *p_domn) {
 
 inputoutput::inputoutput(const string p_caseName, const int p_nShift){
 
+    // get $ODT_PATH environment variable
+    string odtPath;
+    getOdtPath(odtPath);
+    
     caseName     = p_caseName;
-    inputFileDir = "../data/"+caseName+"/input/";
+    inputFileDir = odtPath + "/data/" + caseName + "/input/";
 
-    nShift = p_nShift;
+    nShift       = p_nShift;
 
-    inputFile   = YAML::LoadFile(inputFileDir+"input.yaml");     ///< use these "nodes" to access parameters as needed
-    params      = inputFile["params"];
-    streamProps = inputFile["streamProps"];
-    initParams  = inputFile["initParams"];
-    radParams   = inputFile["radParams"];
-    dvParams    = inputFile["dvParams"];
-    dTimes      = inputFile["dumpTimes"];
-    dumpTimesGen= inputFile["dumpTimesGen"];
-    bcCond      = inputFile["bcCond"];
+    inputFile    = YAML::LoadFile(inputFileDir+"input.yaml");     ///< use these "nodes" to access parameters as needed
+    params       = inputFile["params"];
+    streamProps  = inputFile["streamProps"];
+    initParams   = inputFile["initParams"];
+    radParams    = inputFile["radParams"];
+    dvParams     = inputFile["dvParams"];
+    dTimes       = inputFile["dumpTimes"];
+    dumpTimesGen = inputFile["dumpTimesGen"];
+    bcCond       = inputFile["bcCond"];
 
     //--------- setup dumpTimes. Either set the dumpTimesGen parameters or the dumpTimes list directly
     //--------- if dumpTimesGen:dTimeStart is negative, then use the dumpTimes list (if present), otherwise
@@ -82,16 +86,16 @@ inputoutput::inputoutput(const string p_caseName, const int p_nShift){
 
     ss1.clear(); ss1 << setfill('0') << setw(5) << proc.myid + nShift;
     s1 = ss1.str();
-    dataDir       = "../data/"+caseName+"/data/data_" + s1 + "/";   // e.g., "../data_00001", etc.
-    dataDirStat   = "../data/"+caseName+"/data/data_" + s1 + "/statistics/";
-    dataDirState  = "../data/"+caseName+"/data/data_" + s1 + "/state/";
-    dataDirAction = "../data/"+caseName+"/data/data_" + s1 + "/action/";
+    dataDir       = odtPath + "/data/" + caseName + "/data/data_" + s1 + "/";
+    dataDirStat   = odtPath + "/data/" + caseName + "/data/data_" + s1 + "/statistics/";
+    dataDirState  = odtPath + "/data/" + caseName + "/data/data_" + s1 + "/state/";
+    dataDirAction = odtPath + "/data/" + caseName + "/data/data_" + s1 + "/action/";
     vector<string> directories = { dataDir, dataDirStat, dataDirState, dataDirAction };
     for (const auto& directory : directories) {
         createDirectoryIfNeeded(directory, proc.myid);
     }
 
-    fname = "../data/"+caseName+"/runtime/runtime_" + s1;
+    fname = odtPath + "/data/" + caseName + "/runtime/runtime_" + s1;
     ostrm = new ofstream(fname.c_str());
 
     //----------- set gnuplot file
@@ -466,7 +470,6 @@ void inputoutput::loadVarsFromRestartFile() {
 
     // --- set restart filepath
     // channelFlow: rstType == "single" by default
-    // inputFleDir = "../data/"+caseName+"/input/";
     if(domn->pram->rstType == "multiple") {
         ss1.clear(); ss1 << setfill('0') << setw(5) << proc.myid;
         fname       = inputFileDir + "restart/restart_" + ss1.str() + ".dat";
@@ -653,5 +656,15 @@ void inputoutput::createDirectoryIfNeeded(const string& directory, int procId) {
         }
     } else {
         cout << "\nDirectory " << directory << " already exists and is not empty. Doing nothing." << endl;
+    }
+}
+
+
+void inputoutput::getOdtPath(string &odtPath) {
+    char* odtPath_ = getenv("ODT_PATH");
+    if (odtPath_ != nullptr) {
+        odtPath = odtPath_;
+    } else {
+        throw runtime_error("ODT_PATH environment variable is not set.");
     }
 }
