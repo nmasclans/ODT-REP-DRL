@@ -18,19 +18,24 @@ formattedRealizationNum=$(printf "%05d" "$realizationNum")
 
 runCase () {
 
-    rm -rf "$ODT_PATH/data/$caseName" > /dev/null 2>&1
-    mkdir  "$ODT_PATH/data/$caseName"
-    mkdir  "$ODT_PATH/data/$caseName/data"
-    mkdir  "$ODT_PATH/data/$caseName/input"
-    mkdir  "$ODT_PATH/data/$caseName/output"
-    mkdir  "$ODT_PATH/data/$caseName/runtime"
-    cp     "$inputDir/"*        "$ODT_PATH/data/$caseName/input/" > /dev/null 2>&1
-    cp -r  "$inputDir/restart"* "$ODT_PATH/data/$caseName/input/" > /dev/null 2>&1
+    if [ "$realizationNum" -eq 0 ]; then    # if first realizaton, remove whole case directory and make case subdirectories
+        rm -rf "$ODT_PATH/data/$caseName" > /dev/null 2>&1
+        mkdir  "$ODT_PATH/data/$caseName"
+        mkdir  "$ODT_PATH/data/$caseName/data"
+        mkdir  "$ODT_PATH/data/$caseName/input"
+        mkdir  "$ODT_PATH/data/$caseName/output"
+        mkdir  "$ODT_PATH/data/$caseName/runtime"
+    else                                    # if not first realization, only remove data from such realization, if any
+        formattedRealizationNum=$(printf "%05d" "$realizationNum")
+        rm -rf "$ODT_PATH/data/$caseName/data/data_$formattedRealizationNum" > /dev/null 2>&1
+    fi
+    cp "$inputDir/"* "$ODT_PATH/data/$caseName/input/" > /dev/null 2>&1
 
     #--------------------------------------------------------------------------
 
+    echo ""
     echo "*** RUNNING ***"
-    echo "Output is being written to $ODT_PATH/$caseName/runtime/runtime_* and $ODT_PATH/$caseName/data"
+    echo "Output is being written to $ODT_PATH/$caseName/runtime/runtime_* and $ODT_PATH/$caseName/data for case $caseName and realization #$realizationNum"
     $ODT_PATH/run/odt.x $caseName $realizationNum          # $realizationNum is the shift (realization # here)
 
     #--------------------------------------------------------------------------
