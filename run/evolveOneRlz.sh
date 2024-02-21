@@ -25,8 +25,8 @@ evolveCase () {
 
     # Task 2: Find and copy the end files in the data folder to 'input' folder
     cp  $ODT_PATH/data/$caseName/data/data_$formattedRealizationNum/odt_end.dat $ODT_PATH/data/$caseName/input/restart.dat
-    cp $ODT_PATH/data/$caseName/data/data_$formattedRealizationNum/statistics/stat_odt_end.dat $ODT_PATH/data/$caseName/input/restartStat.dat
-    cp $ODT_PATH/data/$caseName/data/data_$formattedRealizationNum/state/state_odt_end.dat $ODT_PATH/data/$caseName/input/restartState.dat
+    cp $ODT_PATH/data/$caseName/data/data_$formattedRealizationNum/statistics/stat_odt_end.dat $ODT_PATH/data/$caseName/input/restart_stat.dat
+    cp $ODT_PATH/data/$caseName/data/data_$formattedRealizationNum/state/state_odt_end.dat $ODT_PATH/data/$caseName/input/restart_state.dat
     
     # Task 3: Copy the action values file from 'input' folder to the data folder, for later inverstigation
     dmp_last=$(ls -1v $ODT_PATH/data/$caseName/data/data_$formattedRealizationNum/dmp_*.dat | grep -oE '[0-9]+' | tail -n 1) 

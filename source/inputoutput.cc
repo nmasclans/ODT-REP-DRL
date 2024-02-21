@@ -473,15 +473,15 @@ void inputoutput::loadVarsFromRestartFile() {
     if(domn->pram->rstType == "multiple") {
         ss1.clear(); ss1 << setfill('0') << setw(5) << proc.myid;
         fname       = inputFileDir + "restart/restart_" + ss1.str() + ".dat";
-        fnameStat   = inputFileDir + "restart/restartStat_" + ss1.str() + ".dat";
-        fnameState  = inputFileDir + "restart/restartState_" + ss1.str() + ".dat";
-        fnameAction = inputFileDir + "restart/restartAction_" + ss1.str() + ".dat";
+        fnameStat   = inputFileDir + "restart/restart_stat_" + ss1.str() + ".dat";
+        fnameState  = inputFileDir + "restart/restart_state_" + ss1.str() + ".dat";
+        fnameAction = inputFileDir + "restart/restart_action_" + ss1.str() + ".dat";
     }
     else // channelFlow
         fname       = inputFileDir + "restart.dat";
-        fnameStat   = inputFileDir + "restartStat.dat";
-        fnameState  = inputFileDir + "restartState.dat";
-        fnameAction = inputFileDir + "restartAction.dat";
+        fnameStat   = inputFileDir + "restart_stat.dat";
+        fnameState  = inputFileDir + "restart_state.dat";
+        fnameAction = inputFileDir + "restart_action.dat";
     ifstream ifile(fname.c_str());
     ifstream ifileStat(fnameStat.c_str());
     ifstream ifileState(fnameState.c_str());
