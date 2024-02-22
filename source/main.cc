@@ -19,6 +19,7 @@
 #include <string>
 #include <ctime>
 #include <sstream>
+#include <mpi.h>
 
 // namespaces 'std' and 'Cantera' are used for ease of access to standard and Cantera library functions and classes
 using namespace std;
@@ -37,6 +38,23 @@ processor proc;
  * ./odt.x argument1 argument2, where automatically included argument0 tends to be the exacutable filename 
  */
 int main(int argc, char*argv[]) {
+
+    // MPI arguments
+    cout << "[main.cc] Application name: " << argv[0] << endl;
+    cout << "[main.cc] Application arguments: there are " << argc -1 << " input arguments" << endl;
+    if( argc > 1 ){
+        for (int i=1; i<argc; i++){
+            cout << "[main.cc]      " << argv[i] << endl;
+        }
+    }
+    // MPI environment
+    MPI_Init(&argc, &argv);           // initialize MPI execution environment
+    
+    // MPI communicator
+    MPI_Comm sub_com;                 // initialize MPI_Comm object (logical group of MPI processes)
+    MPI_Comm_get_parent(&sub_com);    // define 'sub_com' as the parent communicator (handle) 
+    
+    //-------------------    
 
     // Command-line arguments check: implementation requires 3 arguments 
     if(argc<3) {
@@ -116,7 +134,23 @@ int main(int argc, char*argv[]) {
     *io.ostrm << endl << "#################################################################";
     *io.ostrm << endl;
 
-    return 0;           // 0 indicates successful execution 
+    //-------------------
 
+    // Synchronization parent (Python) & child (C++)
+    MPI_Barrier(sub_com); // C++ barrier that matches python barrier
+    cout << "[main.cc] Barrier passed" << endl;
+    
+    // Disconnect communication
+    if (sub_com != MPI_COMM_NULL)      
+        MPI_Comm_disconnect(&sub_com);
+    cout << "[main.cc] MPI Disconnected" << endl;
+
+    // Finalize MPI environment in the current cpu (where C++ is running)
+    MPI_Finalize();
+    cout << "[main.cc] MPI Finished" << endl;
+
+    //-------------------
+
+    return 0;           // 0 indicates successful execution 
 
 }
