@@ -11,4 +11,8 @@ set(CANTERA_LIB_DIR "/usr/lib" CACHE PATH "Cantera library location")
 
 # Link fmt library
 set(FMT_LIB_DIR "/usr/lib/x86_64-linux-gnu/" CACHE PATH "fmt library location")
+
+# Link MPI library
+# TODO: set proper path for eckert computer
+set(MPI_INCLUDE_DIR "???" CACHE PATH "MPI include location")
 # --- Nuria (End) ---

@@ -65,17 +65,20 @@ endif()
 
 target_link_libraries(odt.x "pthread")
 
-# --- Nuria (Begin): link yaml library ---
+# --- Nuria (Begin): ---
 # 'make' crashes because missing links with 'yaml' library -> link odt.x with yaml library
-# Find the YAML library
+# YAML library
 find_package(yaml-cpp REQUIRED)
-# Link the YAML library to the target
 target_link_libraries(odt.x yaml-cpp)
-# --- Nuria (End) ---
 
-# --- Nuria (Begin): link fmt library ---
+# FMT library
 find_library(FMT_LIB fmt REQUIRED HINTS ${FMT_LIB_DIR})
 target_link_libraries(odt.x ${FMT_LIB})
+
+# MPI library
+find_package(MPI REQUIRED)
+include_directories(${MPI_INCLUDE_PATH})
+target_link_libraries(odt.x ${MPI_LIBRARIES})
 # --- Nuria (End) ---
 
 #################### Local source files
