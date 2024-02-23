@@ -82,7 +82,7 @@ int main(int argc, char*argv[]) {
     param                 pram(&io);
     streams               strm;
     IdealGasPhase         gas(odtPath+"/input/gas_mechanisms/"+pram.chemMechFile);
-    Transport             *tran = newTransportMgr("Mix", &gas);
+    Transport             *tran = newTransportMgr("Mix", &gas);       // for Cantera version < 3.0.0, for Cantera 3.0.0 generates DeprecationWarning 
     eddy                  ed;
     meshManager           mesher;
     solver                *solv;
