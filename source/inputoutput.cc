@@ -655,7 +655,7 @@ void inputoutput::createDirectoryIfNeeded(const string& directory, int procId) {
             exit(0);
         }
     } else {
-        cout << "\nDirectory " << directory << " already exists and is not empty. Doing nothing." << endl;
+        // cout << "\nDirectory " << directory << " already exists and is not empty. Doing nothing." << endl;
     }
 }
 

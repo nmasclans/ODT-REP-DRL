@@ -42,11 +42,9 @@ int main(int argc, char*argv[]) {
     // MPI arguments
     cout << "[main.cc] Application name: " << argv[0] << endl;
     cout << "[main.cc] Application arguments: there are " << argc -1 << " input arguments" << endl;
-    if( argc > 1 ){
-        for (int i=1; i<argc; i++){
-            cout << "[main.cc]      " << argv[i] << endl;
-        }
-    }
+    cout << "[main.cc]     Case name: " << argv[1] << endl;
+    cout << "[main.cc]     Realization number: " << argv[2] << endl;
+    
     // MPI environment
     MPI_Init(&argc, &argv);           // initialize MPI execution environment
     
