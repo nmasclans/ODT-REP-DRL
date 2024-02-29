@@ -7,7 +7,6 @@ if(NOT CMAKE_BUILD_TYPE)
 endif()
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ../run)
-set(CMAKE_INCLUDE_DIRECTORY ../include)     # Nuria
 
 add_executable(odt.x "")
 
@@ -33,11 +32,15 @@ add_definitions(-D_USESTDVECTOR_)
 
 #################### Compile options
 
+# Specify the C++ standard for compilation
 target_compile_features(odt.x PUBLIC cxx_std_11)
 
-set(CMAKE_CXX_FLAGS_DEBUG   "-ggdb3")
-set(CMAKE_CXX_FLAGS_RELEASE "-O3")
-#set(CMAKE_CXX_FLAGS        "-Wall -Wextra")
+# Set flags
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra")
+
+# Add specific flags for different build types
+set(CMAKE_CXX_FLAGS_DEBUG   "${CMAKE_CXX_FLAGS_DEBUG} -ggdb3")
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3")
 
 #################### Link: libraries and flags
 
