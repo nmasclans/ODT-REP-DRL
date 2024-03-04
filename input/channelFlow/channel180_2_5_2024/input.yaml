@@ -1,72 +1,52 @@
-################### Main ODT parameters
-# CHANNEL FLOW: Re_tau = 180. u_tau=1, delta_nu = kvisc0. So, plotting u vs x/kvisc0 is u+ vs y+.
-
 params:
-
-    seed:           -1             #  random number generator seed (negative to randomize it)
-    tEnd:           6.0           #  ending time of realization (s)
-    domainLength:   2.0            #  length of domain (m)
-    ngrd0:          200            #  initial grid points
-    rho0:           1.0            #  initial uniform density (kg/m^3)
-    kvisc0:         0.005556       #  initial uniform kinematic viscosity (m^2/s) 0.0016949 (= \nu = \mu / \rho = u_tau * delta / Re_tau)
-    dPdx:           -1.0           #  initial pressure gradient (Pa/m) ---- FORÇA!
-    pres:           101325.0       #  pressure (Pa)
-    chemMechFile:   not_used.yaml  #  name of chemical mechanism file
-    probType:       CHANNEL        #  CHANNEL, CHANNEL_SCALAR, JETMIXL_RXN
-    tBeginAvg:      5.0           #  averaging time at which to begin statistics calculation
-    #----------------------------------------------------------------------------------
-    Z_param:        450.           #  Viscous penalty parameter
-    A_param:        0.66666666667  #  Energy Distribution parameter alpha
-    C_param:        7.00           #  Eddy frequency parameter
-    LES_type:       FRACDOMAIN     #  NONE, THIRDS, ELAPSEDTIME, FRACDOMAIN, INTEGRALSCALE
-    Z_LES:          0.333333333    #  NONE, THIRDS, ELAPSEDTIME, FRACDOMAIN, INTEGRALSCALE
-    diffCFL:        0.5            #  multiplies min diffusion timestep
-    #----------------------------------------------------------------------------------
-    Lsolver:        EXPLICIT       #  EXPLICIT, SEMI-IMPLICIT, STRANG
-    #----------------------------------------------------------------------------------
-    Lstatconv:      false          #  flag to turn on statistics convergence (by added source term)
-    nunif:          361
-    dtActionRL:     0.1
-    #----------------------------------------------------------------------------------
-    bcType:         WALL           #  OUTFLOW, WALL, PERIODIC, WALL_OUT
-    cCoord:         1              #  1 = planar, 2 = cylindrical, 3 = spherical
-    Lrestart:       false          #  flag to restart case
-                                   #  if true, restart file must be in: ../../data/<caseName>/input/restart.dat, restartStat.dat 
-    #----------------------------------------------------------------------------------
-    gDens:          30             #  grid density for mesher
-    dxmin:          0.00006945     #  min grid spacing: = dxmin / domain length
-    dxmax:          0.002778       #  max grid spacing = dxmax / domain length
-    #----------------------------------------------------------------------------------
-    Pmax:           0.4            #  maximum eddy acceptance probability
-    Pav:            0.02           #  average acceptance probability
-    dtfac:          2.0            #  maximum factor to increase dtSmean
-    nDtSmeanWait:   100000         #  number of eddy samples before increase dtSmean
-    eddyMinCells:   3              #  eddy must overlap at least this many cells
-    DAtimeFac:      4.0            #  time until catch-up adaption is DAtimeFac * dtCUmax
-    tdfac:          1.0            #  factor between dtCUmax and dtCFL for temporal flows
-    sLastDA:        100            #  size of the lastDA vector for timing adaptmesh after diff
-    Lp:             0.015          #  Most probable eddy size frac of domainLength
-    Lmax:           0.333333333    #  Max eddy size frac of domainLength
-    #----------------------------------------------------------------------------------
-    modDump:        100000000      #  accepted eddies before output file
-
-################### Boundary conditions
-
+  seed: -1
+  tEnd: 6.0
+  domainLength: 2.0
+  ngrd0: 200
+  rho0: 1.0
+  kvisc0: 0.005556
+  dPdx: -1.0
+  pres: 101325.0
+  chemMechFile: not_used.yaml
+  probType: CHANNEL
+  tBeginAvg: 5.0
+  Z_param: 450.0
+  A_param: 0.66666666667
+  C_param: 7.0
+  LES_type: FRACDOMAIN
+  Z_LES: 0.333333333
+  diffCFL: 0.5
+  Lsolver: EXPLICIT
+  Lstatconv: true
+  nunif: 361
+  dtActionRL: 0.2
+  bcType: WALL
+  cCoord: 1
+  Lrestart: false
+  gDens: 30
+  dxmin: 6.945e-05
+  dxmax: 0.002778
+  Pmax: 0.4
+  Pav: 0.02
+  dtfac: 2.0
+  nDtSmeanWait: 100000
+  eddyMinCells: 3
+  DAtimeFac: 4.0
+  tdfac: 1.0
+  sLastDA: 100
+  Lp: 0.015
+  Lmax: 0.333333333
+  modDump: 100000000
 bcCond:
-
-    uBClo:          0.0
-    uBChi:          0.0
-    vBClo:          0.0
-    vBChi:          0.0
-    wBClo:          0.0
-    wBChi:          0.0
-    sBClo:          0.0
-    sBChi:          0.0
-
-################### Dump times
-
+  uBClo: 0.0
+  uBChi: 0.0
+  vBClo: 0.0
+  vBChi: 0.0
+  wBClo: 0.0
+  wBChi: 0.0
+  sBClo: 0.0
+  sBChi: 0.0
 dumpTimesGen:
-
-    dTimeStart:     5.0     # make < 0 to ignore dumpTimesGen and use dumpTimes (if present)
-    dTimeEnd:       150.0
-    dTimeStep:      0.5
+  dTimeStart: 5.0
+  dTimeEnd: 150.0
+  dTimeStep: 0.1

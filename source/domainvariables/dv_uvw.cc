@@ -301,7 +301,7 @@ void dv_uvw::getRhsStatConv(const vector<double> &gf,
         rhsStatConv.at(0) = 0.0;
         rhsStatConv.at(domn->ngrd-1) = 0.0;
 
-        // interpolate to uniform grid
+        // interpolate to uniform grid for data saving (rhsStatConv defined in adaptative grid -> FstatConvUnif defined in uniform ct grid)
         interpVarAdaptToUnifGrid(rhsStatConv, FstatConvUnif); // updates FstatConvUnif
 
     }
