@@ -8,6 +8,7 @@
 #include <cstdlib>
 #include <cmath>
 #include <iostream>
+#include <algorithm>
 
 using namespace std;
 
@@ -87,6 +88,25 @@ dv_reynolds_stress::dv_reynolds_stress(domain    *line,
     Binv[1][0]   = - B[1][0] / Bdet;
     Binv[1][1]   =   B[0][0] / Bdet;
 
+    // Baricentric coordinates of xmap triangle cartesian coordinates, source: https://en.wikipedia.org/wiki/Barycentric_coordinate_system
+    // lambda1,2 = Tinv * (xmap - t); lambda3 = 1 - lambda1 - lambda2
+    // xmap = lambda_1 * x1c + lambda_2 * x2c + lambda_3 * x3c
+    // Realizability Condition (lambda): 0<=lambda_i<=1, sum(lambda_i)=1
+    // Realizability Condition (xmap): xmap coord inside barycentric map triangle, defined by x1c, x2c, x3c 
+    t    = vector<double>(2, 0.0);
+    vector<vector<double>> T(2, vector<double>(2, 0.0));
+    Tinv = vector<vector<double>>(2, vector<double>(2, 0.0));
+    for (int i=0; i<2; i++){
+        t[i]    = x3c[i];
+        T[i][0] = x1c[i] - x3c[i];
+        T[i][1] = x2c[i] - x3c[i];
+    }
+    double Tdet = T[0][0] * T[1][1] - T[0][1] * T[1][0];
+    Tinv[0][0]  =   T[1][1] / Tdet;
+    Tinv[0][1]  = - T[0][1] / Tdet;
+    Tinv[1][0]  = - T[1][0] / Tdet;
+    Tinv[1][1]  =   T[0][0] / Tdet;
+    
     // Kronecker delta
     Deltaij       = vector<vector<double>>(3, vector<double>(3, 0.0));
     Deltaij[0][0] = 1.0;
@@ -182,7 +202,8 @@ void dv_reynolds_stress::getReynoldsStressDelta(){
 
         // perturbed eigenvalues, from xmapDelta
         xmap1Pert = xmap1[i] + xmap1Delta[i];    
-        xmap2Pert = xmap2[i] + xmap2Delta[i];    
+        xmap2Pert = xmap2[i] + xmap2Delta[i];  
+        enforceRealizabilityXmap(xmap1Pert, xmap2Pert);                 // update xmap1Pert, xmap2Pert to be realizable, if necessary  
         getInverseBarycentricMapping(xmap1Pert, xmap2Pert, DijPert);    // update DijPert
 
         // perturbed eigenvectors, from thetaZDelta, thetaYDelta, thetaXDelta
@@ -204,7 +225,6 @@ void dv_reynolds_stress::getReynoldsStressDelta(){
 
 }
 
-
 // Direct barycentric mapping: from eigenvalues to barycentric coordinates
 void dv_reynolds_stress::getDirectBarycentricMapping(const vector<vector<double>> &Dij, double &xmapping1, double &xmapping2){
     xmapping1 = x1c[0] * (    Dij[0][0] - Dij[1][1]) \
@@ -215,7 +235,6 @@ void dv_reynolds_stress::getDirectBarycentricMapping(const vector<vector<double>
               + x3c[1] * (3.0*Dij[2][2] + 1.0);
 }
 
-
 // Inverse barycentric mapping: from barycentric coordinates to eigenvalues
 void dv_reynolds_stress::getInverseBarycentricMapping(const double &xmapping1, const double &xmapping2, vector<vector<double>> &Dij){
     vector<double> xmapping = {xmapping1, xmapping2};
@@ -225,12 +244,11 @@ void dv_reynolds_stress::getInverseBarycentricMapping(const double &xmapping1, c
             Dij[i][i] += Binv[i][j] * (xmapping[j] - b[j]);
         }
     }
-    Dij[2][2] = - Dij[0][0] - Dij[1][1]; // by constrain: sum(eigenvalues) = 0
+    Dij[2][2] = - Dij[0][0] - Dij[1][1]; // by constrain: sum(eigenvalues) = 0, source: Emory2013-A
 }
 
-
-// Calculate rotation angles from rotation matrix of eigenvectors
-/* Attention: the rotation matrix of eigen-vectors must be indeed a proper rotation matrix. 
+/* Calculate rotation angles from rotation matrix of eigenvectors
+   Attention: the rotation matrix of eigen-vectors must be indeed a proper rotation matrix. 
    A proper rotation matrix is orthogonal (meaning its inverse is its transpose) and has a determinant of +1.
    This ensures that the matrix represents a rotation without improper reflection or scaling.
    This has been check to be satisfied (+ computational error) at 15 feb. 2024 
@@ -275,7 +293,7 @@ void dv_reynolds_stress::getRotationMatrixFromEulerAngles(const double &thetaZ_i
 
 void dv_reynolds_stress::getPerturbedReynoldsStresses(const double &RkkPert, const vector<vector<double>> &DijPert, const vector<vector<double>> &QijPert, vector<vector<double>> &RijPert){
     vector<vector<double>> AijPert(3, vector<double>(3, 0.0));
-    domn->eigdec->reconstruct_matrix_from_decomposition(DijPert, QijPert, AijPert); // updates AijPert
+    domn->eigdec->reconstruct_matrix_from_decomposition(DijPert, QijPert, AijPert); // update AijPert
     for (int q = 0; q < 3; q++){
         for (int r = 0; r < 3; r++){
             RijPert[q][r] = RkkPert * ((1.0 / 3.0) * Deltaij[q][r] + AijPert[q][r]);
@@ -303,4 +321,78 @@ void dv_reynolds_stress::interpRijDeltaUniformToAdaptativeGrid(){
     interpVarUnifToAdaptGrid(RyzDeltaUnif, RyzDelta);
     interpVarUnifToAdaptGrid(RzzDeltaUnif, RzzDelta);
 
+}
+
+
+///////////////////////////  Enforce realizability of perturbed xmap  ///////////////////////////
+
+/* Transform cartesian coordinates 'xmapping' to barycentric coordinates 'lambda' of eigenvalues barycentric map
+        xmapping1,2: cartesian coordinates of barycentric map
+        lambda1,2,3: barycentric coordinates of barycentric map, satifying lambda1+lambda2+lambda3=1
+        transformation:  lambda1,2 = Tinv * (xmapping_1,2 - t) 
+ */
+void dv_reynolds_stress::getBarycentricCoordFromCartesianCoord(const double &xmapping1, const double &xmapping2, vector<double> &lambda){
+    // Assuming lambda is always of size 3
+    vector<double> xmapping = {xmapping1, xmapping2};
+    for (int i = 0; i < 2; i++){
+        for (int j = 0; j < 2; j++){
+            lambda[i] += Tinv[i][j] * (xmapping[j] - t[j]);
+        }
+    }
+    lambda[2] = 1.0 - lambda[0] - lambda[1];    // from barycentric coord. condition sum(lambda_i) = 1.0
+}
+
+/* Transform barycentric coordinates 'lambda' to cartesian coordinates 'xmapping' of eigenvalues barycentric map
+        transformation: xmapping = lambda_1 * x1c + lambda_2 * x2c + lambda_3 * x3c
+ */
+void dv_reynolds_stress::getCartesianCoordFromBarycentricCoord(const vector<double> &lambda, double &xmapping1, double &xmapping2){
+    // Assuming lambda is always of size 3
+    xmapping1 = lambda[0] * x1c[0] + lambda[1] * x2c[0] + lambda[2] * x3c[0];
+    xmapping2 = lambda[0] * x1c[1] + lambda[1] * x2c[1] + lambda[2] * x3c[1];
+}
+
+/* Check all elements of barycentric coordinates are in range [0.0, 1.0]
+        return: true if all elements are contained within [0.0, 1.0], false otherwise
+ */
+bool dv_reynolds_stress::areRealizableBarycentricCoord(const vector<double> &lambda) {
+    // Assuming lambda is always of size 3
+    return 0.0 <= lambda[0] && lambda[0] <= 1.0 &&
+           0.0 <= lambda[1] && lambda[1] <= 1.0 &&
+           0.0 <= lambda[2] && lambda[2] <= 1.0;
+}
+
+/* Modifies barycentric coordinates of eigenvalues barycentric map to be realizable, by:
+        1st: truncate each coordinate to be within [0,1] range
+        2nd: normalize the coordinates vector to have the sum of elements = 1
+ */
+void dv_reynolds_stress::truncateAndNormalizeBarycentricCoord(vector<double> &lambda){
+    // Assuming lambda is always of size 3
+    // 1st: truncate coordinates within range [0,1]
+    for (int i = 0; i < 3; i++)
+        lambda[i] = std::min(std::max(lambda[i], 0.0), 1.0); 
+    // 2nd: normalize coordinates vector to sum(coordinates) = 1
+    double sumCoord = lambda[0] + lambda[1] + lambda[2];
+    for (int i = 0; i < 3; i++)
+        lambda[i] /= sumCoord; 
+}
+
+/* Check realizability of xmap coordinates (of eigenvalues) by:
+   1st. transforming xmap cartesian coordinates to barycentric coordinates
+   2nd. xmapping is inside the barycentric map triangle (defined by x1c, x2c, x3c, thus realizable) 
+        iff lambda_i>=0 && sum_i(lambda_i)=1
+   Attention: sum_i(lambda_i)=1 condition is already garanteed by construction in 'getBarycentricCoordFromCartesianCoord' method,
+              only 0<=lambda_i<=1 condition is assessed.
+*/
+void dv_reynolds_stress::enforceRealizabilityXmap(double &xmap1, double &xmap2){
+    vector<double> lambda(3, 0.0);
+    getBarycentricCoordFromCartesianCoord(xmap1, xmap2, lambda);    // update lambda
+    // Check eigenvalues realizability from barycentric coordinates:
+    if (!areRealizableBarycentricCoord(lambda)){ 
+        // enforce realizability by truncating & normalizing barycentric coordinates 'lambda'
+        cout << "\nPerturbed xmap not realizable - outside barycentric map realizability triangle." << endl;
+        cout << "Non-realizable barycentric coordinates lambda = (" << lambda[0] << ", " << lambda[1] << ", " << lambda[2] << ")" << endl;
+        truncateAndNormalizeBarycentricCoord(lambda);               // update lambda
+        cout << "Realizable barycentric coordinates lambda = (" << lambda[0] << ", " << lambda[1] << ", " << lambda[2] << ")" << endl;
+    }
+    getCartesianCoordFromBarycentricCoord(lambda, xmap1, xmap2);    // update xmap1, xmap2
 }
