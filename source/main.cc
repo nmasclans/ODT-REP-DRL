@@ -40,10 +40,10 @@ processor proc;
 int main(int argc, char*argv[]) {
 
     // MPI arguments
-    cout << "[main.cc] Application name: " << argv[0] << endl;
-    cout << "[main.cc] Application arguments: there are " << argc -1 << " input arguments" << endl;
-    cout << "[main.cc]     Case name: " << argv[1] << endl;
-    cout << "[main.cc]     Realization number: " << argv[2] << endl;
+    //// cout << "[main.cc] Application name: " << argv[0] << endl;
+    //// cout << "[main.cc] Application arguments: there are " << argc -1 << " input arguments" << endl;
+    //// cout << "[main.cc]     Case name: " << argv[1] << endl;
+    //// cout << "[main.cc]     Realization number: " << argv[2] << endl;
     
     // MPI environment
     MPI_Init(&argc, &argv);           // initialize MPI execution environment
