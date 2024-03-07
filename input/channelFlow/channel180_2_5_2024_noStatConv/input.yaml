@@ -1,6 +1,6 @@
 params:
   seed: -1
-  tEnd: 10.0
+  tEnd: 150.0
   domainLength: 2.0
   ngrd0: 200
   rho0: 1.0
@@ -17,7 +17,7 @@ params:
   Z_LES: 0.333333333
   diffCFL: 0.5
   Lsolver: EXPLICIT
-  Lstatconv: true
+  Lstatconv: false
   nunif: 361
   dtActionRL: 0.2
   bcType: WALL
