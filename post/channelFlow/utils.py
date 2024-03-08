@@ -3,11 +3,24 @@ Utils functions for post/channelFlow post-processing scripts
 """
 
 import yaml
-
+import math
 import glob as gb
 import numpy as np
 from scipy.interpolate import interp1d
 import matplotlib.pyplot as plt
+
+
+def get_nunif2_walls(nunif, nunif2):
+    # -> the unse of nunif2 to mirror channel data leads to operands broadcast ERRORS if nunif is ODD 
+    # -> bottom & top walls what different shape by 1 element if nunif2 is used as [:nunif] for bottom, and [nunif:] for top walls indexes
+    # To solve this error, we define different nunifb & nunift if nunif is odd:
+    if nunif%2 != 0: # is odd
+        nunifb = nunif2
+        nunift = nunif2+1
+    else:
+        nunifb = nunif2
+        nunift = nunif2
+    return nunifb, nunift
 
 
 def get_odt_instantaneous(input_params):
@@ -21,18 +34,17 @@ def get_odt_instantaneous(input_params):
         ODT instantaneous coordinates and fields
         uvel, vvel, wvel (np.ndarrays)
     """
-
-    print(f"\nGetting ODT instantaneous data from {odt_statistics_filepath}")
-
     # --- Get ODT input parameters ---
 
     dxmin = input_params["dxmin"]
     nunif = input_params["nunif"]
     delta = input_params["delta"]
     domainLength = input_params["domainLength"]
+    case_name    = input_params["caseN"]
 
     dxmin *= domainLength       # un-normalize
     nunif2 = int(nunif/2)       # half of num. points (for ploting to domain center, symmetry in y-axis)
+    nunifb, nunift = get_nunif2_walls(nunif, nunif2)
 
     # --- Get ODT data ---
 
@@ -65,9 +77,9 @@ def get_odt_instantaneous(input_params):
         wvel[:,i] = ww
 
     # mirror data -> half channel
-    uvel = 0.5*(uvel[:nunif2,:] + np.flipud(uvel[nunif2:,:]))
-    vvel = 0.5*(vvel[:nunif2,:] + np.flipud(vvel[nunif2:,:]))
-    wvel = 0.5*(wvel[:nunif2,:] + np.flipud(wvel[nunif2:,:]))
+    uvel = 0.5*(uvel[:nunifb,:] + np.flipud(uvel[nunift:,:]))
+    vvel = 0.5*(vvel[:nunifb,:] + np.flipud(vvel[nunift:,:]))
+    wvel = 0.5*(wvel[:nunifb,:] + np.flipud(wvel[nunift:,:]))
 
     return (uvel, vvel, wvel)
 
@@ -83,11 +95,10 @@ def compute_odt_statistics(odt_statistics_filepath, input_params, plot_reynolds_
         
     Comments: 
         The ODT statistics are saved in a .dat files with the following columns data (included as header in the file): 
-        y/delta, y+, u+_mean, v+_mean, w+_mean, u+_rmsf, v+_rmsf, w+_rmsf, <u'u'>+, <v'v'>+, <w'w'>+, <u'v'>+, <u'w'>+, <v'w'>+
+        y/delta, y+, u+_mean, v+_mean, w+_mean, u+_rmsf, v+_rmsf, w+_rmsf, <u'u'>+, <v'v'>+, <w'w'>+, <u'v'>+, <u'w'>+, <v'w'>+, tau_viscous, tau_reynolds, tau_total, vt_u+, d_u+
     """
 
     # --- Get ODT input parameters ---
-    
     rho   = input_params["rho"]
     kvisc = input_params["kvisc"] # = nu = mu / rho 
     dxmin = input_params["dxmin"]
@@ -103,9 +114,12 @@ def compute_odt_statistics(odt_statistics_filepath, input_params, plot_reynolds_
     # --- Compute ODT computational data ---
 
     flist = sorted(gb.glob('../../data/' + case_name + '/data/data_00000/dmp_*.dat'))
-    flist_stat = sorted(gb.glob('../../data/' + case_name + '/data/data_00000/statistics/dmp_*_stat.dat'))
+    flist_stat = sorted(gb.glob('../../data/' + case_name + '/data/data_00000/statistics/stat_dmp_*.dat'))
 
     nunif2 = int(nunif/2)        # half of num. points (for ploting to domain center, symmetry in y-axis)
+    nunifb, nunift = get_nunif2_walls(nunif, nunif2)
+
+    # initialize arrays
     nfiles = len(flist)          # num. files of instantaneous data, i.e. num. discrete time instants
     yu  = np.linspace(-delta,delta,nunif) # uniform grid in y-axis
     # empty vectors of time-averaged quantities
@@ -120,7 +134,7 @@ def compute_odt_statistics(odt_statistics_filepath, input_params, plot_reynolds_
     vwm = np.zeros(nunif)
     dudy2m = np.zeros(nunif2-2)
 
-    logging_files_period = 10000
+    logging_files_period = 1000
     ifile_counter = 0
     ifile_total   = len(flist)
     for ifile in flist :
@@ -153,12 +167,12 @@ def compute_odt_statistics(odt_statistics_filepath, input_params, plot_reynolds_
         
         # update mean profile dudy2m = avg((du/dy)**2)
         # top half of channel
-        uut    = uu[nunif2:]
-        yut    = yu[nunif2:]
+        uut    = uu[nunift:]
+        yut    = yu[nunift:]
         dudy2t = ( (uut[2:]-uut[:-2])/(yut[2:]-yut[:-2]) )**2
         # bottom half of channel
-        uub     = np.flip(uu[:nunif2])
-        yub     = - np.flip(yu[:nunif2])
+        uub     = np.flip(uu[:nunifb])
+        yub     = - np.flip(yu[:nunifb])
         dudy2b  = ( (uub[2:]-uub[:-2])/(yub[2:]-yub[:-2]) )**2
         dudy2m += 0.5*(dudy2b + dudy2t)  # mirror data (symmetric)
 
@@ -171,25 +185,25 @@ def compute_odt_statistics(odt_statistics_filepath, input_params, plot_reynolds_
     um /= nfiles
     vm /= nfiles
     wm /= nfiles
-    um = 0.5*(um[:nunif2] + np.flipud(um[nunif2:]))  # mirror data (symmetric)
-    vm = 0.5*(vm[:nunif2] + np.flipud(vm[nunif2:]))
-    wm = 0.5*(wm[:nunif2] + np.flipud(wm[nunif2:]))
+    um = 0.5*(um[:nunifb] + np.flipud(um[nunift:]))  # mirror data (symmetric)
+    vm = 0.5*(vm[:nunifb] + np.flipud(vm[nunift:]))
+    wm = 0.5*(wm[:nunifb] + np.flipud(wm[nunift:]))
 
     # squared means
     u2m /= nfiles
     v2m /= nfiles
     w2m /= nfiles
-    u2m = 0.5*(u2m[:nunif2] + np.flipud(u2m[nunif2:]))
-    v2m = 0.5*(v2m[:nunif2] + np.flipud(v2m[nunif2:]))
-    w2m = 0.5*(w2m[:nunif2] + np.flipud(w2m[nunif2:]))
+    u2m = 0.5*(u2m[:nunifb] + np.flipud(u2m[nunift:]))
+    v2m = 0.5*(v2m[:nunifb] + np.flipud(v2m[nunift:]))
+    w2m = 0.5*(w2m[:nunifb] + np.flipud(w2m[nunift:]))
 
     # velocity correlations
     uvm /= nfiles
     uwm /= nfiles
     vwm /= nfiles
-    uvm = 0.5*(uvm[:nunif2] + np.flipud(uvm[nunif2:]))
-    uwm = 0.5*(uwm[:nunif2] + np.flipud(uwm[nunif2:]))
-    vwm = 0.5*(vwm[:nunif2] + np.flipud(vwm[nunif2:]))
+    uvm = 0.5*(uvm[:nunifb] + np.flipud(uvm[nunift:]))
+    uwm = 0.5*(uwm[:nunifb] + np.flipud(uwm[nunift:]))
+    vwm = 0.5*(vwm[:nunifb] + np.flipud(vwm[nunift:]))
 
     # Reynolds stresses
     ufufm = u2m - um*um # = <uf·uf>
@@ -258,8 +272,7 @@ def compute_odt_statistics(odt_statistics_filepath, input_params, plot_reynolds_
             header= "y/delta,    y+,          u+_mean,     v+_mean,     w+_mean,     u+_rmsf,     v+_rmsf,     w+_rmsf,     "\
                     "<u'u'>+,     <v'v'>+,     <w'w'>+,     <u'v'>+,     <u'w'>+,     <v'w'>+,     " \
                     "tau_viscous, tau_reynolds,tau_total,   " \
-                    "vt_u+,       d_u+,        " \
-                    "u+_mean_rt,  dumean+_dt,  F_statConv" ,
+                    "vt_u+,       d_u+,        ",
             fmt='%12.5E')
 
     print("(ODT) Nominal Retau: ", Retau)
@@ -343,8 +356,11 @@ def get_odt_statistics(odt_statistics_filepath, input_params):
         input_params (dict): ODT input parameters dictionary
 
     Returns:
-        ODT statistics calculated over statistic time by 'compute_odt_statistics'
-        ydelta, yplus, um, vm, wm, urmsf, vrmsf, wrmsf, ufufm, vfvfm, wfwfm, ufvfm, ufwfm, vfwfm, viscous_stress, reynolds_stress, total_stress (np.ndarrays)
+        ODT statistics calculated over statistic time by function 'compute_odt_statistics', 
+        saved by 'compute_odt_statistics' in odt_statistics_filepath .dat file with columns:
+        y/delta, y+,    u+_mean, v+_mean, w+_mean, u+_rmsf, v+_rmsf, w+_rmsf, <u'u'>+, <v'v'>+, <w'w'>+, <u'v'>+, <u'w'>+, <v'w'>+, tau_viscous,    tau_reynolds,    tau_total,     vt_u+, d_u+
+        (named here for simplicity, as u_tau = 1, delta = 1):
+        ydelta,  yplus, um,      vm,      wm,      urmsf,   vrmsf,   wrmsf,   ufufm,   vfvfm,   wfwfm,   ufvfm,   ufwfm,   vfwfm,   viscous_stress, reynolds_stress, total_stress,  vt_u+, d_u+ (np.ndarrays)
     """
     # --- Get ODT statistics ---
 
@@ -395,7 +411,8 @@ def get_odt_statistics_rt(input_params):
         ( ydelta, 
           um_data, urmsf_data, uFpert_data, 
           vm_data, vrmsf_data, vFpert_data,
-          wm_data, wrmsf_data, wFpert_data )
+          wm_data, wrmsf_data, wFpert_data, 
+          # TODO: update return information as returned variables changed
     """
 
     # --- Get ODT input parameters ---
@@ -405,19 +422,18 @@ def get_odt_statistics_rt(input_params):
 
     # --- Get vel. statistics computed during runtime at last time increment ---
 
-    flist_stat = sorted(gb.glob('../../data/' + case_name + '/data/data_00000/statistics/dmp_*_stat.dat'))
+    flist_stat = sorted(gb.glob(f"../../data/{case_name}/data/data_00000/statistics/stat_dmp_*.dat"))
     flast      = flist_stat[-1]
     data_stat  = np.loadtxt(flast)
 
     # -> check the file rows correspond to the expected variables:
     with open(flast,'r') as f:
-        rows_info = f.readlines()[3] # 4th line of the file
-    rows_info_expected = '#         1_posUnif        2_uvel_mean        3_uvel_rmsf       4_uvel_Fpert        5_vvel_mean        6_vvel_rmsf       7_vvel_Fpert        8_wvel_mean        9_wvel_rmsf      10_wvel_Fpert             11_Rxx             12_Ryy             13_Rzz             14_Rxy             15_Rxz             16_Ryz         17_lambda0         18_lambda1         19_lambda2           20_xmap1           21_xmap2\n'
-    if rows_info != rows_info_expected:
-        print("statistic files rows do not correspond to the expected variables")
-        print("rows variables (expected):\n",rows_info_expected,"\n")
-        print("rows variables (current):\n", rows_info)
-        exit(0)
+        rows_info = f.readlines()[3].split() # 4th line of the file
+    rows_info_expected = '#         1_posUnif        2_uvel_mean        3_uvel_rmsf       4_uvel_Fpert        5_vvel_mean        6_vvel_rmsf       7_vvel_Fpert        8_wvel_mean        9_wvel_rmsf      10_wvel_Fpert             11_Rxx             12_Ryy             13_Rzz             14_Rxy             15_Rxz             16_Ryz\n'.split()
+    assert rows_info == rows_info_expected, f"statistic files rows do not correspond to the expected variables" \
+        f"rows variables (expected): \n{rows_info_expected} \n" \
+        f"rows variables (current): \n{rows_info}"
+    
     # -> get data
     yu           = data_stat[:,0]
     #
@@ -433,51 +449,55 @@ def get_odt_statistics_rt(input_params):
     wrmsf_data   = data_stat[:,8] 
     wFpert_data  = data_stat[:,9]  
     # reynolds stress terms
-    ufufm_data   = data_stat[:,10]
-    vfvfm_data   = data_stat[:,11]
-    wfwfm_data   = data_stat[:,12]
-    ufvfm_data   = data_stat[:,13]
-    ufwfm_data   = data_stat[:,14]
-    vfwfm_data   = data_stat[:,15]
+    ufufm_data   = data_stat[:,10]  # column header: 11_Rxx
+    vfvfm_data   = data_stat[:,11]  # 12_Ryy
+    wfwfm_data   = data_stat[:,12]  # 13_Rzz
+    ufvfm_data   = data_stat[:,13]  # 14_Rxy
+    ufwfm_data   = data_stat[:,14]  # 15_Rxz
+    vfwfm_data   = data_stat[:,15]  # 16_Ryz
     # anisotropy tensor eigenvalues & barycentric map
-    lambda0_data = data_stat[:,16] 
-    lambda1_data = data_stat[:,17] 
-    lambda2_data = data_stat[:,18]
-    xmap1_data   = data_stat[:,19] 
-    xmap2_data   = data_stat[:,20] 
+    # lambda0_data = data_stat[:,16] 
+    # lambda1_data = data_stat[:,17] 
+    # lambda2_data = data_stat[:,18]
+    # xmap1_data   = data_stat[:,19] 
+    # xmap2_data   = data_stat[:,20] 
 
-    # mirror data (symmetric in the y-direction from the channel center)
+    ### Mirror data (symmetric in the y-direction from the channel center)
+    # mirror data indexs
     nunif        = len(um_data)
     nunif2       = int(nunif/2)
-    yu           = yu[:nunif2] + delta
-    um_data      = 0.5 * ( um_data[:nunif2]      + np.flipud(um_data[nunif2:])      )
-    urmsf_data   = 0.5 * ( urmsf_data[:nunif2]   + np.flipud(urmsf_data[nunif2:])   )
-    uFpert_data  = 0.5 * ( uFpert_data[:nunif2]  + np.flipud(uFpert_data[nunif2:])  )
-    vm_data      = 0.5 * ( vm_data[:nunif2]      + np.flipud(vm_data[nunif2:])      )
-    vrmsf_data   = 0.5 * ( vrmsf_data[:nunif2]   + np.flipud(vrmsf_data[nunif2:])   )
-    vFpert_data  = 0.5 * ( vFpert_data[:nunif2]  + np.flipud(vFpert_data[nunif2:])  )
-    wm_data      = 0.5 * ( wm_data[:nunif2]      + np.flipud(wm_data[nunif2:])      )
-    wrmsf_data   = 0.5 * ( wrmsf_data[:nunif2]   + np.flipud(wrmsf_data[nunif2:])   )
-    wFpert_data  = 0.5 * ( wFpert_data[:nunif2]  + np.flipud(wFpert_data[nunif2:])  )
-    ufufm_data   = 0.5 * ( ufufm_data[:nunif2]   + np.flipud(ufufm_data[nunif2:])   )
-    vfvfm_data   = 0.5 * ( vfvfm_data[:nunif2]   + np.flipud(vfvfm_data[nunif2:])   )
-    wfwfm_data   = 0.5 * ( wfwfm_data[:nunif2]   + np.flipud(wfwfm_data[nunif2:])   )
-    ufvfm_data   = 0.5 * ( ufvfm_data[:nunif2]   + np.flipud(ufvfm_data[nunif2:])   )
-    ufwfm_data   = 0.5 * ( ufwfm_data[:nunif2]   + np.flipud(ufwfm_data[nunif2:])   )
-    vfwfm_data   = 0.5 * ( vfwfm_data[:nunif2]   + np.flipud(vfwfm_data[nunif2:])   )
+    nunifb, nunift = get_nunif2_walls(nunif, nunif2)
+    # mirror data
+    yu           = yu[:nunifb] + delta
+    um_data      = 0.5 * ( um_data[:nunifb]      + np.flipud(um_data[nunift:])      )
+    urmsf_data   = 0.5 * ( urmsf_data[:nunifb]   + np.flipud(urmsf_data[nunift:])   )
+    uFpert_data  = 0.5 * ( uFpert_data[:nunifb]  + np.flipud(uFpert_data[nunift:])  )
+    vm_data      = 0.5 * ( vm_data[:nunifb]      + np.flipud(vm_data[nunift:])      )
+    vrmsf_data   = 0.5 * ( vrmsf_data[:nunifb]   + np.flipud(vrmsf_data[nunift:])   )
+    vFpert_data  = 0.5 * ( vFpert_data[:nunifb]  + np.flipud(vFpert_data[nunift:])  )
+    wm_data      = 0.5 * ( wm_data[:nunifb]      + np.flipud(wm_data[nunift:])      )
+    wrmsf_data   = 0.5 * ( wrmsf_data[:nunifb]   + np.flipud(wrmsf_data[nunift:])   )
+    wFpert_data  = 0.5 * ( wFpert_data[:nunifb]  + np.flipud(wFpert_data[nunift:])  )
+    ufufm_data   = 0.5 * ( ufufm_data[:nunifb]   + np.flipud(ufufm_data[nunift:])   )
+    vfvfm_data   = 0.5 * ( vfvfm_data[:nunifb]   + np.flipud(vfvfm_data[nunift:])   )
+    wfwfm_data   = 0.5 * ( wfwfm_data[:nunifb]   + np.flipud(wfwfm_data[nunift:])   )
+    ufvfm_data   = 0.5 * ( ufvfm_data[:nunifb]   + np.flipud(ufvfm_data[nunift:])   )
+    ufwfm_data   = 0.5 * ( ufwfm_data[:nunifb]   + np.flipud(ufwfm_data[nunift:])   )
+    vfwfm_data   = 0.5 * ( vfwfm_data[:nunifb]   + np.flipud(vfwfm_data[nunift:])   )
 
-    lambda0_data = 0.5 * ( lambda0_data[:nunif2] + np.flipud(lambda0_data[nunif2:]) )
-    lambda1_data = 0.5 * ( lambda1_data[:nunif2] + np.flipud(lambda1_data[nunif2:]) )
-    lambda2_data = 0.5 * ( lambda2_data[:nunif2] + np.flipud(lambda2_data[nunif2:]) )
-    xmap1_data   = 0.5 * ( xmap1_data[:nunif2]   + np.flipud(xmap1_data[nunif2:])   )
-    xmap2_data   = 0.5 * ( xmap2_data[:nunif2]   + np.flipud(xmap2_data[nunif2:])   )
+    # lambda0_data = 0.5 * ( lambda0_data[:nunifb] + np.flipud(lambda0_data[nunift:]) )
+    # lambda1_data = 0.5 * ( lambda1_data[:nunifb] + np.flipud(lambda1_data[nunift:]) )
+    # lambda2_data = 0.5 * ( lambda2_data[:nunifb] + np.flipud(lambda2_data[nunift:]) )
+    # xmap1_data   = 0.5 * ( xmap1_data[:nunifb]   + np.flipud(xmap1_data[nunift:])   )
+    # xmap2_data   = 0.5 * ( xmap2_data[:nunifb]   + np.flipud(xmap2_data[nunift:])   )
 
     return (yu/delta, 
             um_data, urmsf_data, uFpert_data,
             vm_data, vrmsf_data, vFpert_data,
             wm_data, wrmsf_data, wFpert_data,
             ufufm_data, vfvfm_data, wfwfm_data, ufvfm_data, ufwfm_data, vfwfm_data,
-            lambda0_data, lambda1_data, lambda2_data, xmap1_data, xmap2_data)
+            # lambda0_data, lambda1_data, lambda2_data, xmap1_data, xmap2_data,
+    )
 
 
 def get_dns_statistics(Re_tau, input_params):
@@ -489,8 +509,8 @@ def get_dns_statistics(Re_tau, input_params):
     nu     = u_tau * delta / Re_tau
     mu     = rho * nu
     kvisc  = mu / rho # = nu 
-
-    if Re_tau == 590:
+    
+    if (Re_tau == 590):
         filename_dns = "DNS_statistics/Re590/dnsChannel_Re590_means.dat"
         print(f"\nGetting DNS-means data from {filename_dns}")
         # Dataset columns
@@ -540,7 +560,6 @@ def get_dns_statistics(Re_tau, input_params):
         ufvfm  = dns[:,10]
         ufwfm  = dns[:,11]
         vfwfm  = dns[:,12]
-
 
     # Compare stablished and computed Retau and utau
     dudy_wall = (um[1]-um[0])/(ydelta[1]-ydelta[0])
@@ -610,19 +629,16 @@ def get_time(file):
     if first_line.startswith("# time = "):
         time = float(first_line.split(" = ")[1])
     else:
-        print(f"No valid format found in the first line of {ifile}.")
+        print(f"No valid format found in the first line of {file}.")
         time = None
     return time
 
 
 def get_odt_statistics_during_runtime(input_params, averaging_times):
     """
-    Get ODT statistics, previously saved in a .dat file using 'compute_odt_statistics' function
-
     Parameters:
-        odt_statistics_filepath (str): ODT statistics filepath
         input_params (dict): ODT input parameters dictionary
-        time_vec (np.array): vector of times at which the statistic is evaluated
+        averaging_times #TODO
 
     Returns:
         ODT statistics calculated during runtime, output of the simulation at each dumpTime instant
@@ -656,10 +672,11 @@ def get_odt_statistics_during_runtime(input_params, averaging_times):
 
     # --- Compute ODT computational data ---
 
-    flist = ['../../data/' + case_name + '/data/data_00000/statistics/dmp_' + s  + '_stat.dat' for s in averaging_times_str]
+    flist = ['../../data/' + case_name + '/data/data_00000/statistics/stat_dmp_' + s  + '.dat' for s in averaging_times_str]
 
     # Num points uniform grid
     nunif2 = int(nunif/2)        # half of num. points (for ploting to domain center, symmetry in y-axis)
+    nunifb, nunift = get_nunif2_walls(nunif, nunif2)
 
     um = np.zeros([nunif, averaging_times_num]) 
 
@@ -681,15 +698,15 @@ def get_odt_statistics_during_runtime(input_params, averaging_times):
     yu_all = np.copy(yu)
 
     # mirror data (symmetric channel in y-axis)
-    um = 0.5 * (um[:nunif2,:]  + np.flipud(um[nunif2:,:]))  # um_
+    um = 0.5 * (um[:nunifb,:]  + np.flipud(um[nunift:,:]))  # um_
 
     # ------------------------ Calculate symmetric field ------------------------
     
     # calculate 'symmetric' part of um in all fine grid
     um_symmetric_all  = np.copy(um_all)
     um_symmetric_half = np.copy(um)
-    um_symmetric_all[:nunif2,:]  = um_symmetric_half
-    um_symmetric_all[nunif2:,:]  = np.flipud(um_symmetric_half)
+    um_symmetric_all[:nunifb,:]  = um_symmetric_half
+    um_symmetric_all[nunift:,:]  = np.flipud(um_symmetric_half)
 
     # ----------- Calculate indicate - Integral deviation from symmetry -----------
 
@@ -704,7 +721,7 @@ def get_odt_statistics_during_runtime(input_params, averaging_times):
     # y-coordinates
     ydelta = yu/delta
     yu += delta         # domain center is at 0; shift so left side is zero
-    yu = yu[:nunif2]    # plotting to domain center
+    yu = yu[:nunifb]    # plotting to domain center
     # Re_tau of ODT data
     dudy = (um[1,-1]-um[0,-1])/(yu[1]-yu[0])
     utau = np.sqrt(kvisc * np.abs(dudy))
@@ -735,6 +752,7 @@ def get_odt_statistics_rt_at_chosen_averaging_times(input_params, averaging_time
     
     # uniform fine grid
     nunif2       = int(nunif/2)
+    nunifb, nunift = get_nunif2_walls(nunif, nunif2)
 
     # --- Averaging times and files identification ---
     
@@ -749,17 +767,15 @@ def get_odt_statistics_rt_at_chosen_averaging_times(input_params, averaging_time
 
     # --- Get vel. statistics computed during runtime at chosen averaging times ---
 
-    flist = ['../../data/' + case_name + '/data/data_00000/statistics/dmp_' + s  + '_stat.dat' for s in averaging_times_str]
+    flist = ['../../data/' + case_name + '/data/data_00000/statistics/stat_dmp_' + s  + '.dat' for s in averaging_times_str]
 
     # -> check the file rows correspond to the expected variables:
     with open(flist[0],'r') as f:
-        rows_info = f.readlines()[3] # 4th line of the file
-    rows_info_expected = '#         1_posUnif        2_uvel_mean        3_uvel_rmsf       4_uvel_Fpert        5_vvel_mean        6_vvel_rmsf       7_vvel_Fpert        8_wvel_mean        9_wvel_rmsf      10_wvel_Fpert             11_Rxx             12_Ryy             13_Rzz             14_Rxy             15_Rxz             16_Ryz         17_lambda0         18_lambda1         19_lambda2           20_xmap1           21_xmap2\n'
-    if rows_info != rows_info_expected:
-        print("statistic files rows do not correspond to the expected variables")
-        print("rows variables (expected):\n",rows_info_expected,"\n")
-        print("rows variables (current):\n", rows_info)
-        exit(0)
+        rows_info = f.readlines()[3].split() # 4th line of the file
+    rows_info_expected = '#         1_posUnif        2_uvel_mean        3_uvel_rmsf       4_uvel_Fpert        5_vvel_mean        6_vvel_rmsf       7_vvel_Fpert        8_wvel_mean        9_wvel_rmsf      10_wvel_Fpert             11_Rxx             12_Ryy             13_Rzz             14_Rxy             15_Rxz             16_Ryz\n'.split()
+    assert rows_info == rows_info_expected, f"statistic files rows do not correspond to the expected variables" \
+        f"rows variables (expected): \n{rows_info_expected} \n" \
+        f"rows variables (current): \n{rows_info}"
 
     # --- initialize variables ---
 
@@ -782,11 +798,11 @@ def get_odt_statistics_rt_at_chosen_averaging_times(input_params, averaging_time
     ufwfm_data   = np.zeros([nunif, averaging_times_num])
     vfwfm_data   = np.zeros([nunif, averaging_times_num])
     # anisotropy t
-    lambda0_data = np.zeros([nunif, averaging_times_num])
-    lambda1_data = np.zeros([nunif, averaging_times_num])
-    lambda2_data = np.zeros([nunif, averaging_times_num])
-    xmap1_data   = np.zeros([nunif, averaging_times_num])
-    xmap2_data   = np.zeros([nunif, averaging_times_num])
+    # lambda0_data = np.zeros([nunif, averaging_times_num])
+    # lambda1_data = np.zeros([nunif, averaging_times_num])
+    # lambda2_data = np.zeros([nunif, averaging_times_num])
+    # xmap1_data   = np.zeros([nunif, averaging_times_num])
+    # xmap2_data   = np.zeros([nunif, averaging_times_num])
 
     # --- get data of statistics calc. at runtime at chosen averaging times ---
 
@@ -810,49 +826,46 @@ def get_odt_statistics_rt_at_chosen_averaging_times(input_params, averaging_time
         ufvfm_data[:,i]   = data_stat[:,13]
         ufwfm_data[:,i]   = data_stat[:,14]
         vfwfm_data[:,i]   = data_stat[:,15]
-        lambda0_data[:,i] = data_stat[:,16] 
-        lambda1_data[:,i] = data_stat[:,17] 
-        lambda2_data[:,i] = data_stat[:,18]
-        xmap1_data[:,i]   = data_stat[:,19] 
-        xmap2_data[:,i]   = data_stat[:,20] 
+        # lambda0_data[:,i] = data_stat[:,16] 
+        # lambda1_data[:,i] = data_stat[:,17] 
+        # lambda2_data[:,i] = data_stat[:,18]
+        # xmap1_data[:,i]   = data_stat[:,19] 
+        # xmap2_data[:,i]   = data_stat[:,20] 
 
     # mirror data (symmetric in the y-direction from the channel center)
-    
-    yu           = yu[:nunif2,:] + delta
-    um_data      = 0.5 * ( um_data[:nunif2,:]      + np.flipud(um_data[nunif2:,:])      )
-    urmsf_data   = 0.5 * ( urmsf_data[:nunif2,:]   + np.flipud(urmsf_data[nunif2:,:])   )
-    uFpert_data  = 0.5 * ( uFpert_data[:nunif2,:]  + np.flipud(uFpert_data[nunif2:,:])  )
-    vm_data      = 0.5 * ( vm_data[:nunif2,:]      + np.flipud(vm_data[nunif2:,:])      )
-    vrmsf_data   = 0.5 * ( vrmsf_data[:nunif2,:]   + np.flipud(vrmsf_data[nunif2:,:])   )
-    vFpert_data  = 0.5 * ( vFpert_data[:nunif2,:]  + np.flipud(vFpert_data[nunif2:,:])  )
-    wm_data      = 0.5 * ( wm_data[:nunif2,:]      + np.flipud(wm_data[nunif2:,:])      )
-    wrmsf_data   = 0.5 * ( wrmsf_data[:nunif2,:]   + np.flipud(wrmsf_data[nunif2:,:])   )
-    wFpert_data  = 0.5 * ( wFpert_data[:nunif2,:]  + np.flipud(wFpert_data[nunif2:,:])  )
-    ufufm_data   = 0.5 * ( ufufm_data[:nunif2,:]   + np.flipud(ufufm_data[nunif2:,:])   )
-    vfvfm_data   = 0.5 * ( vfvfm_data[:nunif2,:]   + np.flipud(vfvfm_data[nunif2:,:])   )
-    wfwfm_data   = 0.5 * ( wfwfm_data[:nunif2,:]   + np.flipud(wfwfm_data[nunif2:,:])   )
-    ufvfm_data   = 0.5 * ( ufvfm_data[:nunif2,:]   + np.flipud(ufvfm_data[nunif2:,:])   )
-    ufwfm_data   = 0.5 * ( ufwfm_data[:nunif2,:]   + np.flipud(ufwfm_data[nunif2:,:])   )
-    vfwfm_data   = 0.5 * ( vfwfm_data[:nunif2,:]   + np.flipud(vfwfm_data[nunif2:,:])   )
-    lambda0_data = 0.5 * ( lambda0_data[:nunif2,:] + np.flipud(lambda0_data[nunif2:,:]) )
-    lambda1_data = 0.5 * ( lambda1_data[:nunif2,:] + np.flipud(lambda1_data[nunif2:,:]) )
-    lambda2_data = 0.5 * ( lambda2_data[:nunif2,:] + np.flipud(lambda2_data[nunif2:,:]) )
-    xmap1_data   = 0.5 * ( xmap1_data[:nunif2,:]   + np.flipud(xmap1_data[nunif2:,:])   )
-    xmap2_data   = 0.5 * ( xmap2_data[:nunif2,:]   + np.flipud(xmap2_data[nunif2:,:])   )
+    yu           = yu[:nunifb,:] + delta
+    um_data      = 0.5 * ( um_data[:nunifb,:]      + np.flipud(um_data[nunift:,:])      )
+    urmsf_data   = 0.5 * ( urmsf_data[:nunifb,:]   + np.flipud(urmsf_data[nunift:,:])   )
+    uFpert_data  = 0.5 * ( uFpert_data[:nunifb,:]  + np.flipud(uFpert_data[nunift:,:])  )
+    vm_data      = 0.5 * ( vm_data[:nunifb,:]      + np.flipud(vm_data[nunift:,:])      )
+    vrmsf_data   = 0.5 * ( vrmsf_data[:nunifb,:]   + np.flipud(vrmsf_data[nunift:,:])   )
+    vFpert_data  = 0.5 * ( vFpert_data[:nunifb,:]  + np.flipud(vFpert_data[nunift:,:])  )
+    wm_data      = 0.5 * ( wm_data[:nunifb,:]      + np.flipud(wm_data[nunift:,:])      )
+    wrmsf_data   = 0.5 * ( wrmsf_data[:nunifb,:]   + np.flipud(wrmsf_data[nunift:,:])   )
+    wFpert_data  = 0.5 * ( wFpert_data[:nunifb,:]  + np.flipud(wFpert_data[nunift:,:])  )
+    ufufm_data   = 0.5 * ( ufufm_data[:nunifb,:]   + np.flipud(ufufm_data[nunift:,:])   )
+    vfvfm_data   = 0.5 * ( vfvfm_data[:nunifb,:]   + np.flipud(vfvfm_data[nunift:,:])   )
+    wfwfm_data   = 0.5 * ( wfwfm_data[:nunifb,:]   + np.flipud(wfwfm_data[nunift:,:])   )
+    ufvfm_data   = 0.5 * ( ufvfm_data[:nunifb,:]   + np.flipud(ufvfm_data[nunift:,:])   )
+    ufwfm_data   = 0.5 * ( ufwfm_data[:nunifb,:]   + np.flipud(ufwfm_data[nunift:,:])   )
+    vfwfm_data   = 0.5 * ( vfwfm_data[:nunifb,:]   + np.flipud(vfwfm_data[nunift:,:])   )
+    # lambda0_data = 0.5 * ( lambda0_data[:nunifb,:] + np.flipud(lambda0_data[nunift:,:]) )
+    # lambda1_data = 0.5 * ( lambda1_data[:nunifb,:] + np.flipud(lambda1_data[nunift:,:]) )
+    # lambda2_data = 0.5 * ( lambda2_data[:nunifb,:] + np.flipud(lambda2_data[nunift:,:]) )
+    # xmap1_data   = 0.5 * ( xmap1_data[:nunifb,:]   + np.flipud(xmap1_data[nunift:,:])   )
+    # xmap2_data   = 0.5 * ( xmap2_data[:nunifb,:]   + np.flipud(xmap2_data[nunift:,:])   )
 
     return (yu/delta, 
             um_data, urmsf_data, uFpert_data,
             vm_data, vrmsf_data, vFpert_data,
             wm_data, wrmsf_data, wFpert_data,
             ufufm_data, vfvfm_data, wfwfm_data, ufvfm_data, ufwfm_data, vfwfm_data,
-            lambda0_data, lambda1_data, lambda2_data, xmap1_data, xmap2_data)
-
-
+            #lambda0_data, lambda1_data, lambda2_data, xmap1_data, xmap2_data,
+    )
 
 def compute_convergence_indicator_odt_tEnd(input_params):
     
     # --- Get ODT input parameters ---
-
     domainLength = input_params["domainLength"]
     dxmin        = input_params["dxmin"]
     delta        = input_params["delta"]
@@ -865,12 +878,12 @@ def compute_convergence_indicator_odt_tEnd(input_params):
     dxmin *= domainLength
     # uniform fine grid
     nunif2 = int(nunif/2)
+    nunifb, nunift = get_nunif2_walls(nunif, nunif2)
 
     # --------------- Get ODT statistics ---------------
 
-    flist_stat     = sorted(gb.glob('../../data/' + case_name + '/data/data_00000/statistics/dmp_*_stat.dat'))
+    flist_stat     = sorted(gb.glob('../../data/' + case_name + '/data/data_00000/statistics/stat_dmp_*.dat'))
     file_stat_last = flist_stat[-1]
-    print("file_stat_last = ", file_stat_last)
     data = np.loadtxt(file_stat_last)
 
     # uniform fine grid (u.f.g) - '1_posUnif' 
@@ -882,10 +895,10 @@ def compute_convergence_indicator_odt_tEnd(input_params):
     # ------------------------ Calculate symmetric field ------------------------
 
     # calculate 'symmetric' part of um
-    um_symmetric_half = 0.5*(um[:nunif2] + np.flipud(um[nunif2:]))  
+    um_symmetric_half = 0.5*(um[:nunifb] + np.flipud(um[nunift:]))  
     um_symmetric = np.copy(um)
-    um_symmetric[:nunif2]  = um_symmetric_half
-    um_symmetric[nunif2:]  = np.flipud(um_symmetric_half)
+    um_symmetric[:nunifb]  = um_symmetric_half
+    um_symmetric[nunift:]  = np.flipud(um_symmetric_half)
 
     # ----------- Calculate indicate - Integral deviation from symmetry -----------
 
@@ -921,10 +934,11 @@ def compute_convergence_indicator_odt_along_time(input_params):
     dxmin *= domainLength
     # uniform fine grid
     nunif2 = int(nunif/2)
+    nunifb, nunift = get_nunif2_walls(nunif, nunif2)
 
     # --------------- Get ODT statistics ---------------
 
-    flist_stat     = sorted(gb.glob('../../data/' + case_name + '/data/data_00000/statistics/dmp_*_stat.dat'))
+    flist_stat     = sorted(gb.glob('../../data/' + case_name + '/data/data_00000/statistics/stat_dmp_*.dat'))
     CI_list = []
     time_list = []
 
@@ -937,10 +951,10 @@ def compute_convergence_indicator_odt_along_time(input_params):
         # ------------------------ Calculate symmetric field ------------------------
 
         # calculate 'symmetric' part of um
-        um_symmetric_half = 0.5*(um[:nunif2] + np.flipud(um[nunif2:]))  
+        um_symmetric_half = 0.5*(um[:nunifb] + np.flipud(um[nunift:]))  
         um_symmetric = np.copy(um)
-        um_symmetric[:nunif2]  = um_symmetric_half
-        um_symmetric[nunif2:]  = np.flipud(um_symmetric_half)
+        um_symmetric[:nunifb]  = um_symmetric_half
+        um_symmetric[nunift:]  = np.flipud(um_symmetric_half)
 
         # ----------- Calculate indicate - Integral deviation from symmetry -----------
 
@@ -984,9 +998,11 @@ def compute_odt_statistics_at_chosen_time(input_params, time_end):
     # --- Compute ODT computational data ---
 
     flist = sorted(gb.glob('../../data/' + case_name + '/data/data_00000/dmp_*.dat'))
-    flist_stat = sorted(gb.glob('../../data/' + case_name + '/data/data_00000/statistics/dmp_*_stat.dat'))
+    flist_stat = sorted(gb.glob('../../data/' + case_name + '/data/data_00000/statistics/stat_dmp_*.dat'))
 
     nunif2 = int(nunif/2)        # half of num. points (for ploting to domain center, symmetry in y-axis)
+    nunifb, nunift = get_nunif2_walls(nunif, nunif2)
+
     yu  = np.linspace(-delta,delta,nunif) # uniform grid in y-axis
     # empty vectors of time-averaged quantities
     um  = np.zeros(nunif)        # mean velocity, calulated in post-processing from instantaneous velocity
@@ -1040,25 +1056,25 @@ def compute_odt_statistics_at_chosen_time(input_params, time_end):
     um /= fcounter
     vm /= fcounter
     wm /= fcounter
-    um = 0.5*(um[:nunif2] + np.flipud(um[nunif2:]))  # mirror data (symmetric)
-    vm = 0.5*(vm[:nunif2] + np.flipud(vm[nunif2:]))
-    wm = 0.5*(wm[:nunif2] + np.flipud(wm[nunif2:]))
+    um = 0.5*(um[:nunifb] + np.flipud(um[nunift:]))  # mirror data (symmetric)
+    vm = 0.5*(vm[:nunifb] + np.flipud(vm[nunift:]))
+    wm = 0.5*(wm[:nunifb] + np.flipud(wm[nunift:]))
 
     # squared means
     u2m /= fcounter
     v2m /= fcounter
     w2m /= fcounter
-    u2m = 0.5*(u2m[:nunif2] + np.flipud(u2m[nunif2:]))
-    v2m = 0.5*(v2m[:nunif2] + np.flipud(v2m[nunif2:]))
-    w2m = 0.5*(w2m[:nunif2] + np.flipud(w2m[nunif2:]))
+    u2m = 0.5*(u2m[:nunifb] + np.flipud(u2m[nunift:]))
+    v2m = 0.5*(v2m[:nunifb] + np.flipud(v2m[nunift:]))
+    w2m = 0.5*(w2m[:nunifb] + np.flipud(w2m[nunift:]))
 
     # velocity correlations
     uvm /= fcounter
     uwm /= fcounter
     vwm /= fcounter
-    uvm = 0.5*(uvm[:nunif2] + np.flipud(uvm[nunif2:]))
-    uwm = 0.5*(uwm[:nunif2] + np.flipud(uwm[nunif2:]))
-    vwm = 0.5*(vwm[:nunif2] + np.flipud(vwm[nunif2:]))
+    uvm = 0.5*(uvm[:nunifb] + np.flipud(uvm[nunift:]))
+    uwm = 0.5*(uwm[:nunifb] + np.flipud(uwm[nunift:]))
+    vwm = 0.5*(vwm[:nunifb] + np.flipud(vwm[nunift:]))
 
     # Reynolds stresses
     ufufm = u2m - um*um # = <uf·uf>
@@ -1075,7 +1091,7 @@ def compute_odt_statistics_at_chosen_time(input_params, time_end):
 
     # --- y-coordinate, y+ ---
     yu += delta         # domain center is at 0; shift so left side is zero
-    yu = yu[:nunif2]    # plotting to domain center
+    yu = yu[:nunifb]    # plotting to domain center
     dudy = (um[1]-um[0])/(yu[1]-yu[0])
     utau = np.sqrt(kvisc * np.abs(dudy) / rho)
     RetauOdt = utau * delta / kvisc
@@ -1089,7 +1105,139 @@ def get_provisional_tEnd(case_name):
 
     # --- Get vel. statistics computed during runtime at last time increment ---
 
-    flist_stat = sorted(gb.glob('../../data/' + case_name + '/data/data_00000/statistics/dmp_*_stat.dat'))
+    flist_stat = sorted(gb.glob('../../data/' + case_name + '/data/data_00000/statistics/stat_dmp_*.dat'))
     flast      = flist_stat[-1]
 
     return get_time(flast)
+
+
+#-----------------------------------------------------------------------------------------
+#           Anisotropy tensor, eigen-decomposition, mapping to barycentric map 
+#-----------------------------------------------------------------------------------------
+
+def check_realizability_conditions(Rxx, Ryy, Rzz, Rxy, Rxz, Ryz):
+
+    #------------ Realizability conditions ---------------
+
+    # help: .all() ensures the condition is satisfied in all grid points
+
+    # COND 1: Rii >= 0, for i = 1,2,3
+
+    cond0_0 = ( Rxx >= 0 ).all()    # i = 1
+    cond0_1 = ( Ryy >= 0 ).all()    # i = 2
+    cond0_2 = ( Rzz >= 0 ).all()    # i = 3
+    cond0   = cond0_0 and cond0_1 and cond0_2
+
+    # COND 2: Rij^2 <= Rii*Rjj, for i!=j
+
+    cond1_0 = ( Rxy**2 <= Rxx * Ryy ).all()     # i = 0, j = 1
+    cond1_1 = ( Rxz**2 <= Rxx * Rzz ).all()     # i = 0, j = 2
+    cond1_2 = ( Ryz**2 <= Ryy * Rzz ).all()     # i = 1, j = 2
+    cond1   = cond1_0 and cond1_1 and cond1_2
+
+    # COND 3: det(Rij) >= 0
+    detR  = Rxx * Ryy * Rzz + 2 * Rxy * Rxz * Ryz - (Rxx * Ryz * Ryz + Ryy * Rxz * Rxz + Rzz * Rxy * Rxy) # np.linalg.det(R_ij), length #num_points
+    cond2 = ( detR >= 0 ).all()
+
+    if cond0 and cond1 and cond2:
+        print("\nCONGRATULATIONS, the reynolds stress tensor satisfies REALIZABILITY CONDITIONS.")
+    else:
+        raise Exception(f"The reynolds stress tensor does not satisfy REALIZABILITY CONDITIONS: cond0 = {cond0}, cond1 = {cond1}, cond2 = {cond2}")
+
+
+def compute_reynolds_stress_dof(Rxx, Ryy, Rzz, Rxy, Rxz, Ryz, 
+                                tensor_kk_tolerance   = 1.0e-8, 
+                                eigenvalues_tolerance = 1.0e-8, 
+                                verbose = False,
+                                x1c = np.array( [ 1.0 , 0.0 ] ),
+                                x2c = np.array( [ 0.0 , 0.0 ] ),
+                                x3c = np.array( [ 0.5 , math.sqrt(3.0)/2.0 ] )):
+
+    check_realizability_conditions(Rxx, Ryy, Rzz, Rxy, Rxz, Ryz)
+    
+    # Computed for each point of the grid
+    # If the trace of the reynolds stress tensor (2 * TKE) is too small, the corresponding 
+    # datapoint is omitted, because the anisotropy tensor would -> infinity, as its equation
+    # contains the multiplier ( 1 / (2*TKE) )
+    
+    # initialize arrays
+    num_points = len(Rxx)
+    Rkk     = np.zeros(num_points)
+    lambda1 = np.zeros(num_points)
+    lambda2 = np.zeros(num_points)
+    lambda3 = np.zeros(num_points)
+    xmap1   = np.zeros(num_points)
+    xmap2   = np.zeros(num_points)
+
+    for p in range(num_points):
+
+        #------------ Reynolds stress tensor ---------------
+
+        R_ij      = np.zeros([num_points, 3, 3])
+        R_ij[0,0] = Rxx
+        R_ij[0,1] = Rxy
+        R_ij[0,2] = Rxz
+        R_ij[1,0] = Rxy
+        R_ij[1,1] = Ryy
+        R_ij[1,2] = Ryz
+        R_ij[2,0] = Rxz
+        R_ij[2,1] = Ryz
+        R_ij[2,2] = Rzz
+
+        #------------ Anisotropy Tensor ------------
+
+        # identity tensor
+        delta_ij = np.eye(3)                                        # shape: [3,3]
+
+        # calculate trace -> 2 * (Turbulent kinetic energy)
+        Rkk[p] = Rxx[p] + Ryy[p] + Rzz[p]
+        TKE = 0.5 * Rkk[p] #  -> same formula!                      # shape: scalar
+        ###TKE = 0.5 * (urmsf[p]**2 + vrmsf[p]**2 + wrmsf[p]**2)    # shape: scalar
+
+        # omit grid point if reynolds stress tensor trace (2 * TKE) is too small
+        if np.abs(Rkk[p]) < tensor_kk_tolerance:
+            print(f"Discarded point #{p}")
+            continue
+
+        # construct anisotropy tensor
+        a_ij = (1.0 / (2*TKE)) * R_ij - (1.0 / 3.0) * delta_ij   # shape: [3,3]
+
+        #------------ eigen-decomposition of the SYMMETRIC TRACE-FREE anisotropy tensor ------------
+
+        # ensure a_ij is trace-free
+        # -> calculate trace
+        a_kk = a_ij[0,0] + a_ij[1,1] + a_ij[2,2]
+        # -> substract the trace
+        a_ij[0,0] -= a_kk/3.0
+        a_ij[1,1] -= a_kk/3.0
+        a_ij[2,2] -= a_kk/3.0
+
+        # Calculate the eigenvalues and eigenvectors
+        eigenvalues_a_ij, eigenvectors_a_ij = np.linalg.eigh( a_ij )
+        eigenvalues_a_ij_sum = sum(eigenvalues_a_ij)
+        assert eigenvalues_a_ij_sum < eigenvalues_tolerance, f"ERROR: The sum of the anisotropy tensor eigenvalues should be 0; in point #{p} the sum is = {eigenvalues_a_ij_sum}"
+
+        # Sort eigenvalues and eigenvectors in decreasing order, so that eigval_1 >= eigval_2 >= eigval_3
+        idx = eigenvalues_a_ij.argsort()[::-1]   
+        eigenvalues_a_ij  = eigenvalues_a_ij[idx]
+        eigenvectors_a_ij = eigenvectors_a_ij[:,idx]
+        (lambda1[p], lambda2[p], lambda3[p]) = eigenvalues_a_ij
+
+        if verbose:
+            inspected_eigenvalue = (-Rxx[p]+Ryy[p]-3*Ryz[p])/(3*Rxx[p]+6*Ryy[p])
+            print(f"\nPoint p = {p}")
+            print(f"3rd eigenvalue lambda_2 = {eigenvalues_a_ij[2]}")
+            print(f"3rd eigenvector v_2     = {eigenvectors_a_ij[:,2]}")
+            print(f"(expected from equations) \lambda_2 = (-R_00+R_11-3R_12)/(3R_00+6R_11) = {inspected_eigenvalue}")
+            print(f"(expected from equations) v_2 = (0, -1, 1)$, not normalized")
+            print(f"R_11 = {Ryy[p]:.5f}, R_12 = {Ryz[p]:.5f}")
+
+        # Calculate Barycentric map point
+        # where eigenvalues_a_ij[0] >= eigenvalues_a_ij[1] >= eigenvalues_a_ij[2] (eigval in decreasing order)
+        bar_map_xy =   x1c * (     eigenvalues_a_ij[0] -     eigenvalues_a_ij[1]) \
+                     + x2c * ( 2 * eigenvalues_a_ij[1] - 2 * eigenvalues_a_ij[2]) \
+                     + x3c * ( 3 * eigenvalues_a_ij[2] + 1)
+        xmap1[p]   = bar_map_xy[0]
+        xmap2[p]   = bar_map_xy[1]
+
+    return (Rkk, lambda1, lambda2, lambda2, xmap1, xmap2)

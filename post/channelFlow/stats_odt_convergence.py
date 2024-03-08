@@ -18,7 +18,7 @@
 # Scaling is done in the input file (not explicitly here).
 
 ## todo: change many things of this script and related functions to incorporate the new implementation of 
-## statistics in a fine uniform grid, and saved in dmp_...._stat.dat
+## statistics in a fine uniform grid, and saved in stat_dmp_*****.dat
 
 import numpy as np
 import glob as gb
@@ -30,6 +30,7 @@ from scipy.interpolate import interp1d
 from ChannelVisualizer import ChannelVisualizer
 from utils import *
 
+eps   = 1e-8 # small number for using np.arange 
 
 #--------------------------------------------------------------------------------------------
 
@@ -64,16 +65,16 @@ dTimeStart  = yml["dumpTimesGen"]["dTimeStart"]
 dTimeEnd    = get_provisional_tEnd(caseN)  # tEnd, valid even while running odt, instead of yml["params"]["tEnd"]
 dTimeStep   = yml["dumpTimesGen"]["dTimeStep"]
 inputParams = {"kvisc":kvisc, "rho":rho, "dxmin": dxmin, "nunif":nunif, "domainLength" : domainLength, "delta": delta, "Retau": Retau, "caseN": caseN, "utau": utau, 'dTimeStart':dTimeStart, 'dTimeEnd':dTimeEnd, 'dTimeStep':dTimeStep} 
-
 # --- Get ODT computational data ---
 
 flist = sorted(gb.glob('../../data/'+caseN+'/data/data_00000/dmp_*.dat'))
 
 # Num points uniform grid
 nunif2 = int(nunif/2)        # half of num. points (for ploting to domain center, symmetry in y-axis)
+nunifb, nunift = get_nunif2_walls(nunif, nunif2)
 
 # Averaging times
-averaging_times = np.arange(dTimeStart, dTimeEnd+0.1, delta_aver_time)
+averaging_times = np.arange(dTimeStart, dTimeEnd+eps, delta_aver_time)
 num_aver_times  = len(averaging_times)
 
 yu  = np.linspace(-delta,delta,nunif) # uniform grid in y-axis
@@ -139,15 +140,15 @@ for ifile in flist :
         vwm[:,idx] = vwm_aux/nfiles    
 
 # mirror data (symmetric channel in y-axis)
-um  = 0.5 * (um[:nunif2,:]  + np.flipud(um[nunif2:,:]))  # mirror data (symmetric)
-vm  = 0.5 * (vm[:nunif2,:]  + np.flipud(vm[nunif2:,:]))
-wm  = 0.5 * (wm[:nunif2,:]  + np.flipud(wm[nunif2:,:]))
-u2m = 0.5 * (u2m[:nunif2,:] + np.flipud(u2m[nunif2:,:]))
-v2m = 0.5 * (v2m[:nunif2,:] + np.flipud(v2m[nunif2:,:]))
-w2m = 0.5 * (w2m[:nunif2,:] + np.flipud(w2m[nunif2:,:]))
-uvm = 0.5 * (uvm[:nunif2,:] + np.flipud(uvm[nunif2:,:]))
-uwm = 0.5 * (uwm[:nunif2,:] + np.flipud(uwm[nunif2:,:]))
-vwm = 0.5 * (vwm[:nunif2,:] + np.flipud(vwm[nunif2:,:]))
+um  = 0.5 * (um[:nunifb,:]  + np.flipud(um[nunift:,:]))  # mirror data (symmetric)
+vm  = 0.5 * (vm[:nunifb,:]  + np.flipud(vm[nunift:,:]))
+wm  = 0.5 * (wm[:nunifb,:]  + np.flipud(wm[nunift:,:]))
+u2m = 0.5 * (u2m[:nunifb,:] + np.flipud(u2m[nunift:,:]))
+v2m = 0.5 * (v2m[:nunifb,:] + np.flipud(v2m[nunift:,:]))
+w2m = 0.5 * (w2m[:nunifb,:] + np.flipud(w2m[nunift:,:]))
+uvm = 0.5 * (uvm[:nunifb,:] + np.flipud(uvm[nunift:,:]))
+uwm = 0.5 * (uwm[:nunifb,:] + np.flipud(uwm[nunift:,:]))
+vwm = 0.5 * (vwm[:nunifb,:] + np.flipud(vwm[nunift:,:]))
 
 # Reynolds stresses
 ufufm = u2m - um*um # = <uf·uf>
@@ -166,7 +167,7 @@ wrmsf = np.sqrt(wfwfm)
 
 # y-coordinates
 yu += delta         # domain center is at 0; shift so left side is zero
-yu = yu[:nunif2]    # plotting to domain center
+yu = yu[:nunifb]    # plotting to domain center
 
 # Re_tau of ODT data
 dudy = (um[1,-1]-um[0,-1])/(yu[1]-yu[0])

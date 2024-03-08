@@ -64,8 +64,8 @@ compute_odt_statistics(odtStatisticsFilepath, inputParams, plot_reynolds_stress_
 # calculated-at-runtime statistics
 (ydelta_odt_rt, um_odt_rt, urmsf_odt_rt, uFpert_odt_rt, vm_odt_rt, vrmsf_odt_rt, vFpert_odt_rt, wm_odt_rt, wrmsf_odt_rt, wFpert_odt_rt,
  ufufm_odt_rt, vfvfm_odt_rt, wfwfm_odt_rt, ufvfm_odt_rt, ufwfm_odt_rt, vfwfm_odt_rt, \
- _, _, _, _, _) \
-    = get_odt_statistics_rt(inputParams)
+ # _, _, _, _, _), \
+ ) = get_odt_statistics_rt(inputParams)
 # check y/delta coordinates coincide for both statistics calculations 
 assert (abs(ydelta_odt - ydelta_odt_rt) < 1e-6).all(), "yu/delta from get_odt_statistics != yu/delta from get_odt_statistics_rt"
 

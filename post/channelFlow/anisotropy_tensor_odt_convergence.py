@@ -216,14 +216,13 @@ for avg_time in averaging_times:
 # -------------------------------------------------------------------------
 # -------------------------------------------------------------------------
 
-(ydelta_rt, _,_,_, _,_,_, _,_,_, _,_,_,_,_,_, lambda0_rt, lambda1_rt, lambda2_rt, bar_map_x_rt, bar_map_y_rt) \
-    = get_odt_statistics_rt_at_chosen_averaging_times(inputParams, averaging_times)
+(ydelta_rt, _,_,_, _,_,_, _,_,_, Rxx_rt, Ryy_rt, Rzz_rt, Rxy_rt, Rxz_rt, Ryz_rt) = get_odt_statistics_rt_at_chosen_averaging_times(inputParams, averaging_times)
+(Rkk_rt, lambda0_rt, lambda1_rt, lambda2_rt, xmap1_rt, xmap2_rt) = compute_reynolds_stress_dof(Rxx_rt, Ryy_rt, Rzz_rt, Rxy_rt, Rxz_rt, Ryz_rt)
 
 for i in range(num_aver_times): 
-
     eigenvalues_rt = np.array([lambda0_rt[:,i], lambda1_rt[:,i], lambda2_rt[:,i]]).transpose()
     frames_eig_rt  = visualizer.build_anisotropy_tensor_eigenvalues_frame(frames_eig_rt, ydelta_rt[:,i], eigenvalues_rt, averaging_times[i])
-    frames_bar_rt  = visualizer.build_anisotropy_tensor_barycentric_map_frame(frames_bar_rt, bar_map_x_rt[:,i], bar_map_y_rt[:,i], ydelta_rt[:,i], averaging_times[i])
+    frames_bar_rt  = visualizer.build_anisotropy_tensor_barycentric_map_frame(frames_bar_rt, xmap1_rt[:,i], xmap2_rt[:,i], ydelta_rt[:,i], averaging_times[i])
 
 
 # -------------------------------------------------------------------------

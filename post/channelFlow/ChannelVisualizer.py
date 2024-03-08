@@ -495,6 +495,43 @@ class ChannelVisualizer():
         plt.savefig(filename, dpi=600)
 
     
+
+    def build_anisotropy_tensor_barycentric_map(self, bar_map_x, bar_map_y, bar_map_color, avg_time, case_name, title):
+        
+        plt.figure()
+
+        # Plot markers Barycentric map
+        #cmap = cm.get_cmap( 'Greys' ) ## deprecated from matplotlib 3.7
+        cmap  = matplotlib.colormaps['Greys']
+        norm  = colors.Normalize(vmin = 0, vmax = 1.0)
+
+        # Plot data into the barycentric map
+        plt.scatter( bar_map_x, bar_map_y, c = bar_map_color, cmap = cmap, norm=norm, zorder = 3, marker = 'o', s = 85, edgecolor = 'black', linewidth = 0.8 )
+
+        # Plot barycentric map lines
+        plt.plot( [self.x1c[0], self.x2c[0]],[self.x1c[1], self.x2c[1]], zorder = 1, color = 'black', linestyle = '-', linewidth = 2 )
+        plt.plot( [self.x2c[0], self.x3c[0]],[self.x2c[1], self.x3c[1]], zorder = 1, color = 'black', linestyle = '-', linewidth = 2 )
+        plt.plot( [self.x3c[0], self.x1c[0]],[self.x3c[1], self.x1c[1]], zorder = 1, color = 'black', linestyle = '-', linewidth = 2 )
+
+        # Configure plot
+        plt.xlim([-0.1,1.1])
+        plt.ylim([-0.1,1.1])
+        plt.axis( 'off' )
+        ax = plt.gca()
+        ax.set_aspect('equal', adjustable='box')
+        plt.text( 1.0047, -0.025, r'$\textbf{x}_{1_{c}}$' )
+        plt.text( -0.037, -0.025, r'$\textbf{x}_{2_{c}}$' )
+        plt.text( 0.4850, 0.9000, r'$\textbf{x}_{3_{c}}$' )
+        cbar = plt.colorbar()
+        cbar.set_label( r'$y/\delta$' )
+        plt.title(f"averaging time = {avg_time:.1f}")
+        
+        # save figure
+        filename = f"../../data/{case_name}/post/{title}.jpg"
+        print(f"\nMAKING PLOT OF BARYCENTRIC MAP OF ANISOTROPY TENSOR in {filename}" )
+        plt.savefig(filename, dpi=600)
+
+
     def build_anisotropy_tensor_barycentric_map_frame(self, frames, bar_map_x, bar_map_y, bar_map_color, avg_time):
 
         plt.figure()
