@@ -199,6 +199,7 @@ void dv_reynolds_stress::getReynoldsStressDelta(){
 
         // perturbed TKE, from RkkDelta
         RkkPert = Rkk[i] + RkkDelta[i];                     // update RkkPert
+        enforceRealizabilityRkk(RkkPert);
 
         // perturbed eigenvalues, from xmapDelta
         xmap1Pert = xmap1[i] + xmap1Delta[i];    
@@ -374,6 +375,13 @@ void dv_reynolds_stress::truncateAndNormalizeBarycentricCoord(vector<double> &la
     double sumCoord = lambda[0] + lambda[1] + lambda[2];
     for (int i = 0; i < 3; i++)
         lambda[i] /= sumCoord; 
+}
+
+// Check realizability of Rkk (Rij norm), by garanteeing Rkk >= 0
+void dv_reynolds_stress::enforceRealizabilityRkk(double &rkk){
+    if (rkk<0.0){
+        rkk=0.0;
+    }
 }
 
 /* Check realizability of xmap coordinates (of eigenvalues) by:

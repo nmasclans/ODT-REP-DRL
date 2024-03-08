@@ -69,6 +69,7 @@ class dv_reynolds_stress : public dv
         virtual void getCartesianCoordFromBarycentricCoord(const vector<double> &lambda, double &xmapping1, double &xmapping2);
         virtual bool areRealizableBarycentricCoord(const vector<double> &lambda);
         virtual void truncateAndNormalizeBarycentricCoord(vector<double> &lambda);
+        virtual void enforceRealizabilityRkk(double &rkk);
         virtual void enforceRealizabilityXmap(double &xmap1, double &xmap2);
 
         //////////////////// CONSTRUCTOR FUNCTIONS /////////////////
