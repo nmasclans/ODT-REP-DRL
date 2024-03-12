@@ -19,9 +19,6 @@
 import numpy as np
 import yaml
 import sys
-import matplotlib
-matplotlib.use('PDF')       
-import matplotlib.pyplot as plt
 import os
 from ChannelVisualizer import ChannelVisualizer
 
@@ -30,14 +27,21 @@ from utils import *
 #--------------------------------------------------------------------------------------------
 
 try :
-    caseN = sys.argv[1]
-    Retau = int(sys.argv[2])
+    caseN  = sys.argv[1]
+    rlzN   = int(sys.argv[2])
+    Retau  = int(sys.argv[3])
 except :
-    raise ValueError("Include the case name in the call")
+    raise ValueError("Missing call arguments, should be: <case_name> <realization_number> <reynolds_number>")
 
-if not os.path.exists("../../data/"+caseN+"/post") :
-    os.mkdir("../../data/"+caseN+"/post")
-
+# post-processing directory
+postDir = f"../../data/{caseN}/post"
+if not os.path.exists(postDir):
+    os.mkdir(postDir)
+# post-processing sub-directory for single realization
+rlzStr = f"{rlzN:05d}"
+postRlzDir = os.path.join(postDir, f"post_{rlzStr}")
+if not os.path.exists(postRlzDir):
+    os.mkdir(postRlzDir)
 
 # --- Get ODT input parameters ---
 
@@ -55,8 +59,7 @@ inputParams = {"kvisc":kvisc, "rho":rho, "dxmin": dxmin, "nunif": nunif, "domain
 
 #------------ Get ODT data ---------------
 
-odtStatisticsFilepath = "../../data/" + caseN + "/post/ODTstat.dat"
-
+odtStatisticsFilepath = os.path.join(postRlzDir, "ODTstat.dat")
 # post-processed statistics
 compute_odt_statistics(odtStatisticsFilepath, inputParams, plot_reynolds_stress_terms=False)
 (ydelta_odt, yplus_odt, um_odt, vm_odt, wm_odt, urmsf_odt, vrmsf_odt, wrmsf_odt, ufufm_odt, vfvfm_odt, wfwfm_odt, ufvfm_odt, ufwfm_odt, vfwfm_odt, viscous_stress_odt, reynolds_stress_odt, total_stress_odt, vt_u_plus_odt, d_u_plus_odt) \
@@ -83,7 +86,7 @@ assert (abs(ydelta_odt - ydelta_odt_rt) < 1e-6).all(), "yu/delta from get_odt_st
 
 # Build plots
 
-visualizer = ChannelVisualizer(caseN)
+visualizer = ChannelVisualizer(postRlzDir)
 
 visualizer.build_u_mean_profile(yplus_odt, yplus_dns, um_odt, um_odt_rt, um_dns)
 visualizer.build_u_rmsf_profile(yplus_odt, yplus_dns, urmsf_odt, vrmsf_odt, wrmsf_odt, urmsf_dns, vrmsf_dns, wrmsf_dns)

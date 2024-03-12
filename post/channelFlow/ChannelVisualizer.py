@@ -1,6 +1,8 @@
 import copy
-import numpy as np
+import os
 import matplotlib
+
+import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 import matplotlib.colors as colors
@@ -20,9 +22,9 @@ plt.rc( 'text.latex', preamble = r'\usepackage{amsmath} \usepackage{amssymb} \us
 
 class ChannelVisualizer():
 
-    def __init__(self, caseN):
+    def __init__(self, postRlzDir):
 
-        self.caseN = caseN
+        self.postRlzDir = postRlzDir
 
         # --- Location of Barycentric map corners ---
         self.x1c = np.array( [ 1.0 , 0.0 ] )
@@ -35,7 +37,7 @@ class ChannelVisualizer():
 
     def build_u_mean_profile(self, y_odt, y_dns, u_odt, u_rt_odt, u_dns):
         
-        filename = f"../../data/{self.caseN}/post/u_mean.jpg"
+        filename = os.path.join(self.postRlzDir, "u_mean.jpg")
         print(f"\nMAKING PLOT OF MEAN U PROFILE: ODT vs DNS in {filename}" )
 
         fig, ax = plt.subplots()
@@ -56,7 +58,7 @@ class ChannelVisualizer():
 
     def build_u_rmsf_profile(self, y_odt, y_dns, urmsf_odt, vrmsf_odt, wrmsf_odt, urmsf_dns, vrmsf_dns, wrmsf_dns):
 
-        filename = f"../../data/{self.caseN}/post/u_rmsf.jpg"
+        filename = os.path.join(self.postRlzDir, "u_rmsf.jpg")
         print(f"\nMAKING PLOT OF RMS VEL PROFILES: ODT vs DNS in {filename}" )
 
         fig, ax = plt.subplots()
@@ -87,7 +89,7 @@ class ChannelVisualizer():
 
     def build_runtime_vs_post_statistics(self, yplus_odt, um_odt, vm_odt, wm_odt, urmsf_odt, vrmsf_odt, wrmsf_odt, um_odt_rt, vm_odt_rt, wm_odt_rt, urmsf_odt_rt, vrmsf_odt_rt, wrmsf_odt_rt):
 
-        filename = f"../../data/{self.caseN}/post/runtime_vs_postprocessed_velocity_stats.jpg"
+        filename = os.path.join(self.postRlzDir, "runtime_vs_postprocessed_velocity_stats.jpg")
         print(f"\nMAKING PLOT OF AVERAGED AND RMSF VEL PROFILES calculated at RUNTIME vs. POST-PROCESSED (ODT) in {filename}")
 
         fig, ax = plt.subplots(3, figsize=(8,10))
@@ -122,7 +124,7 @@ class ChannelVisualizer():
 
     def build_reynolds_stress_diagonal_profile(self, y_odt, y_dns, Rxx_odt, Ryy_odt, Rzz_odt, Rxx_dns, Ryy_dns, Rzz_dns):
 
-        filename = f"../../data/{self.caseN}/post/reynolds_stress_diagonal.jpg"
+        filename = os.path.join(self.postRlzDir, "reynolds_stress_diagonal.jpg")
         print(f"\nMAKING PLOT OF REYNOLDS STRESSES PROFILES (DIAGONAL): ODT vs DNS in {filename}" )
 
         fig, ax = plt.subplots()
@@ -153,7 +155,7 @@ class ChannelVisualizer():
 
     def build_reynolds_stress_not_diagonal_profile(self, y_odt, y_dns, Rxy_odt, Rxz_odt, Ryz_odt, Rxy_dns, Rxz_dns, Ryz_dns):
 
-        filename = f"../../data/{self.caseN}/post/reynolds_stress_not_diagonal.jpg"
+        filename = os.path.join(self.postRlzDir, "reynolds_stress_not_diagonal.jpg")
         print(f"\nMAKING PLOT OF REYNOLDS STRESSES PROFILES (NOT-DIAGONAL): ODT vs DNS in {filename}" )
 
         fig, ax = plt.subplots()
@@ -184,7 +186,7 @@ class ChannelVisualizer():
     
     def build_runtime_vs_post_reynolds_stress(self, yplus_odt, ufufm_odt, vfvfm_odt, wfwfm_odt, ufvfm_odt, ufwfm_odt, vfwfm_odt, ufufm_odt_rt, vfvfm_odt_rt, wfwfm_odt_rt, ufvfm_odt_rt, ufwfm_odt_rt, vfwfm_odt_rt):
 
-        filename = f"../../data/{self.caseN}/post/runtime_vs_postprocessed_reynolds_stress.jpg"
+        filename = os.path.join(self.postRlzDir, "runtime_vs_postprocessed_reynolds_stress.jpg")
         print(f"\nMAKING PLOT OF REYNOLDS STRESSES PROFILES calculated at RUNTIME vs. POST-PROCESSED (ODT) in {filename}" )
 
         fig, ax = plt.subplots(3,2,figsize=(10,10))
@@ -252,7 +254,7 @@ class ChannelVisualizer():
         if is_runtime_statistics_calculated:
             assert u_odt_rt.shape[0] == len(y_odt_rt)
 
-        filename = f"../../data/{self.caseN}/post/u_mean_odt_convergence_postprocess_statistics.jpg"
+        filename = os.path.join(self.postRlzDir, "u_mean_odt_convergence_postprocess_statistics.jpg")
         print(f"\nMAKING PLOT OF MEAN U PROFILE CONVERGENCE of ODT with POST-PROCESSING CALCULATED STATISTICS in {filename}" )
 
         fig, ax = plt.subplots(figsize=(8,6))
@@ -266,7 +268,7 @@ class ChannelVisualizer():
 
         if is_runtime_statistics_calculated:
 
-            filename = f"../../data/{self.caseN}/post/u_mean_odt_convergence_runtime_statistics.jpg"
+            filename = os.path.join(self.postRlzDir, "u_mean_odt_convergence_runtime_statistics.jpg")
             print(f"\nMAKING PLOT OF MEAN U PROFILE CONVERGENCE of ODT with RUNTIME-CALCULATED STATISTICS in {filename}" )
             
             fig, ax = plt.subplots(figsize=(8,6))
@@ -283,7 +285,7 @@ class ChannelVisualizer():
                                              urmsf_odt_convergence, vrmsf_odt_convergence, wrmsf_odt_convergence, \
                                              urmsf_dns, vrmsf_dns, wrmsf_dns, averaging_times):
 
-        filename = f"../../data/{self.caseN}/post/u_rmsf_odt_convergence.jpg"
+        filename = os.path.join(self.postRlzDir, "u_rmsf_odt_convergence.jpg")
         print(f"\nMAKING PLOT OF RMS VEL PROFILES: ODT vs DNS in {filename}" )
 
         fig, ax = plt.subplots(3, figsize=(9,9))
@@ -318,7 +320,7 @@ class ChannelVisualizer():
             Rxx_odt_convergence, Ryy_odt_convergence, Rzz_odt_convergence, \
             Rxx_dns, Ryy_dns, Rzz_dns, averaging_times):
 
-        filename = f"../../data/{self.caseN}/post/reynolds_stress_diagonal_odt_convergence.jpg"
+        filename = os.path.join(self.postRlzDir, "reynolds_stress_diagonal_odt_convergence.jpg")
         print(f"\nMAKING PLOT OF REYNOLDS STRESSES PROFILES (DIAGONAL): ODT vs DNS in {filename}" )
 
         fig, ax = plt.subplots(3, figsize=(9,9))
@@ -353,7 +355,7 @@ class ChannelVisualizer():
             Rxy_odt_convergence, Rxz_odt_convergence, Ryz_odt_convergence, \
             Rxy_dns, Rxz_dns, Ryz_dns, averaging_times):
 
-        filename = f"../../data/{self.caseN}/post/reynolds_stress_not_diagonal_odt_convergence.jpg"
+        filename = os.path.join(self.postRlzDir, "reynolds_stress_not_diagonal_odt_convergence.jpg")
         print(f"\nMAKING PLOT OF REYNOLDS STRESSES PROFILES (NOT-DIAGONAL): ODT vs DNS in {filename}" )
 
         fig, ax = plt.subplots(3, figsize=(9,9))
@@ -388,7 +390,7 @@ class ChannelVisualizer():
                                    tau_viscous_odt, tau_reynolds_odt, tau_total_odt, \
                                    tau_viscous_dns, tau_reynolds_dns, tau_total_dns):
         
-        filename = f"../../data/{self.caseN}/post/stress_decomposition.jpg"
+        filename = os.path.join(self.postRlzDir, "stress_decomposition.jpg")
         print(f"\nMAKING PLOT OF STRESS DECOMPOSITION ODT vs DNS in {filename}")
 
         fig, ax = plt.subplots(2,figsize=(9,9))
@@ -410,7 +412,7 @@ class ChannelVisualizer():
 
     def build_TKE_budgets(self, yplus_odt, yplus_dns, vt_u_plus_odt, d_u_plus_odt, vt_u_plus_dns, p_u_plus_dns):
 
-        filename = f"../../data/{self.caseN}/post/TKE_budgets.jpg"
+        filename = os.path.join(self.postRlzDir, "TKE_budgets.jpg")
         print(f"\nMAKING PLOT OF TKE BUDGETS ODT vs DNS in {filename}")
        
         fig, ax = plt.subplots()
@@ -440,7 +442,7 @@ class ChannelVisualizer():
     
     def build_um_profile_symmetric_vs_nonsymmetric(self, CI, yuplus, um_nonsym, um_sym):
 
-        filename = f"../../data/{self.caseN}/post/u_mean_symmetric_vs_nonsymmetric.jpg"
+        filename = os.path.join(self.postRlzDir, "u_mean_symmetric_vs_nonsymmetric.jpg")
         print(f"\nMAKING PLOT OF UM+ ORIGINAL NON-SYMMETRIC PROFILE vs SYMMETRIC PROFILE in {filename}")
 
         fig, ax = plt.subplots()
@@ -459,7 +461,7 @@ class ChannelVisualizer():
 
     def build_um_profile_symmetric_vs_nonsymmetric_odt_convergence(self, CI, yuplus, um_nonsym, um_sym, averaging_times):
 
-        filename = f"../../data/{self.caseN}/post/u_mean_symmetric_vs_nonsymmetric_odt_convergence.jpg"
+        filename = os.path.join(self.postRlzDir, "u_mean_symmetric_vs_nonsymmetric_odt_convergence.jpg")
         print(f"\nMAKING PLOT OF UM+ ORIGINAL NON-SYMMETRIC PROFILE vs SYMMETRIC PROFILE for ODT CONVERGENCE in {filename}")
 
         num_profiles = um_nonsym.shape[1]
@@ -481,7 +483,7 @@ class ChannelVisualizer():
     def build_CI_evolution(self, time, CI):
         # todo: include time data in the x axis, by now it is just index position in the CI list
 
-        filename = f"../../data/{self.caseN}/post/CI_vs_time.jpg"
+        filename = os.path.join(self.postRlzDir, "CI_vs_time.jpg")
         print(f"\nMAKING PLOT OF CI EVOLUTION ALONG TIME in {filename}")
 
         fig, ax = plt.subplots()
@@ -496,7 +498,7 @@ class ChannelVisualizer():
 
     
 
-    def build_anisotropy_tensor_barycentric_map(self, bar_map_x, bar_map_y, y_delta, avg_time, case_name, title):
+    def build_anisotropy_tensor_barycentric_map(self, bar_map_x, bar_map_y, y_delta, avg_time, title):
         
         plt.figure()
 
@@ -527,7 +529,7 @@ class ChannelVisualizer():
         plt.title(f"averaging time = {avg_time:.1f}")
         
         # save figure
-        filename = f"../../data/{case_name}/post/{title}.jpg"
+        filename = os.path.join(self.postRlzDir, f"{title}.jpg")
         print(f"\nMAKING PLOT OF BARYCENTRIC MAP OF ANISOTROPY TENSOR in {filename}" )
         plt.savefig(filename, dpi=600)
 
@@ -564,7 +566,7 @@ class ChannelVisualizer():
         ###plt.clim( 0.0, 20.0 )
 
         # ------ save figure ------
-        #filename = f"../../data/{caseN}/post/anisotropy_tensor_barycentric_map_odt_avgTime_{avg_time:.0f}.jpg"
+        #filename = os.path.join(self.postRlzDir, f"anisotropy_tensor_barycentric_map_odt_avgTime_{avg_time:.0f}.jpg")
         #print(f"\nMAKING PLOT OF BARYCENTRIC MAP OF ANISOTROPY TENSOR from ODT data at Averaging Time = {avg_time:.2f}, in filename: {filename}" )
         #plt.savefig(filename, dpi=600)
 
@@ -610,7 +612,7 @@ class ChannelVisualizer():
 
     def plot_line(self, xdata, ydata, xlim, ylim, xlabel, ylabel, title):
 
-        filename = f"../../data/{self.caseN}/post/{title}.jpg"
+        filename = os.path.join(self.postRlzDir, f"{title}.jpg")
         print(f"\nMAKING PLOT of {xlabel} vs. {ylabel} in {filename}" )
 
         fig, ax = plt.subplots()
@@ -627,7 +629,7 @@ class ChannelVisualizer():
 
     def plot_pdf(self, xdata, xlim, xlabel, nbins, title):
 
-        filename = f"../../data/{self.caseN}/post/{title}.jpg"
+        filename = os.path.join(self.postRlzDir, f"{title}.jpg")
         print(f"\nMAKING PLOT of PDF of {xlabel} in {filename}" )
 
         # Compute a histogram of the sample
@@ -651,7 +653,7 @@ class ChannelVisualizer():
 
     def plot_join_pdf(self, x_data, y_data, xlim, ylim, xlabel, ylabel, nbins, title):
 
-        filename = f"../../data/{self.caseN}/post/{title}.jpg"
+        filename = os.path.join(self.postRlzDir, f"{title}.jpg")
         print(f"\nMAKING PLOT of JOIN-PDF of {xlabel} vs. {ylabel} in {filename}" )
 
         fig, ax = plt.subplots()

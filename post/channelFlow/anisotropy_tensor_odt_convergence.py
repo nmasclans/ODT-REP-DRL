@@ -29,13 +29,21 @@ nbins = 50;			            # [-]
 
 try :
     caseN = sys.argv[1]
-    Retau = int(sys.argv[2])
-    delta_aver_time = int(sys.argv[3])
+    rlzN   = int(sys.argv[2])
+    Retau = int(sys.argv[3])
+    delta_aver_time = int(sys.argv[4])
 except :
-    raise ValueError("Include the case name in the call")
+    raise ValueError("Missing call arguments, should be: <case_name> <realization_number> <reynolds_number> <delta_time_stats_anisotropy>")
 
-if not os.path.exists("../../data/"+caseN+"/post") :
-    os.mkdir("../../data/"+caseN+"/post")
+# post-processing directory
+postDir = f"../../data/{caseN}/post"
+if not os.path.exists(postDir):
+    os.mkdir(postDir)
+# post-processing sub-directory for single realization
+rlzStr = f"{rlzN:05d}"
+postRlzDir = os.path.join(postDir, f"post_{rlzStr}")
+if not os.path.exists(postRlzDir):
+    os.mkdir(postRlzDir)
 
 # --- Location of Barycentric map corners ---
 x1c = np.array( [ 1.0 , 0.0 ] )
@@ -43,7 +51,7 @@ x2c = np.array( [ 0.0 , 0.0 ] )
 x3c = np.array( [ 0.5 , np.sqrt(3.0)/2.0 ] )
 
 # --- Animation frames (gif) ---
-visualizer      = ChannelVisualizer(caseN)
+visualizer      = ChannelVisualizer(postRlzDir)
 frames_eig_post = [];   frames_bar_post = []
 frames_eig_rt   = [];   frames_bar_rt   = []
 
@@ -119,18 +127,18 @@ for i in range(num_aver_times):
 # -------------------------------------------------------------------------
 
 # post-processed statistics
-filename = f"../../data/{caseN}/post/anisotropy_tensor_eigenvalues_odt_convergence_post.gif"
+filename = os.path.join(postRlzDir, "post/anisotropy_tensor_eigenvalues_odt_convergence_post.gif")
 print(f"\nMAKING GIF EIGENVALUES OF ANISOTROPY TENSOR for POST-PROCESSING calculations ALONG AVG. TIME in {filename}" )
 frames_eig_post[0].save(filename, save_all=True, append_images=frames_eig_post[1:], duration=100, loop=0)
-filename = f"../../data/{caseN}/post/anisotropy_tensor_barycentric_map_odt_convergence_post.gif"
+filename = os.path.join(postRlzDir, "anisotropy_tensor_barycentric_map_odt_convergence_post.gif")
 print(f"\nMAKING GIF OF BARYCENTRIC MAP OF ANISOTROPY TENSOR for POST-PROCESSING calculations ALONG AVG. TIME in {filename}" )
 frames_bar_post[0].save(filename, save_all=True, append_images=frames_bar_post[1:], duration=100, loop=0)
 
 # runtime statistics
-filename = f"../../data/{caseN}/post/anisotropy_tensor_eigenvalues_odt_convergence_rt.gif"
+filename = os.path.join(postRlzDir, "post/anisotropy_tensor_eigenvalues_odt_convergence_rt.gif")
 print(f"\nMAKING GIF EIGENVALUES OF ANISOTROPY TENSOR for RUNTIME calculations ALONG AVG. TIME in {filename}" )
 frames_eig_rt[0].save(filename, save_all=True, append_images=frames_eig_rt[1:], duration=100, loop=0)
 print(f"\nMAKING GIF OF BARYCENTRIC MAP OF ANISOTROPY TENSOR for RUNTIME calculations ALONG AVG. TIME in {filename}" )
-filename = f"../../data/{caseN}/post/anisotropy_tensor_barycentric_map_odt_convergence_rt.gif"
+filename = os.path.join(postRlzDir, "anisotropy_tensor_barycentric_map_odt_convergence_rt.gif")
 frames_bar_rt[0].save(filename, save_all=True, append_images=frames_bar_rt[1:], duration=100, loop=0)
 

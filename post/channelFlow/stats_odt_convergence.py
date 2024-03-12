@@ -38,13 +38,21 @@ eps   = 1e-8 # small number for using np.arange
 
 try :
     caseN = sys.argv[1]
-    Retau = int(sys.argv[2])
-    delta_aver_time = int(sys.argv[3])
+    rlzN   = int(sys.argv[2])
+    Retau = int(sys.argv[3])
+    delta_aver_time = int(sys.argv[4])
 except :
-    raise ValueError("Include the case name in the call")
+    raise ValueError("Missing call arguments, should be: <case_name> <realization_number> <reynolds_number> <delta_time_stats_stats>")
 
-if not os.path.exists("../../data/"+caseN+"/post") :
-    os.mkdir("../../data/"+caseN+"/post")
+# post-processing directory
+postDir = f"../../data/{caseN}/post"
+if not os.path.exists(postDir):
+    os.mkdir(postDir)
+# post-processing sub-directory for single realization
+rlzStr = f"{rlzN:05d}"
+postRlzDir = os.path.join(postDir, f"post_{rlzStr}")
+if not os.path.exists(postRlzDir):
+    os.mkdir(postRlzDir)
 
 #------------ ODT data ---------------
 
@@ -195,7 +203,7 @@ print("(ODT) Actual  Retau (at simulation end):", RetauOdt)
 
 # Build plots
 
-visualizer = ChannelVisualizer(caseN)
+visualizer = ChannelVisualizer(postRlzDir)
 visualizer.build_u_mean_profile_odt_convergence(yuplus, yplus_dns, um, um_dns, averaging_times, y_odt_rt = yplus_rt, u_odt_rt = um_rt)
 visualizer.build_u_rmsf_profile_odt_convergence(yuplus, yplus_dns, urmsf, vrmsf, wrmsf, urmsf_dns, vrmsf_dns, wrmsf_dns, averaging_times)
 visualizer.build_reynolds_stress_diagonal_profile_odt_convergence(    yuplus, yplus_dns, ufufm, vfvfm, wfwfm, ufufm_dns, vfvfm_dns, wfwfm_dns, averaging_times)

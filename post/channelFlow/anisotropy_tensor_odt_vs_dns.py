@@ -23,9 +23,7 @@ import sys
 import os
 import math
 
-import matplotlib
 import numpy as np
-import pandas as pd
 
 from utils import *
 from ChannelVisualizer import ChannelVisualizer
@@ -52,18 +50,26 @@ x3c = np.array( [ 0.5 , math.sqrt(3.0)/2.0 ] )
 # --- Get CASE parameters ---
 
 try :
-    caseN = sys.argv[1]
-    Retau = int(sys.argv[2])
+    caseN  = sys.argv[1]
+    rlzN   = int(sys.argv[2])
+    Retau  = int(sys.argv[3])
 except :
-    raise ValueError("Include the case name in the call")
+    raise ValueError("Missing call arguments, should be: <case_name> <realization_number> <reynolds_number>")
 
-if not os.path.exists("../../data/"+caseN+"/post") :
-    os.mkdir("../../data/"+caseN+"/post")
+# post-processing directory
+postDir = f"../../data/{caseN}/post"
+if not os.path.exists(postDir):
+    os.mkdir(postDir)
+# post-processing sub-directory for single realization
+rlzStr = f"{rlzN:05d}"
+postRlzDir = os.path.join(postDir, f"post_{rlzStr}")
+if not os.path.exists(postRlzDir):
+    os.mkdir(postRlzDir)
 
 # --- Visualizer ---
 
-visualizer  = ChannelVisualizer(caseN)
-nbins       = 1000
+visualizer = ChannelVisualizer(postRlzDir)
+nbins      = 1000
 
 # --- Get ODT input parameters ---
 
@@ -84,7 +90,7 @@ inputParams = {"kvisc":kvisc, "rho":rho, "dxmin": dxmin, "nunif": nunif, "domain
 #------------ Get ODT data ---------------
 
 # post-processed statistics
-odtStatisticsFilepath = "../../data/" + caseN + "/post/ODTstat.dat"
+odtStatisticsFilepath = os.path.join(postRlzDir, "ODTstat.dat")
 compute_odt_statistics(odtStatisticsFilepath, inputParams)
 (ydelta_odt, yplus_odt, um_odt, vm_odt, wm_odt, urmsf_odt, vrmsf_odt, wrmsf_odt, ufufm_odt, vfvfm_odt, wfwfm_odt, ufvfm_odt, ufwfm_odt, vfwfm_odt, viscous_stress_odt, reynolds_stress_odt, total_stress_odt, vt_u_plus_odt, d_u_plus_odt) \
     = get_odt_statistics(odtStatisticsFilepath, inputParams)
@@ -148,6 +154,6 @@ for sim in simulation_list:
     # ---------------------- Plot Barycentric Map ---------------------- 
     
     # post-processing calculations
-    visualizer.build_anisotropy_tensor_barycentric_map(xmap1, xmap2, yplus, tEnd, caseN, f"anisotropy_tensor_barycentric_map_{sim}_post")
+    visualizer.build_anisotropy_tensor_barycentric_map(xmap1, xmap2, yplus, tEnd, f"anisotropy_tensor_barycentric_map_{sim}_post")
     # runtime calculations
-    visualizer.build_anisotropy_tensor_barycentric_map(xmap1_odt_rt, xmap2_odt_rt, yplus, tEnd, caseN, f"anisotropy_tensor_barycentric_map_odt_rt")
+    visualizer.build_anisotropy_tensor_barycentric_map(xmap1_odt_rt, xmap2_odt_rt, yplus, tEnd, f"anisotropy_tensor_barycentric_map_odt_rt")
