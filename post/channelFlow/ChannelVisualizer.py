@@ -496,7 +496,7 @@ class ChannelVisualizer():
 
     
 
-    def build_anisotropy_tensor_barycentric_map(self, bar_map_x, bar_map_y, bar_map_color, avg_time, case_name, title):
+    def build_anisotropy_tensor_barycentric_map(self, bar_map_x, bar_map_y, y_delta, avg_time, case_name, title):
         
         plt.figure()
 
@@ -506,7 +506,7 @@ class ChannelVisualizer():
         norm  = colors.Normalize(vmin = 0, vmax = 1.0)
 
         # Plot data into the barycentric map
-        plt.scatter( bar_map_x, bar_map_y, c = bar_map_color, cmap = cmap, norm=norm, zorder = 3, marker = 'o', s = 85, edgecolor = 'black', linewidth = 0.8 )
+        plt.scatter( bar_map_x, bar_map_y, c = y_delta, cmap = cmap, norm=norm, zorder = 3, marker = 'o', s = 85, edgecolor = 'black', linewidth = 0.8 )
 
         # Plot barycentric map lines
         plt.plot( [self.x1c[0], self.x2c[0]],[self.x1c[1], self.x2c[1]], zorder = 1, color = 'black', linestyle = '-', linewidth = 2 )
@@ -532,7 +532,7 @@ class ChannelVisualizer():
         plt.savefig(filename, dpi=600)
 
 
-    def build_anisotropy_tensor_barycentric_map_frame(self, frames, bar_map_x, bar_map_y, bar_map_color, avg_time):
+    def build_anisotropy_tensor_barycentric_map_frame(self, frames, bar_map_x, bar_map_y, y_delta, avg_time):
 
         plt.figure()
 
@@ -542,7 +542,7 @@ class ChannelVisualizer():
         norm  = colors.Normalize(vmin = 0, vmax = 1.0)
 
         # Plot data into the barycentric map
-        plt.scatter( bar_map_x, bar_map_y, c = bar_map_color, cmap = cmap, norm=norm, zorder = 3, marker = 'o', s = 85, edgecolor = 'black', linewidth = 0.8 )
+        plt.scatter( bar_map_x, bar_map_y, c = y_delta, cmap = cmap, norm=norm, zorder = 3, marker = 'o', s = 85, edgecolor = 'black', linewidth = 0.8 )
 
         # Plot barycentric map lines
         plt.plot( [self.x1c[0], self.x2c[0]],[self.x1c[1], self.x2c[1]], zorder = 1, color = 'black', linestyle = '-', linewidth = 2 )

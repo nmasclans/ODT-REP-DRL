@@ -1115,7 +1115,7 @@ def get_provisional_tEnd(case_name):
 #           Anisotropy tensor, eigen-decomposition, mapping to barycentric map 
 #-----------------------------------------------------------------------------------------
 
-def check_realizability_conditions(Rxx, Ryy, Rzz, Rxy, Rxz, Ryz):
+def check_realizability_conditions(Rxx, Ryy, Rzz, Rxy, Rxz, Ryz, verbose=False):
 
     #------------ Realizability conditions ---------------
 
@@ -1137,12 +1137,20 @@ def check_realizability_conditions(Rxx, Ryy, Rzz, Rxy, Rxz, Ryz):
 
     # COND 3: det(Rij) >= 0
     detR  = Rxx * Ryy * Rzz + 2 * Rxy * Rxz * Ryz - (Rxx * Ryz * Ryz + Ryy * Rxz * Rxz + Rzz * Rxy * Rxy) # np.linalg.det(R_ij), length #num_points
+    # detR  = np.linalg.det(R_ij)
+    # enforce detR == 0 if -eps < detR < 0 due to computational error  
+    for i in range(len(detR)):
+        if detR[i] > -1e-15 and detR[i] < 0.0:
+            detR[i] = 0.0
     cond2 = ( detR >= 0 ).all()
 
     if cond0 and cond1 and cond2:
-        print("\nCONGRATULATIONS, the reynolds stress tensor satisfies REALIZABILITY CONDITIONS.")
+        if verbose:
+            print("\nCONGRATULATIONS, the reynolds stress tensor satisfies REALIZABILITY CONDITIONS.")
     else:
-        raise Exception(f"The reynolds stress tensor does not satisfy REALIZABILITY CONDITIONS: cond0 = {cond0}, cond1 = {cond1}, cond2 = {cond2}")
+        message = f"The reynolds stress tensor does not satisfy REALIZABILITY CONDITIONS: cond0 = {cond0}, cond1 = {cond1}, cond2 = {cond2}"
+        print(detR)
+        raise Exception(message)
 
 
 def compute_reynolds_stress_dof(Rxx, Ryy, Rzz, Rxy, Rxz, Ryz, 
@@ -1173,16 +1181,16 @@ def compute_reynolds_stress_dof(Rxx, Ryy, Rzz, Rxy, Rxz, Ryz,
 
         #------------ Reynolds stress tensor ---------------
 
-        R_ij      = np.zeros([num_points, 3, 3])
-        R_ij[0,0] = Rxx
-        R_ij[0,1] = Rxy
-        R_ij[0,2] = Rxz
-        R_ij[1,0] = Rxy
-        R_ij[1,1] = Ryy
-        R_ij[1,2] = Ryz
-        R_ij[2,0] = Rxz
-        R_ij[2,1] = Ryz
-        R_ij[2,2] = Rzz
+        R_ij      = np.zeros([3, 3])
+        R_ij[0,0] = Rxx[p]
+        R_ij[0,1] = Rxy[p]
+        R_ij[0,2] = Rxz[p]
+        R_ij[1,0] = Rxy[p]
+        R_ij[1,1] = Ryy[p]
+        R_ij[1,2] = Ryz[p]
+        R_ij[2,0] = Rxz[p]
+        R_ij[2,1] = Ryz[p]
+        R_ij[2,2] = Rzz[p]
 
         #------------ Anisotropy Tensor ------------
 
@@ -1190,7 +1198,7 @@ def compute_reynolds_stress_dof(Rxx, Ryy, Rzz, Rxy, Rxz, Ryz,
         delta_ij = np.eye(3)                                        # shape: [3,3]
 
         # calculate trace -> 2 * (Turbulent kinetic energy)
-        Rkk[p] = Rxx[p] + Ryy[p] + Rzz[p]
+        Rkk[p] = R_ij[0,0] + R_ij[1,1] + R_ij[2,2]
         TKE = 0.5 * Rkk[p] #  -> same formula!                      # shape: scalar
         ###TKE = 0.5 * (urmsf[p]**2 + vrmsf[p]**2 + wrmsf[p]**2)    # shape: scalar
 
@@ -1240,4 +1248,4 @@ def compute_reynolds_stress_dof(Rxx, Ryy, Rzz, Rxy, Rxz, Ryz,
         xmap1[p]   = bar_map_xy[0]
         xmap2[p]   = bar_map_xy[1]
 
-    return (Rkk, lambda1, lambda2, lambda2, xmap1, xmap2)
+    return (Rkk, lambda1, lambda2, lambda3, xmap1, xmap2)

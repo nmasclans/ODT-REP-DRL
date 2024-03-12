@@ -18,7 +18,7 @@ plt.rc('text.latex', preamble=r"\usepackage{amsmath} \usepackage{amsmath} \usepa
 
 #--------------------------------------------------------------------------------------------
 
-verbose = False
+verbose = True
 
 # --- Define parameters ---
 tensor_kk_tolerance   = 1.0e-8;	# [-]
@@ -79,135 +79,24 @@ num_aver_times  = len(averaging_times)
 # -------------------------------------------------------------------------
 # -------------------------------------------------------------------------
 
+print("------ Calculate Rij dof from post-processed statistics ------")
 for avg_time in averaging_times:
 
     #------------ Compute statistics until avg_time is reached ---------------
     
     if verbose:
-        print(f"\n\n------------ Averaging Time = {avg_time:.2f} ---------------")
-    (ydelta, _, _, urmsf, vrmsf, wrmsf, R11, R22, R33, R12, R13, R23) \
+        print(f"Averaging Time = {avg_time:.2f}")
+    (ydelta, _, _, urmsf, vrmsf, wrmsf, Rxx, Ryy, Rzz, Rxy, Rxz, Ryz) \
         = compute_odt_statistics_at_chosen_time(inputParams, avg_time)
 
-    #------------ Reynolds stress tensor ---------------
-
-    # Build tensor (for each grid point)
-    num_points  = len(R11)
-    R_ij        = np.zeros([num_points, 3, 3])
-    R_ij[:,0,0] = R11
-    R_ij[:,0,1] = R12
-    R_ij[:,0,2] = R13
-    R_ij[:,1,0] = R12
-    R_ij[:,1,1] = R22
-    R_ij[:,1,2] = R23
-    R_ij[:,2,0] = R13
-    R_ij[:,2,1] = R23
-    R_ij[:,2,2] = R33
-
-    #------------ Realizability conditions ---------------
-
-    # help: .all() ensures the condition is satisfied in all grid points
-
-    # COND 1: Rii >= 0, for i = 1,2,3
-
-    cond1_1 = ( R11 >= 0 ).all()    # i = 1
-    cond1_2 = ( R22 >= 0 ).all()    # i = 2
-    cond1_3 = ( R33 >= 0 ).all()    # i = 3
-    cond1   = cond1_1 and cond1_2 and cond1_3
-
-    # COND 2: Rij^2 <= Rii*Rjj, for i!=j
-
-    cond2_1 = ( R12**2 <= R11 * R22 ).all()     # i = 1, j = 2
-    cond2_2 = ( R13**2 <= R11 * R33 ).all()     # i = 1, j = 3
-    cond2_3 = ( R23**2 <= R22 * R33 ).all()     # i = 1, j = 3
-    cond2   = cond2_1 and cond2_2 and cond2_3
-
-    # COND 3: det(Rij) >= 0
-
-    detR  = np.linalg.det(R_ij)    # length(detR) = num_points
-    cond3 = ( detR >= 0 ).all()
-    
-    if verbose:
-        if cond1 and cond2 and cond3:
-            print("\nCONGRATULATIONS, the reynolds stress tensor satisfies REALIZABILITY CONDITIONS.")
-        else:
-            print(f"\nREALIZABILITY ERROR in AVERAGING TIME t_avg = {avg_time:.2f}")
-            print("\nERROR: The reynolds stress tensor does not satisfy REALIZABILITY CONDITIONS")
-            print("\nERROR: Cond 1 is ", cond1," - Cond 2 is ", cond2, "- Cond 3 is ", cond3)
-            #print("EXECUTION TERMINATED")
-            #exit(0)
-
-    #-----------------------------------------------------------------------------------------
-    #           Anisotropy tensor, eigen-decomposition, mapping to barycentric map 
-    #-----------------------------------------------------------------------------------------
-
-    # Computed for each point of the grid
-    # If the trace of the reynolds stress tensor (2 * TKE) is too small, the corresponding 
-    # datapoint is omitted, because the anisotropy tensor would -> infinity, as its equation
-    # contains the multiplier ( 1 / (2*TKE) )
-
-    # initialize quantities
-    eigenvalues   = np.zeros([num_points, 3])
-    bar_map_x     = np.zeros(num_points)
-    bar_map_y     = np.zeros(num_points)
-    bar_map_color = np.zeros(num_points)
-
-    for p in range(num_points):
-
-        #------------ Anisotropy Tensor ------------
-
-        # identity tensor
-        delta_ij = np.eye(3)                                        # shape: [3,3]
-
-        # calculate trace -> 2 * (Turbulent kinetic energy)
-        Rkk = R11[p] + R22[p] + R33[p]                              # shape: scalar
-        ###TKE = 0.5 * Rkk -> WRONG FORMULA!                        # shape: scalar
-        TKE = 0.5 * (urmsf[p]**2 + vrmsf[p]**2 + wrmsf[p]**2)       # shape: scalar
-
-        # omit grid point if reynolds stress tensor trace (2 * TKE) is too small
-        if np.abs(Rkk) < tensor_kk_tolerance:
-            print(f"Discarded point #{p}")
-            continue
-
-        # construct anisotropy tensor
-        a_ij = (1.0 / (2*TKE)) * R_ij[p,:,:] - (1.0 / 3.0) * delta_ij   # shape: [3,3]
-
-        #------------ eigen-decomposition of the SYMMETRIC TRACE-FREE anisotropy tensor ------------
-
-        # ensure a_ij is trace-free
-        # -> calculate trace
-        a_kk = a_ij[0,0] + a_ij[1,1] + a_ij[2,2]                    # shape [num_points]
-        # -> substract the trace
-        a_ij[0,0] -= a_kk/3.0
-        a_ij[1,1] -= a_kk/3.0
-        a_ij[2,2] -= a_kk/3.0
-
-        # Calculate the eigenvalues and eigenvectors
-        eigenvalues_a_ij, eigenvectors_a_ij = np.linalg.eigh( a_ij )
-        eigenvalues_a_ij_sum = sum(eigenvalues_a_ij)
-        assert eigenvalues_a_ij_sum < eigenvalues_tolerance, f"ERROR: The sum of the anisotropy tensor eigenvalues should be 0; in point #{p} the sum is = {eigenvalues_a_ij_sum}"
-
-        # Sort eigenvalues and eigenvectors in decreasing order, so that eigval_1 >= eigval_2 >= eigval_3
-        idx = eigenvalues_a_ij.argsort()[::-1]   
-        eigenvalues_a_ij  = eigenvalues_a_ij[idx]
-        eigenvectors_a_ij = eigenvectors_a_ij[:,idx]
-        #print(f"EigVal[{p}] = ", eigenvalues_a_ij)
-
-        # Calculate Barycentric map point
-        # where eigenvalues_a_ij[0] >= eigenvalues_a_ij[1] >= eigenvalues_a_ij[2] (eigval in decreasing order)
-        bar_map_xy = x1c * (     eigenvalues_a_ij[0] -     eigenvalues_a_ij[1])  \
-                + x2c * ( 2 * eigenvalues_a_ij[1] - 2 * eigenvalues_a_ij[2]) \
-                + x3c * ( 3 * eigenvalues_a_ij[2] + 1)
-        
-        # Store quantities
-        eigenvalues[p,:] = eigenvalues_a_ij[:]
-        bar_map_x[p]     = bar_map_xy[0]
-        bar_map_y[p]     = bar_map_xy[1]
-        bar_map_color[p] = ydelta[p]
+    #------------ Degrees-of-Freedom Reynolds stress tensor ---------------
+    (Rkk, lambda1, lambda2, lambda3, xmap1, xmap2) = compute_reynolds_stress_dof(Rxx, Ryy, Rzz, Rxy, Rxz, Ryz)
+    eigenvalues = np.array([lambda1, lambda2, lambda3]).transpose()       # shape [num_points, 3]    
 
     # ---------------------- Build frame at averaging time ---------------------- 
     
     frames_eig_post = visualizer.build_anisotropy_tensor_eigenvalues_frame(frames_eig_post, ydelta, eigenvalues, avg_time)
-    frames_bar_post = visualizer.build_anisotropy_tensor_barycentric_map_frame(frames_bar_post, bar_map_x, bar_map_y, bar_map_color, avg_time)
+    frames_bar_post = visualizer.build_anisotropy_tensor_barycentric_map_frame(frames_bar_post, xmap1, xmap2, ydelta, avg_time)
 
 
 # -------------------------------------------------------------------------
@@ -216,14 +105,14 @@ for avg_time in averaging_times:
 # -------------------------------------------------------------------------
 # -------------------------------------------------------------------------
 
+print("------ Calculate Rij dof from statistics calculated at runtime by ODT ------")
 (ydelta_rt, _,_,_, _,_,_, _,_,_, Rxx_rt, Ryy_rt, Rzz_rt, Rxy_rt, Rxz_rt, Ryz_rt) = get_odt_statistics_rt_at_chosen_averaging_times(inputParams, averaging_times)
-(Rkk_rt, lambda0_rt, lambda1_rt, lambda2_rt, xmap1_rt, xmap2_rt) = compute_reynolds_stress_dof(Rxx_rt, Ryy_rt, Rzz_rt, Rxy_rt, Rxz_rt, Ryz_rt)
 
 for i in range(num_aver_times): 
-    eigenvalues_rt = np.array([lambda0_rt[:,i], lambda1_rt[:,i], lambda2_rt[:,i]]).transpose()
+    (Rkk_rt, lambda1_rt, lambda2_rt, lambda3_rt, xmap1_rt, xmap2_rt) = compute_reynolds_stress_dof(Rxx_rt[:,i], Ryy_rt[:,i], Rzz_rt[:,i], Rxy_rt[:,i], Rxz_rt[:,i], Ryz_rt[:,i])
+    eigenvalues_rt = np.array([lambda1_rt, lambda2_rt, lambda3_rt]).transpose()
     frames_eig_rt  = visualizer.build_anisotropy_tensor_eigenvalues_frame(frames_eig_rt, ydelta_rt[:,i], eigenvalues_rt, averaging_times[i])
-    frames_bar_rt  = visualizer.build_anisotropy_tensor_barycentric_map_frame(frames_bar_rt, xmap1_rt[:,i], xmap2_rt[:,i], ydelta_rt[:,i], averaging_times[i])
-
+    frames_bar_rt  = visualizer.build_anisotropy_tensor_barycentric_map_frame(frames_bar_rt, xmap1_rt, xmap2_rt, ydelta_rt[:,i], averaging_times[i])
 
 # -------------------------------------------------------------------------
 # ------------------ Create the animation from the frames -----------------

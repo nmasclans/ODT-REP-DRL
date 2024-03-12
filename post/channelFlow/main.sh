@@ -2,6 +2,7 @@
 
 # Run as:
 # ./main.sh channel590 590 25 1
+#./main.sh channel180_2_5_2024_longSimulation 180 50 1
 
 # Check if the correct number of arguments is provided
 if [ "$#" -ne 4 ]; then
@@ -9,6 +10,7 @@ if [ "$#" -ne 4 ]; then
     exit 1
 fi
 
+# Execute multiple post-processing python3 scripts, with corresponding call arguments
 echo -e "\n\n\n----------------------------------------------------------------"
 echo -e "--------------------- stats_odt_vs_dns.py ----------------------"
 echo -e "----------------------------------------------------------------\n\n\n"

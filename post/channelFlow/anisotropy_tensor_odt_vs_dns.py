@@ -133,7 +133,7 @@ for sim in simulation_list:
     #           Anisotropy tensor, eigen-decomposition, mapping to barycentric map 
     #-----------------------------------------------------------------------------------------
     
-    (Rkk, lambda1, lambda2, lambda2, xmap1, xmap2) = compute_reynolds_stress_dof(Rxx, Ryy, Rzz, Rxy, Rxz, Ryz)
+    (Rkk, lambda1, lambda2, lambda3, xmap1, xmap2) = compute_reynolds_stress_dof(Rxx, Ryy, Rzz, Rxy, Rxz, Ryz)
 
     # ---------------------- Plot xmap 1st-coordinate vs. y (post-processing & runtime calculations) ---------------------- 
     
