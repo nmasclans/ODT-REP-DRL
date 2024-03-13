@@ -27,11 +27,13 @@ from utils import *
 #--------------------------------------------------------------------------------------------
 
 try :
-    caseN  = sys.argv[1]
-    rlzN   = int(sys.argv[2])
-    Retau  = int(sys.argv[3])
+    caseN    = sys.argv[1]
+    rlzN     = int(sys.argv[2])
+    Retau    = int(sys.argv[3])
+    tEndAvg  = float(sys.argv[4])
+    print(f"Script parameters: \n- Case name: {caseN} \n- Realization Number: {rlzN} \n- Retau: {Retau} \n- Time End Averaging: {tEndAvg} \n")
 except :
-    raise ValueError("Missing call arguments, should be: <case_name> <realization_number> <reynolds_number>")
+    raise ValueError("Missing call arguments, should be: <case_name> <realization_number> <reynolds_number> <time_end_averaging>")
 
 # post-processing directory
 postDir = f"../../data/{caseN}/post"
@@ -48,27 +50,35 @@ if not os.path.exists(postRlzDir):
 odtInputDataFilepath  = "../../data/" + caseN + "/input/input.yaml"
 with open(odtInputDataFilepath) as ifile :
     yml = yaml.load(ifile, Loader=yaml.FullLoader)
-kvisc = yml["params"]["kvisc0"] # kvisc = nu = mu / rho
-rho   = yml["params"]["rho0"]
-dxmin = yml["params"]["dxmin"]
-nunif = yml["params"]["nunif"]
+kvisc        = yml["params"]["kvisc0"] # kvisc = nu = mu / rho
+rho          = yml["params"]["rho0"]
+dxmin        = yml["params"]["dxmin"]
+nunif        = yml["params"]["nunif"]
 domainLength = yml["params"]["domainLength"] 
-delta = domainLength * 0.5
-utau  = 1.0
-inputParams = {"kvisc":kvisc, "rho":rho, "dxmin": dxmin, "nunif": nunif, "domainLength" : domainLength, "delta": delta, "Retau": Retau, "caseN": caseN, "utau": utau} 
+dTimeStart   = yml["dumpTimesGen"]["dTimeStart"]
+dTimeEnd     = get_effective_dTimeEnd(caseN, rlzStr) # dTimeEnd = yml["dumpTimesGen"]["dTimeEnd"] can lead to errors if dTimeEnd > tEnd
+dTimeStep    = yml["dumpTimesGen"]["dTimeStep"]
+delta        = domainLength * 0.5
+utau         = 1.0
+inputParams  = {"kvisc":kvisc, "rho":rho, "dxmin": dxmin, "nunif": nunif, "domainLength" : domainLength, "delta": delta, "Retau": Retau, "utau": utau,
+                "caseN": caseN, "rlzStr": rlzStr, 
+                "dTimeStart": dTimeStart, "dTimeEnd": dTimeEnd, "dTimeStep": dTimeStep, "tEndAvg": tEndAvg} 
 
 #------------ Get ODT data ---------------
 
 odtStatisticsFilepath = os.path.join(postRlzDir, "ODTstat.dat")
+
 # post-processed statistics
 compute_odt_statistics(odtStatisticsFilepath, inputParams, plot_reynolds_stress_terms=False)
 (ydelta_odt, yplus_odt, um_odt, vm_odt, wm_odt, urmsf_odt, vrmsf_odt, wrmsf_odt, ufufm_odt, vfvfm_odt, wfwfm_odt, ufvfm_odt, ufwfm_odt, vfwfm_odt, viscous_stress_odt, reynolds_stress_odt, total_stress_odt, vt_u_plus_odt, d_u_plus_odt) \
     = get_odt_statistics(odtStatisticsFilepath, inputParams)
+
 # calculated-at-runtime statistics
-(ydelta_odt_rt, um_odt_rt, urmsf_odt_rt, uFpert_odt_rt, vm_odt_rt, vrmsf_odt_rt, vFpert_odt_rt, wm_odt_rt, wrmsf_odt_rt, wFpert_odt_rt,
+(ydelta_odt_rt, yplus_odt_rt, um_odt_rt, urmsf_odt_rt, uFpert_odt_rt, vm_odt_rt, vrmsf_odt_rt, vFpert_odt_rt, wm_odt_rt, wrmsf_odt_rt, wFpert_odt_rt,
  ufufm_odt_rt, vfvfm_odt_rt, wfwfm_odt_rt, ufvfm_odt_rt, ufwfm_odt_rt, vfwfm_odt_rt, \
  # _, _, _, _, _), \
  ) = get_odt_statistics_rt(inputParams)
+
 # check y/delta coordinates coincide for both statistics calculations 
 assert (abs(ydelta_odt - ydelta_odt_rt) < 1e-6).all(), "yu/delta from get_odt_statistics != yu/delta from get_odt_statistics_rt"
 

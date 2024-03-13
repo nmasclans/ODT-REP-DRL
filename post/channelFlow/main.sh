@@ -1,32 +1,37 @@
 #!/bin/bash
 
 # Run as:
-# ./main.sh channel590 0 590 25 1
-#./main.sh channel180_2_5_2024_longSimulation 0 180 50 1
+# ./main.sh channel180_2_5_2024 0 180 10 1 50
 
 # Check if the correct number of arguments is provided
-if [ "$#" -ne 5 ]; then
-    echo "Usage: $0 <case_name> <realization_number> <reynolds_number> <delta_time_stats_stats> <delta_time_stats_anisotropy>"
+if [ "$#" -ne 7 ]; then
+    echo "Usage: $0 <1_case_name> <2_realization_number> <3_reynolds_number> <4_delta_time_stats> <5_delta_time_stats_anisotropy> <6_time_begin_averaging> <7_time_end_averaging>"
     exit 1
 fi
+
+# Generate dmp file for odt_end.dat file (idem. for statistics & state) if last dmp file time < end file time
+echo -e "\n\n\n----------------------------------------------------------------"
+echo -e "------------------- load_end_file_to_dmp_file.py ---------------------"
+echo -e "----------------------------------------------------------------\n\n\n"
+python3 load_end_file_to_dmp_file.py "$1" "$2"
 
 # Execute multiple post-processing python3 scripts, with corresponding call arguments
 echo -e "\n\n\n----------------------------------------------------------------"
 echo -e "--------------------- stats_odt_vs_dns.py ----------------------"
 echo -e "----------------------------------------------------------------\n\n\n"
-python3 stats_odt_vs_dns.py "$1" "$2" "$3"
+python3 stats_odt_vs_dns.py "$1" "$2" "$3" "$7"
 
 echo -e "\n\n\n----------------------------------------------------------------"
 echo -e "------------------ stats_odt_convergence.py --------------------"
 echo -e "----------------------------------------------------------------\n\n\n"
-python3 stats_odt_convergence.py "$1" "$2" "$3" "$4"
+python3 stats_odt_convergence.py "$1" "$2" "$3" "$4" "$6" "$7"
 
 echo -e "\n\n\n----------------------------------------------------------------"
 echo -e "---------------- anisotropy_tensor_odt_vs_dns.py ---------------"
 echo -e "----------------------------------------------------------------\n\n\n"
-python3 anisotropy_tensor_odt_vs_dns.py "$1" "$2" "$3"
+python3 anisotropy_tensor_odt_vs_dns.py "$1" "$2" "$3" "$7"
 
 echo -e "\n\n\n----------------------------------------------------------------"
 echo -e "------------- anisotropy_tensor_odt_convergence.py -------------"
 echo -e "----------------------------------------------------------------\n\n\n"
-python3 anisotropy_tensor_odt_convergence.py "$1" "$2" "$3" "$5"
+python3 anisotropy_tensor_odt_convergence.py "$1" "$2" "$3" "$5" "$6" "$7"

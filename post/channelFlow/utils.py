@@ -41,6 +41,7 @@ def get_odt_instantaneous(input_params):
     delta = input_params["delta"]
     domainLength = input_params["domainLength"]
     case_name    = input_params["caseN"]
+    rlzStr       = input_params["rlzStr"]
 
     dxmin *= domainLength       # un-normalize
     nunif2 = int(nunif/2)       # half of num. points (for ploting to domain center, symmetry in y-axis)
@@ -48,7 +49,7 @@ def get_odt_instantaneous(input_params):
 
     # --- Get ODT data ---
 
-    flist     = sorted(gb.glob('../../data/' + case_name + '/data/data_00000/dmp_*.dat'))
+    flist     = sorted(gb.glob(f'../../data/{case_name}/data/data_{rlzStr}/dmp_*.dat'))
     num_files = len(flist)
 
     
@@ -99,13 +100,16 @@ def compute_odt_statistics(odt_statistics_filepath, input_params, plot_reynolds_
     """
 
     # --- Get ODT input parameters ---
-    rho   = input_params["rho"]
-    kvisc = input_params["kvisc"] # = nu = mu / rho 
-    dxmin = input_params["dxmin"]
-    delta = input_params["delta"]
-    Retau = input_params["Retau"]
-    nunif = input_params["nunif"]
-    case_name = input_params["caseN"]
+    rho        = input_params["rho"]
+    utau       = input_params["utau"]
+    kvisc      = input_params["kvisc"] # = nu = mu / rho 
+    dxmin      = input_params["dxmin"]
+    delta      = input_params["delta"]
+    Retau      = input_params["Retau"]
+    nunif      = input_params["nunif"]
+    case_name  = input_params["caseN"]
+    rlzStr     = input_params["rlzStr"]
+    tEndAvg    = input_params["tEndAvg"]
     
     # un-normalize
     domainLength = input_params["domainLength"]
@@ -113,14 +117,13 @@ def compute_odt_statistics(odt_statistics_filepath, input_params, plot_reynolds_
 
     # --- Compute ODT computational data ---
 
-    flist = sorted(gb.glob('../../data/' + case_name + '/data/data_00000/dmp_*.dat'))
-    flist_stat = sorted(gb.glob('../../data/' + case_name + '/data/data_00000/statistics/stat_dmp_*.dat'))
+    flist = sorted(gb.glob(f'../../data/{case_name}/data/data_{rlzStr}/dmp_*.dat'))
+    flist_stat = sorted(gb.glob(f'../../data/{case_name}/data/data_{rlzStr}/statistics/stat_dmp_*.dat'))
 
     nunif2 = int(nunif/2)        # half of num. points (for ploting to domain center, symmetry in y-axis)
     nunifb, nunift = get_nunif2_walls(nunif, nunif2)
 
     # initialize arrays
-    nfiles = len(flist)          # num. files of instantaneous data, i.e. num. discrete time instants
     yu  = np.linspace(-delta,delta,nunif) # uniform grid in y-axis
     # empty vectors of time-averaged quantities
     um  = np.zeros(nunif)        # mean velocity, calulated in post-processing from instantaneous velocity
@@ -135,9 +138,14 @@ def compute_odt_statistics(odt_statistics_filepath, input_params, plot_reynolds_
     dudy2m = np.zeros(nunif2-2)
 
     logging_files_period = 1000
-    ifile_counter = 0
+    file_counter = 0
     ifile_total   = len(flist)
     for ifile in flist :
+
+        # Check file time is <= tEndAvg
+        currentTime = get_time(ifile)
+        if currentTime > tEndAvg:
+            break
 
         # ------------------ (get) Instantaneous velocity ------------------
 
@@ -177,30 +185,30 @@ def compute_odt_statistics(odt_statistics_filepath, input_params, plot_reynolds_
         dudy2m += 0.5*(dudy2b + dudy2t)  # mirror data (symmetric)
 
         # Logging info
-        ifile_counter += 1
-        if ifile_counter % logging_files_period == 1:
-            print(f"Calculating ODT statistics... {ifile_counter/ifile_total*100:.0f}%")
+        file_counter += 1
+        if file_counter % logging_files_period == 1:
+            print(f"Calculating ODT statistics... {file_counter/ifile_total*100:.0f}%")
 
     # (computed) means
-    um /= nfiles
-    vm /= nfiles
-    wm /= nfiles
+    um /= file_counter
+    vm /= file_counter
+    wm /= file_counter
     um = 0.5*(um[:nunifb] + np.flipud(um[nunift:]))  # mirror data (symmetric)
     vm = 0.5*(vm[:nunifb] + np.flipud(vm[nunift:]))
     wm = 0.5*(wm[:nunifb] + np.flipud(wm[nunift:]))
 
     # squared means
-    u2m /= nfiles
-    v2m /= nfiles
-    w2m /= nfiles
+    u2m /= file_counter
+    v2m /= file_counter
+    w2m /= file_counter
     u2m = 0.5*(u2m[:nunifb] + np.flipud(u2m[nunift:]))
     v2m = 0.5*(v2m[:nunifb] + np.flipud(v2m[nunift:]))
     w2m = 0.5*(w2m[:nunifb] + np.flipud(w2m[nunift:]))
 
     # velocity correlations
-    uvm /= nfiles
-    uwm /= nfiles
-    vwm /= nfiles
+    uvm /= file_counter
+    uwm /= file_counter
+    vwm /= file_counter
     uvm = 0.5*(uvm[:nunifb] + np.flipud(uvm[nunift:]))
     uwm = 0.5*(uwm[:nunifb] + np.flipud(uwm[nunift:]))
     vwm = 0.5*(vwm[:nunifb] + np.flipud(vwm[nunift:]))
@@ -219,15 +227,19 @@ def compute_odt_statistics(odt_statistics_filepath, input_params, plot_reynolds_
     wrmsf = np.sqrt(wfwfm) 
 
     # averaged terms for calculating TKE budgets
-    dudy2m /= nfiles 
+    dudy2m /= file_counter 
 
     # --- y-coordinate, y+ ---
     yu += delta         # domain center is at 0; shift so left side is zero
     yu = yu[:nunif2]    # plotting to domain center
-    dudy = (um[1]-um[0])/(yu[1]-yu[0])
-    utau = np.sqrt(kvisc * np.abs(dudy) / rho)
+    ydelta = yu/delta
+    yplus  = yu * utau / kvisc
+    
+    dudyOdt = (um[1]-um[0])/(yu[1]-yu[0])
+    utauOdt = np.sqrt(kvisc * np.abs(dudyOdt) / rho)
     RetauOdt = utau * delta / kvisc
-    yuplus = yu * utau/kvisc    # scale y --> y+ (note: utau is close to unity)
+    print(f"\n[compute_odt_statistics] Expected Re_tau = {Retau} vs. Effective Re_tau = {RetauOdt}")
+    print(f"[compute_odt_statistics] Expected u_tau = {utau} vs. Effective u_tau = {utauOdt}")
 
     # --- Compute Stress Decomposition ---
     # Stress decomposition: Viscous, Reynolds and Total stress
@@ -264,44 +276,38 @@ def compute_odt_statistics(odt_statistics_filepath, input_params, plot_reynolds_
 
     # --- Save ODT computational data ---
 
-    odt_data = np.vstack([yu/delta,yuplus,um,vm,wm,urmsf,vrmsf,wrmsf,
+    odt_data = np.vstack([ydelta,yplus, 
+                          um,vm,wm,urmsf,vrmsf,wrmsf,
                           ufufm,vfvfm,wfwfm,ufvfm,ufwfm,vfwfm,
                           viscous_stress,reynolds_stress,total_stress, # -> stress decomposition
                           vt_u_plus, d_u_plus]).T                      # -> TKE budgets for u-component
     np.savetxt(odt_statistics_filepath, odt_data, 
             header= "y/delta,    y+,          u+_mean,     v+_mean,     w+_mean,     u+_rmsf,     v+_rmsf,     w+_rmsf,     "\
                     "<u'u'>+,     <v'v'>+,     <w'w'>+,     <u'v'>+,     <u'w'>+,     <v'w'>+,     " \
-                    "tau_viscous, tau_reynolds,tau_total,   " \
+                    "tau_viscous, tau_reynolds,tau_totafilel,   " \
                     "vt_u+,       d_u+,        ",
             fmt='%12.5E')
-
-    print("(ODT) Nominal Retau: ", Retau)
-    print("(ODT) Actual  Retau: ", RetauOdt)
-    print("(ODT) Nominal utau:  1")
-    print("(ODT) Actual  utau: ", utau)
-    print("(ODT) kvisc :", kvisc)
-    print("(ODT) dumdy|y0 :", dudy, "    du: ", um[1]-um[0], "    dy: ", yu[1]-yu[0], "\n")
 
     # ---------- non-diagonal terms of reynolds stress tensor --------
     if plot_reynolds_stress_terms:
         fs=20
         fs_leg=20
         fig, ax = plt.subplots(3, figsize=(10,10))
-        ax[0].plot(yuplus, ufvfm,'o',label=r"$R_{01}=<u'v'>$")
-        ax[0].plot(yuplus, ufwfm,    label=r"$R_{02}=<u'w'>$")
-        ax[0].plot(yuplus, vfwfm,    label=r"$R_{12}=<v'w'>$")
+        ax[0].plot(yplus, ufvfm,'o',label=r"$R_{01}=<u'v'>$")
+        ax[0].plot(yplus, ufwfm,    label=r"$R_{02}=<u'w'>$")
+        ax[0].plot(yplus, vfwfm,    label=r"$R_{12}=<v'w'>$")
         ax[0].legend(loc="upper right", fontsize=fs_leg)
         ax[0].set_title(r"$R_{ij}=<u_i'u_j'> = <u_iu_j> - <u_i><u_j>$ vs. $y^{+}$", fontsize=fs)
         ##
-        ax[1].plot(yuplus, uvm,'o',label=r"$<uv>$")
-        ax[1].plot(yuplus, uwm,    label=r"$<uw>$")
-        ax[1].plot(yuplus, vwm,    label=r"$<vw>$")
+        ax[1].plot(yplus, uvm,'o',label=r"$<uv>$")
+        ax[1].plot(yplus, uwm,    label=r"$<uw>$")
+        ax[1].plot(yplus, vwm,    label=r"$<vw>$")
         ax[1].legend(loc="upper right", fontsize=fs_leg)
         ax[1].set_title(r"$<u_iu_j>$ vs. $y^{+}$", fontsize=fs)
         ##
-        ax[2].plot(yuplus, um*vm,'o',label=r"$<u><v>$")
-        ax[2].plot(yuplus, um*wm,    label=r"$<u><w>$")
-        ax[2].plot(yuplus, vm*wm,    label=r"$<v><w>$")
+        ax[2].plot(yplus, um*vm,'o',label=r"$<u><v>$")
+        ax[2].plot(yplus, um*wm,    label=r"$<u><w>$")
+        ax[2].plot(yplus, vm*wm,    label=r"$<v><w>$")
         ax[2].legend(loc="upper right", fontsize=fs_leg)
         ax[2].set_title(r"$<u_i><u_j>$ vs. $y^{+}$", fontsize=fs)
         ##
@@ -310,21 +316,21 @@ def compute_odt_statistics(odt_statistics_filepath, input_params, plot_reynolds_
         plt.close()
         # ---------- non-diagonal terms of reynolds stress tensor --------
         fig, ax = plt.subplots(3, figsize=(10,10))
-        ax[0].plot(yuplus, ufufm,    label=r"$R_{00}=<u'u'>$")
-        ax[0].plot(yuplus, vfvfm,'o',label=r"$R_{11}=<v'v'>$")
-        ax[0].plot(yuplus, wfwfm,    label=r"$R_{22}=<w'w'>$")
+        ax[0].plot(yplus, ufufm,    label=r"$R_{00}=<u'u'>$")
+        ax[0].plot(yplus, vfvfm,'o',label=r"$R_{11}=<v'v'>$")
+        ax[0].plot(yplus, wfwfm,    label=r"$R_{22}=<w'w'>$")
         ax[0].legend(loc="upper right", fontsize=fs_leg)
         ax[0].set_title(r"$R_{ii}=<u_i'u_i'> = <u_iu_i> - <u_i><u_i>$ vs. $y^{+}$", fontsize=fs)
         ##
-        ax[1].plot(yuplus, u2m,    label=r"$<uu>$")
-        ax[1].plot(yuplus, v2m,'o',label=r"$<vv>$")
-        ax[1].plot(yuplus, w2m,    label=r"$<ww>$")
+        ax[1].plot(yplus, u2m,    label=r"$<uu>$")
+        ax[1].plot(yplus, v2m,'o',label=r"$<vv>$")
+        ax[1].plot(yplus, w2m,    label=r"$<ww>$")
         ax[1].legend(loc="upper right", fontsize=fs_leg)
         ax[1].set_title(r"$<u_iu_i>$ vs. $y^{+}$", fontsize=fs)
         ##
-        ax[2].plot(yuplus, um*um,    label=r"$<u><u>$")
-        ax[2].plot(yuplus, vm*vm,'o',label=r"$<v><v>$")
-        ax[2].plot(yuplus, wm*wm,    label=r"$<w><w>$")
+        ax[2].plot(yplus, um*um,    label=r"$<u><u>$")
+        ax[2].plot(yplus, vm*vm,'o',label=r"$<v><v>$")
+        ax[2].plot(yplus, wm*wm,    label=r"$<w><w>$")
         ax[2].legend(loc="upper right", fontsize=fs_leg)
         ax[2].set_title(r"$<u_i><u_i>$ vs. $y^{+}$", fontsize=fs)
         ##
@@ -333,12 +339,12 @@ def compute_odt_statistics(odt_statistics_filepath, input_params, plot_reynolds_
         plt.close()
         # ---------- plot all terms of reynolds stress tensor --------
         fig, ax = plt.subplots(figsize=(6,6))
-        ax.plot(yuplus, ufufm,    linewidth=2, zorder = 3,                label=r"$R_{00}=<u'u'>$")
-        ax.plot(yuplus, vfvfm,'o',linewidth=2, zorder = 2, markersize=5,  label=r"$R_{11}=<v'v'>$")
-        ax.plot(yuplus, wfwfm,    linewidth=2, zorder = 3,                label=r"$R_{22}=<w'w'>$")
-        ax.plot(yuplus, ufvfm,'o',linewidth=2, zorder = 2, markersize=5,  label=r"$R_{01}=<u'v'>$")
-        ax.plot(yuplus, ufwfm,    linewidth=2, zorder = 3,                label=r"$R_{02}=<u'w'>$")
-        ax.plot(yuplus, vfwfm,'o',linewidth=2, zorder = 1, markersize=10, label=r"$R_{12}=<v'w'>$")
+        ax.plot(yplus, ufufm,    linewidth=2, zorder = 3,                label=r"$R_{00}=<u'u'>$")
+        ax.plot(yplus, vfvfm,'o',linewidth=2, zorder = 2, markersize=5,  label=r"$R_{11}=<v'v'>$")
+        ax.plot(yplus, wfwfm,    linewidth=2, zorder = 3,                label=r"$R_{22}=<w'w'>$")
+        ax.plot(yplus, ufvfm,'o',linewidth=2, zorder = 2, markersize=5,  label=r"$R_{01}=<u'v'>$")
+        ax.plot(yplus, ufwfm,    linewidth=2, zorder = 3,                label=r"$R_{02}=<u'w'>$")
+        ax.plot(yplus, vfwfm,'o',linewidth=2, zorder = 1, markersize=10, label=r"$R_{12}=<v'w'>$")
         ax.set_xlabel(r"$y^{+}$")
         ax.legend(loc="upper right", fontsize=fs_leg)
         ax.set_title(r"$R_{ij}=<u_i'u_i'>$, for $i,j=0,1,2$", fontsize=fs)
@@ -417,17 +423,29 @@ def get_odt_statistics_rt(input_params):
 
     # --- Get ODT input parameters ---
     
-    delta = input_params["delta"]
-    case_name = input_params["caseN"]
+    utau      = input_params["utau"]
+    delta      = input_params["delta"]
+    kvisc      = input_params["kvisc"]
+    Retau      = input_params["Retau"]
+    case_name  = input_params["caseN"]
+    rlzStr     = input_params["rlzStr"]
+    dTimeStart = input_params["dTimeStart"]
+    dTimeEnd   = input_params["dTimeEnd"]
+    dTimeStep  = input_params["dTimeStep"]
+    tEndAvg    = input_params["tEndAvg"]
+    
+    # --- Get dmp file with dump number ***** corresponding to tEndAvg, or the closest one from below ---
+    dTimes     = np.round(np.arange(dTimeStart, dTimeEnd+1e-6, dTimeStep), 6)
+    tEndAvgDmpIdx = np.sum(tEndAvg > dTimes) 
+    tEndAvgDmpStr = f"{tEndAvgDmpIdx:05d}"
 
     # --- Get vel. statistics computed during runtime at last time increment ---
 
-    flist_stat = sorted(gb.glob(f"../../data/{case_name}/data/data_00000/statistics/stat_dmp_*.dat"))
-    flast      = flist_stat[-1]
-    data_stat  = np.loadtxt(flast)
+    fstat     = f"../../data/{case_name}/data/data_{rlzStr}/statistics/stat_dmp_{tEndAvgDmpStr}.dat"
+    data_stat = np.loadtxt(fstat)
 
     # -> check the file rows correspond to the expected variables:
-    with open(flast,'r') as f:
+    with open(fstat,'r') as f:
         rows_info = f.readlines()[3].split() # 4th line of the file
     rows_info_expected = '#         1_posUnif        2_uvel_mean        3_uvel_rmsf       4_uvel_Fpert        5_vvel_mean        6_vvel_rmsf       7_vvel_Fpert        8_wvel_mean        9_wvel_rmsf      10_wvel_Fpert             11_Rxx             12_Ryy             13_Rzz             14_Rxy             15_Rxz             16_Ryz\n'.split()
     assert rows_info == rows_info_expected, f"statistic files rows do not correspond to the expected variables" \
@@ -468,7 +486,6 @@ def get_odt_statistics_rt(input_params):
     nunif2       = int(nunif/2)
     nunifb, nunift = get_nunif2_walls(nunif, nunif2)
     # mirror data
-    yu           = yu[:nunifb] + delta
     um_data      = 0.5 * ( um_data[:nunifb]      + np.flipud(um_data[nunift:])      )
     urmsf_data   = 0.5 * ( urmsf_data[:nunifb]   + np.flipud(urmsf_data[nunift:])   )
     uFpert_data  = 0.5 * ( uFpert_data[:nunifb]  + np.flipud(uFpert_data[nunift:])  )
@@ -484,14 +501,27 @@ def get_odt_statistics_rt(input_params):
     ufvfm_data   = 0.5 * ( ufvfm_data[:nunifb]   + np.flipud(ufvfm_data[nunift:])   )
     ufwfm_data   = 0.5 * ( ufwfm_data[:nunifb]   + np.flipud(ufwfm_data[nunift:])   )
     vfwfm_data   = 0.5 * ( vfwfm_data[:nunifb]   + np.flipud(vfwfm_data[nunift:])   )
-
     # lambda0_data = 0.5 * ( lambda0_data[:nunifb] + np.flipud(lambda0_data[nunift:]) )
     # lambda1_data = 0.5 * ( lambda1_data[:nunifb] + np.flipud(lambda1_data[nunift:]) )
     # lambda2_data = 0.5 * ( lambda2_data[:nunifb] + np.flipud(lambda2_data[nunift:]) )
     # xmap1_data   = 0.5 * ( xmap1_data[:nunifb]   + np.flipud(xmap1_data[nunift:])   )
     # xmap2_data   = 0.5 * ( xmap2_data[:nunifb]   + np.flipud(xmap2_data[nunift:])   )
 
-    return (yu/delta, 
+    # ------------ scale y to y+ ------------
+
+    # y-coordinates
+    yu     = yu[:nunifb] + delta
+    ydelta = yu/delta
+    yplus  = yu * utau / kvisc
+
+    # Check: Re_tau and u_tau of ODT data
+    dudy     = (um_data[1]-um_data[0])/(yu[1]-yu[0])
+    utauOdt  = np.sqrt(kvisc * np.abs(dudy))
+    RetauOdt = utauOdt * delta / kvisc
+    print(f"\n[get_odt_statistics_rt] Expected Re_tau = {Retau} vs. Effective Re_tau = {RetauOdt}")
+    print(f"[get_odt_statistics_rt] Expected u_tau = {utau} vs. Effective u_tau = {utauOdt}")
+
+    return (ydelta, yplus, 
             um_data, urmsf_data, uFpert_data,
             vm_data, vrmsf_data, vFpert_data,
             wm_data, wrmsf_data, wFpert_data,
@@ -500,17 +530,82 @@ def get_odt_statistics_rt(input_params):
     )
 
 
-def get_dns_statistics(Re_tau, input_params):
+def get_odt_udata_rt(input_params):
+    """
+    """
+
+    # --- Get ODT input parameters ---
+    
+    utau      = input_params["utau"]
+    delta      = input_params["delta"]
+    kvisc      = input_params["kvisc"]
+    Retau      = input_params["Retau"]
+    case_name  = input_params["caseN"]
+    rlzStr     = input_params["rlzStr"]
+    dTimeStart = input_params["dTimeStart"]
+    dTimeEnd   = input_params["dTimeEnd"]
+    dTimeStep  = input_params["dTimeStep"]
+    tEndAvg    = input_params["tEndAvg"]
+    
+    # --- Get dmp file with dump number ***** corresponding to tEndAvg, or the closest one from below ---
+    dTimes     = np.round(np.arange(dTimeStart, dTimeEnd+1e-6, dTimeStep), 6)
+    tEndAvgDmpIdx = np.sum(tEndAvg > dTimes) 
+    tEndAvgDmpStr = f"{tEndAvgDmpIdx:05d}"
+
+    # --- Get vel. statistics computed during runtime at last time increment ---
+
+    fstat     = f"../../data/{case_name}/data/data_{rlzStr}/statistics/stat_dmp_{tEndAvgDmpStr}.dat"
+    print(f"Get statistics data from file: {fstat}")
+    data_stat = np.loadtxt(fstat)
+
+    # -> check the file rows correspond to the expected variables:
+    with open(fstat,'r') as f:
+        rows_info = f.readlines()[3].split() # 4th line of the file
+    rows_info_expected = '#         1_posUnif        2_uvel_mean        3_uvel_rmsf       4_uvel_Fpert        5_vvel_mean        6_vvel_rmsf       7_vvel_Fpert        8_wvel_mean        9_wvel_rmsf      10_wvel_Fpert             11_Rxx             12_Ryy             13_Rzz             14_Rxy             15_Rxz             16_Ryz\n'.split()
+    assert rows_info == rows_info_expected, f"statistic files rows do not correspond to the expected variables" \
+        f"rows variables (expected): \n{rows_info_expected} \n" \
+        f"rows variables (current): \n{rows_info}"
+    
+    # --- get data
+    yu           = data_stat[:,0]
+    um_data      = data_stat[:,1] 
+    urmsf_data   = data_stat[:,2] 
+
+    # --- Mirror data (symmetric in the y-direction from the channel center)
+    # mirror data indexs
+    nunif        = len(um_data)
+    nunif2       = int(nunif/2)
+    nunifb, nunift = get_nunif2_walls(nunif, nunif2)
+    # mirror data
+    um_data      = 0.5 * ( um_data[:nunifb]      + np.flipud(um_data[nunift:])      )
+    urmsf_data   = 0.5 * ( urmsf_data[:nunifb]   + np.flipud(urmsf_data[nunift:])   )
+    
+    # --- scale y to y+
+    yu     = yu[:nunifb] + delta # mirror and add delta value
+    ydelta = yu/delta
+    yplus  = yu * utau / kvisc
+
+    # Check: Re_tau and u_tau of ODT data
+    dudy     = (um_data[1]-um_data[0])/(yu[1]-yu[0])
+    utauOdt  = np.sqrt(kvisc * np.abs(dudy))
+    RetauOdt = utauOdt * delta / kvisc
+    print(f"\n[get_odt_udata_rt] Expected Re_tau = {Retau} vs. Effective Re_tau = {RetauOdt}")
+    print(f"[get_odt_udata_rt] Expected u_tau = {utau} vs. Effective u_tau = {utauOdt}")
+
+    return (ydelta, yplus, um_data, urmsf_data)
+
+
+def get_dns_statistics(Retau, input_params):
 
     # --- Get DNS input parameters (prescribed) ---
     rho    = 1.0
     delta  = 1.0
-    u_tau  = 1.0
-    nu     = u_tau * delta / Re_tau
+    utau   = 1.0
+    nu     = utau * delta / Retau
     mu     = rho * nu
     kvisc  = mu / rho # = nu 
     
-    if (Re_tau == 590):
+    if (Retau == 590):
         filename_dns = "DNS_statistics/Re590/dnsChannel_Re590_means.dat"
         print(f"\nGetting DNS-means data from {filename_dns}")
         # Dataset columns
@@ -540,7 +635,7 @@ def get_dns_statistics(Re_tau, input_params):
         wrmsf = np.sqrt(wfwfm)
     
     else:
-        filename_dns = f"DNS_statistics/Re{Re_tau}/profiles/Re{Re_tau}.prof"
+        filename_dns = f"DNS_statistics/Re{Retau}/profiles/Re{Retau}.prof"
         print(f"\nGetting DNS-reynolds data from {filename_dns}")
         # Dataset columns:
         # 0    | 1    | 2    | 3    | 4    | 5    | 6      | 7      | 8      | 9      | 10   | 11   | 12   | 13   | 14   | 15     | 16   
@@ -563,14 +658,10 @@ def get_dns_statistics(Re_tau, input_params):
 
     # Compare stablished and computed Retau and utau
     dudy_wall = (um[1]-um[0])/(ydelta[1]-ydelta[0])
-    u_tauDns  = np.sqrt(kvisc * np.abs(dudy_wall) / rho)
-    Re_tauDns = u_tauDns * delta / kvisc
-    print("\n(DNS) Nominal Re_tau: ", Re_tau)
-    print("(DNS) Actual  Re_tau: ", Re_tauDns)
-    print("(DNS) Nominal u_tau:  ", u_tau)
-    print("(DNS) Actual  u_tau:  ", u_tauDns)
-    print("(DNS) kvisc    :", kvisc)
-    print("(DNS) dumdy|y0 :", dudy_wall, "    du: ", um[1]-um[0], "    dy: ", ydelta[1]-ydelta[0], "\n")
+    utauDns  = np.sqrt(kvisc * np.abs(dudy_wall) / rho)
+    RetauDns = utauDns * delta / kvisc
+    print(f"\n[get_dns_statistics] Expected Re_tau = {Retau} vs. Effective Re_tau = {RetauDns}")
+    print(f"[get_dns_statistics] Expected u_tau = {utau} vs. Effective u_tau = {utauDns}")
 
     # --- Stress decomposition: Viscous, Reynolds and Total stress ---
     dumdy = (um[1:] - um[:-1])/(ydelta[1:] - ydelta[:-1])
@@ -583,7 +674,7 @@ def get_dns_statistics(Re_tau, input_params):
     f_uk  = urmsf**2 - um**2 
     Deltay_k = (ydelta[2:]-ydelta[:-2])/2 # length in y-coordinate of cell k from ODT grid 
     vt_u_ = (kvisc) * ( (f_uk[2:] - 2*f_uk[1:-1] + f_uk[:-2])/(Deltay_k**2) )
-    vt_u_plus_ = vt_u_ * ( delta / u_tau**3 )
+    vt_u_plus_ = vt_u_ * ( delta / utau**3 )
 
     # --- Dissipation budget ---
     # d_i = avg( ( d(u_{i,rmsf})/dy )^2 )
@@ -592,7 +683,7 @@ def get_dns_statistics(Re_tau, input_params):
     # --- Production budget ---
     dumdy = (um[2:] - um[:-2])/(ydelta[2:] - ydelta[:-2]) # 1st-order central finite difference
     p_u_  = - 2 * ufvfm[1:-1] * dumdy
-    p_u_plus_ = p_u_ * ( delta / u_tau**3 ) 
+    p_u_plus_ = p_u_ * ( delta / utau**3 ) 
 
     # Add "0" at grid boundaries to quantities computed from 1st- and 2nd-order derivatives to vstack vectors of the same size
     # -> involve 1st-order forward finite differences
@@ -634,7 +725,166 @@ def get_time(file):
     return time
 
 
-def get_odt_statistics_during_runtime(input_params, averaging_times):
+def get_odt_statistics_post_at_chosen_averaging_times(input_params, averaging_times):
+    
+    # --- Get ODT input parameters ---
+    
+    utau         = input_params["utau"]
+    delta        = input_params["delta"]
+    kvisc        = input_params["kvisc"]
+    Retau        = input_params["Retau"]
+    case_name    = input_params["caseN"]
+    rlzStr       = input_params["rlzStr"]
+    dTimeStart   = input_params["dTimeStart"]
+    dTimeEnd     = input_params["dTimeEnd"]
+    dTimeStep    = input_params["dTimeStep"]
+    domainLength = input_params["domainLength"]
+    dxmin        = input_params["dxmin"]
+    nunif        = input_params["nunif"]
+
+    # un-normalize
+    dxmin       *= domainLength
+    
+    # uniform fine grid
+    nunif2       = int(nunif/2)
+    nunifb, nunift = get_nunif2_walls(nunif, nunif2)
+
+    # --- Averaging times and files identification ---
+    
+    dTimeVec = np.arange(dTimeStart, dTimeEnd+1e-4, dTimeStep).round(4)
+    averaging_times_num = len(averaging_times)
+    averaging_times_idx = []
+    for t_idx in range(averaging_times_num):
+         averaging_times_idx.append(np.where(dTimeVec==averaging_times[t_idx])[0][0])
+    averaging_times_str = [str(idx).zfill(5) for idx in averaging_times_idx]
+    if (len(averaging_times_str) != averaging_times_num):
+        raise ValueError("Not all averaging_times where found!")
+    
+    # --- Get vel. statistics computed during runtime at chosen averaging times ---
+
+    flist = sorted(gb.glob(f"../../data/{case_name}/data/data_{rlzStr}/dmp_*.dat"))
+
+    # -> check the file rows correspond to the expected variables:
+    with open(flist[0],'r') as f:
+        rows_info = f.readlines()[3].split() # 4th line of the file
+    rows_info_expected = "#             1_pos             2_posf             3_uvel             4_vvel             5_wvel\n".split()
+    assert rows_info == rows_info_expected, f"statistic files rows do not correspond to the expected variables" \
+        f"rows variables (expected): \n{rows_info_expected} \n" \
+        f"rows variables (current): \n{rows_info}"
+    
+    # --- initialize variables ---
+
+    yu  = np.linspace(-delta,delta,nunif) # uniform grid in y-axis
+    # empty vectors of time-averaged quantities
+    um_aux  = np.zeros(nunif)   
+    vm_aux  = np.zeros(nunif)   
+    wm_aux  = np.zeros(nunif)   
+    u2m_aux = np.zeros(nunif)   
+    v2m_aux = np.zeros(nunif)   
+    w2m_aux = np.zeros(nunif)   
+    uvm_aux = np.zeros(nunif)   
+    uwm_aux = np.zeros(nunif)   
+    vwm_aux = np.zeros(nunif)   
+    um      = np.zeros([nunif, averaging_times_num])   # mean velocity
+    vm      = np.zeros([nunif, averaging_times_num])
+    wm      = np.zeros([nunif, averaging_times_num])
+    u2m     = np.zeros([nunif, averaging_times_num])   # mean square velocity (for rmsf and reynolds stresses)
+    v2m     = np.zeros([nunif, averaging_times_num])
+    w2m     = np.zeros([nunif, averaging_times_num])
+    uvm     = np.zeros([nunif, averaging_times_num])   # mean velocity correlations (for reynolds stresses)
+    uwm     = np.zeros([nunif, averaging_times_num])
+    vwm     = np.zeros([nunif, averaging_times_num])
+
+    file_counter = 0
+    for ifile in flist :
+        file_counter += 1
+        data = np.loadtxt(ifile)
+        y = data[:,0] # not normalized
+        u = data[:,2] # normalized by u_tau, u is in fact u+
+        v = data[:,3] # normalized by u_tau, v is in fact v+
+        w = data[:,4] # normalized by u_tau, w is in fact w+
+
+        # interpolate to uniform grid
+        uu = interp1d(y, u, fill_value='extrapolate')(yu)  
+        vv = interp1d(y, v, fill_value='extrapolate')(yu)
+        ww = interp1d(y, w, fill_value='extrapolate')(yu)
+
+        # update mean profiles
+        um_aux  += uu
+        vm_aux  += vv
+        wm_aux  += ww
+        u2m_aux += uu*uu
+        v2m_aux += vv*vv
+        w2m_aux += ww*ww
+        uvm_aux += uu*vv
+        uwm_aux += uu*ww
+        vwm_aux += vv*ww
+
+        # Averaging time
+        averaging_time = get_time(ifile)
+
+        idx_averaging_time = np.where(averaging_time == averaging_times)[0]
+        if len(idx_averaging_time)>0: # instance found
+            idx = idx_averaging_time[0]
+            um[:,idx]  = um_aux/file_counter   
+            vm[:,idx]  = vm_aux/file_counter   
+            wm[:,idx]  = wm_aux/file_counter   
+            u2m[:,idx] = u2m_aux/file_counter    
+            v2m[:,idx] = v2m_aux/file_counter    
+            w2m[:,idx] = w2m_aux/file_counter    
+            uvm[:,idx] = uvm_aux/file_counter    
+            uwm[:,idx] = uwm_aux/file_counter    
+            vwm[:,idx] = vwm_aux/file_counter    
+
+    # mirror data (symmetric channel in y-axis)
+    um  = 0.5 * (um[:nunifb,:]  + np.flipud(um[nunift:,:]))  # mirror data (symmetric)
+    vm  = 0.5 * (vm[:nunifb,:]  + np.flipud(vm[nunift:,:]))
+    wm  = 0.5 * (wm[:nunifb,:]  + np.flipud(wm[nunift:,:]))
+    u2m = 0.5 * (u2m[:nunifb,:] + np.flipud(u2m[nunift:,:]))
+    v2m = 0.5 * (v2m[:nunifb,:] + np.flipud(v2m[nunift:,:]))
+    w2m = 0.5 * (w2m[:nunifb,:] + np.flipud(w2m[nunift:,:]))
+    uvm = 0.5 * (uvm[:nunifb,:] + np.flipud(uvm[nunift:,:]))
+    uwm = 0.5 * (uwm[:nunifb,:] + np.flipud(uwm[nunift:,:]))
+    vwm = 0.5 * (vwm[:nunifb,:] + np.flipud(vwm[nunift:,:]))
+
+    # Reynolds stresses
+    ufufm = u2m - um*um # = <uf·uf>
+    vfvfm = v2m - vm*vm # = <vf·vf>
+    wfwfm = w2m - wm*wm # = <wf·wf>
+    ufvfm = uvm - um*vm # = <uf·vf>
+    ufwfm = uwm - um*wm # = <uf·wf>
+    vfwfm = vwm - vm*wm # = <vf·wf>
+
+    # root-mean-squared fluctuations (rmsf)
+    urmsf = np.sqrt(ufufm) 
+    vrmsf = np.sqrt(vfvfm) 
+    wrmsf = np.sqrt(wfwfm) 
+
+    # ------------ scale y to y+ ------------
+
+    # y-coordinates
+    yu += delta          # domain center is at 0; shift so left side is zero
+    yu  = yu[:nunifb]    # plotting to domain center
+    ydelta = yu/delta
+    yplus  = yu * utau / kvisc 
+    
+    # Check: Re_tau and u_tau of ODT data
+    dudy     = (um[1,-1]-um[0,-1])/(yu[1]-yu[0])
+    utauOdt  = np.sqrt(kvisc * np.abs(dudy))
+    RetauOdt = utauOdt * delta / kvisc
+    print(f"\n[get_odt_statistics_post_at_chosen_averaging_times] Expected Re_tau = {Retau} vs. Effective Re_tau = {RetauOdt}")
+    print(f"[get_odt_statistics_post_at_chosen_averaging_times] Expected u_tau = {utau} vs. Effective u_tau = {utauOdt}")
+    # scale y --> y+ (note: utau should be unity)
+    yplus = yu * utau/kvisc    
+
+    return (ydelta, yplus,
+            um, urmsf,
+            vm, vrmsf,
+            wm, wrmsf,
+            ufufm, vfvfm, wfwfm, ufvfm, ufwfm, vfwfm,
+    )
+
+def get_odt_statistics_rt_at_chosen_averaging_times_um_symmetry(input_params, averaging_times):
     """
     Parameters:
         input_params (dict): ODT input parameters dictionary
@@ -647,20 +897,22 @@ def get_odt_statistics_during_runtime(input_params, averaging_times):
 
     # --- Get ODT input parameters ---
     
-    rho          = input_params["rho"]
+    utau         = input_params["utau"]
     kvisc        = input_params["kvisc"] # = nu = mu / rho 
     domainLength = input_params["domainLength"]
     dxmin        = input_params["dxmin"]
     delta        = input_params["delta"]
     Retau        = input_params["Retau"]
     case_name    = input_params["caseN"]
+    rlzStr       = input_params["rlzStr"]
     dTimeStart   = input_params["dTimeStart"]
     dTimeEnd     = input_params["dTimeEnd"]
     dTimeStep    = input_params["dTimeStep"]
     nunif        = input_params["nunif"]
     dxmin       *= domainLength
 
-    # Averaging times and files identification
+    # --- Averaging times and files identification ---
+
     dTimeVec = np.arange(dTimeStart, dTimeEnd+1e-3, dTimeStep).round(2)
     averaging_times_num = len(averaging_times)
     averaging_times_idx = []
@@ -672,7 +924,7 @@ def get_odt_statistics_during_runtime(input_params, averaging_times):
 
     # --- Compute ODT computational data ---
 
-    flist = ['../../data/' + case_name + '/data/data_00000/statistics/stat_dmp_' + s  + '.dat' for s in averaging_times_str]
+    flist = [f'../../data/{case_name}/data/data_{rlzStr}/statistics/stat_dmp_{s}.dat' for s in averaging_times_str]
 
     # Num points uniform grid
     nunif2 = int(nunif/2)        # half of num. points (for ploting to domain center, symmetry in y-axis)
@@ -719,27 +971,30 @@ def get_odt_statistics_during_runtime(input_params, averaging_times):
     # ------------ scale y to y+ ------------
 
     # y-coordinates
-    ydelta = yu/delta
-    yu += delta         # domain center is at 0; shift so left side is zero
-    yu = yu[:nunifb]    # plotting to domain center
-    # Re_tau of ODT data
+    yu        = yu[:nunifb] + delta   # plotting to domain center
+    ydelta    = yu / delta
+    yplus     = yu * utau / kvisc 
+    yplus_all = yu_all * utau / kvisc
+    # Check: Re_tau and u_tau of ODT data
     dudy = (um[1,-1]-um[0,-1])/(yu[1]-yu[0])
-    utau = np.sqrt(kvisc * np.abs(dudy))
-    # scale y --> y+ (note: utau should be unity)
-    yuplus     = yu     * utau / kvisc 
-    yuplus_all = yu_all * utau / kvisc
-
-    # --- Save ODT computational data ---
-
-    return (ydelta, yuplus, um, CI, yuplus_all, um_all, um_symmetric_all)
+    utauOdt = np.sqrt(kvisc * np.abs(dudy))
+    RetauOdt = utauOdt * delta / kvisc
+    print(f"\n[get_odt_statistics_rt_at_chosen_averaging_times_um_symmetry] Expected Re_tau = {Retau} vs. Effective Re_tau = {RetauOdt}")
+    print(f"[get_odt_statistics_rt_at_chosen_averaging_times_um_symmetry] Expected u_tau = {utau} vs. Effective u_tau = {utauOdt}")
+    
+    return (ydelta, yplus, um, CI, yplus_all, um_all, um_symmetric_all)
 
 
 def get_odt_statistics_rt_at_chosen_averaging_times(input_params, averaging_times):
 
     # --- Get ODT input parameters ---
     
+    utau         = input_params["utau"]
     delta        = input_params["delta"]
+    kvisc        = input_params["kvisc"]
+    Retau        = input_params["Retau"]
     case_name    = input_params["caseN"]
+    rlzStr       = input_params["rlzStr"]
     dTimeStart   = input_params["dTimeStart"]
     dTimeEnd     = input_params["dTimeEnd"]
     dTimeStep    = input_params["dTimeStep"]
@@ -756,7 +1011,7 @@ def get_odt_statistics_rt_at_chosen_averaging_times(input_params, averaging_time
 
     # --- Averaging times and files identification ---
     
-    dTimeVec = np.arange(dTimeStart, dTimeEnd+1e-3, dTimeStep).round(2)
+    dTimeVec = np.arange(dTimeStart, dTimeEnd+1e-4, dTimeStep).round(4)
     averaging_times_num = len(averaging_times)
     averaging_times_idx = []
     for t_idx in range(averaging_times_num):
@@ -767,7 +1022,7 @@ def get_odt_statistics_rt_at_chosen_averaging_times(input_params, averaging_time
 
     # --- Get vel. statistics computed during runtime at chosen averaging times ---
 
-    flist = ['../../data/' + case_name + '/data/data_00000/statistics/stat_dmp_' + s  + '.dat' for s in averaging_times_str]
+    flist = [f'../../data/{case_name}/data/data_{rlzStr}/statistics/stat_dmp_{s}.dat' for s in averaging_times_str]
 
     # -> check the file rows correspond to the expected variables:
     with open(flist[0],'r') as f:
@@ -833,7 +1088,6 @@ def get_odt_statistics_rt_at_chosen_averaging_times(input_params, averaging_time
         # xmap2_data[:,i]   = data_stat[:,20] 
 
     # mirror data (symmetric in the y-direction from the channel center)
-    yu           = yu[:nunifb,:] + delta
     um_data      = 0.5 * ( um_data[:nunifb,:]      + np.flipud(um_data[nunift:,:])      )
     urmsf_data   = 0.5 * ( urmsf_data[:nunifb,:]   + np.flipud(urmsf_data[nunift:,:])   )
     uFpert_data  = 0.5 * ( uFpert_data[:nunifb,:]  + np.flipud(uFpert_data[nunift:,:])  )
@@ -855,24 +1109,48 @@ def get_odt_statistics_rt_at_chosen_averaging_times(input_params, averaging_time
     # xmap1_data   = 0.5 * ( xmap1_data[:nunifb,:]   + np.flipud(xmap1_data[nunift:,:])   )
     # xmap2_data   = 0.5 * ( xmap2_data[:nunifb,:]   + np.flipud(xmap2_data[nunift:,:])   )
 
-    return (yu/delta, 
-            um_data, urmsf_data, uFpert_data,
+    # ------------ scale y to y+ ------------
+
+    yu     = yu[:nunifb,-1] + delta     # only from last snapshot, it is the same along all snapshots
+    ydelta = yu / delta
+    yplus  = yu * utau / kvisc 
+    
+    # Check: Re_tau and u_tau of ODT data
+    dudy     = (um_data[1,-1]-um_data[0,-1])/(yu[1]-yu[0])
+    utauOdt  = np.sqrt(kvisc * np.abs(dudy))
+    RetauOdt = utauOdt * delta / kvisc
+    print(f"\n[get_odt_statistics_rt_at_chosen_averaging_times] Expected Re_tau = {Retau} vs. Effective Re_tau = {RetauOdt}")
+    print(f"[get_odt_statistics_rt_at_chosen_averaging_times] Expected u_tau = {utau} vs. Effective u_tau = {utauOdt}")
+
+    return (ydelta, yplus,                      # shape [nunif]               
+            um_data, urmsf_data, uFpert_data,   # shape [nunif, len(averaging_times)]
             vm_data, vrmsf_data, vFpert_data,
             wm_data, wrmsf_data, wFpert_data,
             ufufm_data, vfvfm_data, wfwfm_data, ufvfm_data, ufwfm_data, vfwfm_data,
             #lambda0_data, lambda1_data, lambda2_data, xmap1_data, xmap2_data,
     )
 
+
 def compute_convergence_indicator_odt_tEnd(input_params):
     
     # --- Get ODT input parameters ---
+    utau         = input_params["utau"]
     domainLength = input_params["domainLength"]
     dxmin        = input_params["dxmin"]
     delta        = input_params["delta"]
     case_name    = input_params["caseN"]
+    rlzStr       = input_params["rlzStr"]
     kvisc        = input_params["kvisc"]
-    utau         = input_params["utau"]
     nunif        = input_params["nunif"]
+    dTimeStart   = input_params["dTimeStart"]
+    dTimeEnd     = input_params["dTimeEnd"]
+    dTimeStep    = input_params["dTimeStep"]
+    tEndAvg      = input_params["tEndAvg"]
+    
+    # --- Get dmp file with dump number ***** corresponding to tEndAvg, or the closest one from below ---
+    dTimes        = np.round(np.arange(dTimeStart, dTimeEnd+1e-6, dTimeStep), 6)
+    tEndAvgDmpIdx = np.sum(tEndAvg > dTimes) 
+    tEndAvgDmpStr = f"{tEndAvgDmpIdx:05d}"
     
     # un-normalize
     dxmin *= domainLength
@@ -880,16 +1158,15 @@ def compute_convergence_indicator_odt_tEnd(input_params):
     nunif2 = int(nunif/2)
     nunifb, nunift = get_nunif2_walls(nunif, nunif2)
 
-    # --------------- Get ODT statistics ---------------
+    # --- Get ODT statistics computed during runtime at last time increment ---
 
-    flist_stat     = sorted(gb.glob('../../data/' + case_name + '/data/data_00000/statistics/stat_dmp_*.dat'))
-    file_stat_last = flist_stat[-1]
-    data = np.loadtxt(file_stat_last)
+    fstat     = f"../../data/{case_name}/data/data_{rlzStr}/statistics/stat_dmp_{tEndAvgDmpStr}.dat"
+    data_stat = np.loadtxt(fstat)
 
     # uniform fine grid (u.f.g) - '1_posUnif' 
-    yu = data[:,0]
+    yu = data_stat[:,0]
     # u_avg statistic runtime-calculated in u.f.g - '2_uvelmean'
-    um = data[:,1]
+    um = data_stat[:,1]
     assert len(yu) == nunif, "ERROR: size error, uniform fine grid should have length 'nunif'"
 
     # ------------------------ Calculate symmetric field ------------------------
@@ -909,14 +1186,9 @@ def compute_convergence_indicator_odt_tEnd(input_params):
     print("\n(ODT) Convergence Indicator at tEnd (CI, Esp_s) = ", CI)
 
     # ------------ scale y to y+ ------------
+    yplus = yu * utau/kvisc 
 
-    # Re_tau of ODT data
-    dudy = (um[1]-um[0])/(yu[1]-yu[0])
-    utau = np.sqrt(kvisc * np.abs(dudy))
-    # scale y --> y+ (note: utau should be unity)
-    yuplus = yu * utau/kvisc 
-
-    return (CI, yuplus, um, um_symmetric)
+    return (CI, yplus, um, um_symmetric)
 
 
 def compute_convergence_indicator_odt_along_time(input_params):
@@ -925,11 +1197,10 @@ def compute_convergence_indicator_odt_along_time(input_params):
 
     domainLength = input_params["domainLength"]
     dxmin        = input_params["dxmin"]
-    delta        = input_params["delta"]
     case_name    = input_params["caseN"]
-    kvisc        = input_params["kvisc"]
-    utau         = input_params["utau"]
+    rlzStr       = input_params["rlzStr"]
     nunif        = input_params["nunif"]
+    tEndAvg      = input_params["tEndAvg"]
     # un-normalize
     dxmin *= domainLength
     # uniform fine grid
@@ -938,11 +1209,16 @@ def compute_convergence_indicator_odt_along_time(input_params):
 
     # --------------- Get ODT statistics ---------------
 
-    flist_stat     = sorted(gb.glob('../../data/' + case_name + '/data/data_00000/statistics/stat_dmp_*.dat'))
+    flist_stat     = sorted(gb.glob(f'../../data/{case_name}/data/data_{rlzStr}/statistics/stat_dmp_*.dat'))
     CI_list = []
     time_list = []
 
     for ifile in flist_stat: 
+
+        # Check file time is <= tEndAvg
+        currentTime = get_time(ifile)
+        if currentTime > tEndAvg:
+            break
 
         data = np.loadtxt(ifile)
         # u_avg statistic runtime-calculated in u.f.g - '2_uvelmean'
@@ -951,8 +1227,8 @@ def compute_convergence_indicator_odt_along_time(input_params):
         # ------------------------ Calculate symmetric field ------------------------
 
         # calculate 'symmetric' part of um
-        um_symmetric_half = 0.5*(um[:nunifb] + np.flipud(um[nunift:]))  
-        um_symmetric = np.copy(um)
+        um_symmetric_half      = 0.5*(um[:nunifb] + np.flipud(um[nunift:]))  
+        um_symmetric           = np.copy(um)
         um_symmetric[:nunifb]  = um_symmetric_half
         um_symmetric[nunift:]  = np.flipud(um_symmetric_half)
 
@@ -983,12 +1259,14 @@ def compute_odt_statistics_at_chosen_time(input_params, time_end):
 
     # --- Get ODT input parameters ---
     
-    rho   = input_params["rho"]
-    kvisc = input_params["kvisc"] # = nu = mu / rho 
-    dxmin = input_params["dxmin"]
-    delta = input_params["delta"]
-    Retau = input_params["Retau"]
+    rho       = input_params["rho"]
+    kvisc     = input_params["kvisc"] # = nu = mu / rho 
+    dxmin     = input_params["dxmin"]
+    delta     = input_params["delta"]
+    Retau     = input_params["Retau"]
+    utau      = input_params["utau"]
     case_name = input_params["caseN"]
+    rlzStr    = input_params["rlzStr"]
     nunif     = input_params["nunif"]
     
     # un-normalize
@@ -997,8 +1275,8 @@ def compute_odt_statistics_at_chosen_time(input_params, time_end):
 
     # --- Compute ODT computational data ---
 
-    flist = sorted(gb.glob('../../data/' + case_name + '/data/data_00000/dmp_*.dat'))
-    flist_stat = sorted(gb.glob('../../data/' + case_name + '/data/data_00000/statistics/stat_dmp_*.dat'))
+    flist = sorted(gb.glob(f'../../data/{case_name}/data/data_{rlzStr}/dmp_*.dat'))
+    flist_stat = sorted(gb.glob(f'../../data/{case_name}/data/data_{rlzStr}/statistics/stat_dmp_*.dat'))
 
     nunif2 = int(nunif/2)        # half of num. points (for ploting to domain center, symmetry in y-axis)
     nunifb, nunift = get_nunif2_walls(nunif, nunif2)
@@ -1090,22 +1368,25 @@ def compute_odt_statistics_at_chosen_time(input_params, time_end):
     wrmsf = np.sqrt(wfwfm) 
 
     # --- y-coordinate, y+ ---
-    yu += delta         # domain center is at 0; shift so left side is zero
-    yu = yu[:nunifb]    # plotting to domain center
-    dudy = (um[1]-um[0])/(yu[1]-yu[0])
-    utau = np.sqrt(kvisc * np.abs(dudy) / rho)
-    RetauOdt = utau * delta / kvisc
-    yuplus = yu * utau/kvisc    # scale y --> y+ (note: utau is close to unity)
-    ydelta = yu
+    yu     = yu[:nunifb] + delta   # plotting to domain center, domain center is at 0; shift so left side is zero
+    ydelta = yu / delta
+    yplus = yu * utau / kvisc
 
-    return (ydelta, yuplus, um, urmsf, vrmsf, wrmsf, 
+    # Check: Re_tau and u_tau from ODT simulation
+    dudy = (um[1]-um[0])/(yu[1]-yu[0])
+    utauOdt = np.sqrt(kvisc * np.abs(dudy) / rho)
+    RetauOdt = utauOdt * delta / kvisc
+    print(f"\n[compute_odt_statistics_at_chosen_time] Expected Re_tau = {Retau} vs. Effective Re_tau = {RetauOdt}")
+    print(f"[compute_odt_statistics_at_chosen_time] Expected u_tau = {utau} vs. Effective u_tau = {utauOdt}")
+
+    return (ydelta, yplus, um, urmsf, vrmsf, wrmsf, 
             ufufm, vfvfm, wfwfm, ufvfm, ufwfm, vfwfm)
 
-def get_provisional_tEnd(case_name):
+def get_effective_dTimeEnd(case_name, rlzStr):
 
     # --- Get vel. statistics computed during runtime at last time increment ---
 
-    flist_stat = sorted(gb.glob('../../data/' + case_name + '/data/data_00000/statistics/stat_dmp_*.dat'))
+    flist_stat = sorted(gb.glob(f'../../data/{case_name}/data/data_{rlzStr}/statistics/stat_dmp_*.dat'))
     flast      = flist_stat[-1]
 
     return get_time(flast)

@@ -230,89 +230,104 @@ class ChannelVisualizer():
     #   Methods:       ODT profiles convergence for increasing averaging time
     #--------------------------------------------------------------------------------------------
 
-    def build_u_mean_profile_odt_convergence(self, y_odt, y_dns, u_odt_converg, u_dns, averaging_times, y_odt_rt = None, u_odt_rt=None):
+    def build_u_mean_profile_odt_convergence(self, yplus_rt, yplus_post, yplus_dns, um_rt, um_post, um_dns, averaging_times):
         """
         Builds a plot of the u_mean profile of ODT data at several averaging times  
         Mean stream-wise direction (u_mean) is already normalized by u_tau.
 
         Parameters:
-            y_odt (np.array):           y+ coordinates of odt data, 
-                                        Shape: (num_points_y_odt)
-            y_dns (np.array):           y+ coordinates of dns data, 
-                                        Shape: (num_points_y_dns)
-            u_odt_converg (np.array):   u+_mean of odt data, along y axis and at several averaging times
-                                        Shape: (num_points_y_odt,num_averaging_times)
-            u_dns (np.array):           u+_mean of dns data, along y axis at end of the simulation
-                                        Shape: (num_points_y_dns)             
+            # TODO: add other input params   
             averaging_times (np.array): averaging times at which u_mean is obtained
                                         Shape: (num_averaging_times), column vector
         """
-        assert u_odt_converg.shape[0] == len(y_odt)
-        assert u_odt_converg.shape[1] == len(averaging_times)
+        assert um_post.shape[0] == len(yplus_post)
+        assert um_post.shape[1] == len(averaging_times)
+        assert um_rt.shape[0]   == len(yplus_rt)
+        assert um_rt.shape[1]   == len(averaging_times)
 
-        is_runtime_statistics_calculated = ((y_odt_rt is not None) and (u_odt_rt is not None))
-        if is_runtime_statistics_calculated:
-            assert u_odt_rt.shape[0] == len(y_odt_rt)
-
-        filename = os.path.join(self.postRlzDir, "u_mean_odt_convergence_postprocess_statistics.jpg")
+        # --- odt post-processed statistics vs. dns ---
+        filename = os.path.join(self.postRlzDir, "u_mean_convergence_postprocessed_statistics.jpg")
         print(f"\nMAKING PLOT OF MEAN U PROFILE CONVERGENCE of ODT with POST-PROCESSING CALCULATED STATISTICS in {filename}" )
 
         fig, ax = plt.subplots(figsize=(8,6))
-        ax.semilogx(y_odt, u_odt_converg, label = [r"$T_{{avg}}={}$".format(t) for t in averaging_times])
-        ax.semilogx(y_dns, u_dns, 'k--', label=r"DNS")
+        ax.semilogx(yplus_post, um_post, label = [r"$T_{{avg}}={}$".format(t) for t in averaging_times])
+        ax.semilogx(yplus_dns, um_dns, 'k--', label=r"DNS")
         ax.set_xlabel(r'$y^+$')
         ax.set_ylabel(r'$u^+$')
         ax.legend(loc='upper center', ncol = 3, bbox_to_anchor=(0.5,1.35))
         fig.subplots_adjust(top=0.75, bottom=0.15)  # Leave space for the legend above the first subplot
         plt.savefig(filename, dpi=600)
 
-        if is_runtime_statistics_calculated:
-
-            filename = os.path.join(self.postRlzDir, "u_mean_odt_convergence_runtime_statistics.jpg")
-            print(f"\nMAKING PLOT OF MEAN U PROFILE CONVERGENCE of ODT with RUNTIME-CALCULATED STATISTICS in {filename}" )
-            
-            fig, ax = plt.subplots(figsize=(8,6))
-            ax.semilogx(y_odt_rt, u_odt_rt, label = [r"$T_{{avg}}={}$ (rt)".format(t) for t in averaging_times])
-            ax.semilogx(y_dns, u_dns, 'k--', label=r"DNS")
-            ax.set_xlabel(r'$y^+$')
-            ax.set_ylabel(r'$u^+$')
-            ax.legend(loc='upper center', ncol = 3, bbox_to_anchor=(0.5,1.35))
-            fig.subplots_adjust(top=0.75, bottom=0.15)  # Leave space for the legend above the first subplot
-            plt.savefig(filename, dpi=600)
-
-
-    def build_u_rmsf_profile_odt_convergence(self, y_odt, y_dns, \
-                                             urmsf_odt_convergence, vrmsf_odt_convergence, wrmsf_odt_convergence, \
-                                             urmsf_dns, vrmsf_dns, wrmsf_dns, averaging_times):
-
-        filename = os.path.join(self.postRlzDir, "u_rmsf_odt_convergence.jpg")
-        print(f"\nMAKING PLOT OF RMS VEL PROFILES: ODT vs DNS in {filename}" )
-
-        fig, ax = plt.subplots(3, figsize=(9,9))
-
-        ax[0].plot(y_odt,  urmsf_odt_convergence)
-        ax[1].plot(y_odt,  vrmsf_odt_convergence)
-        ax[2].plot(y_odt,  wrmsf_odt_convergence)
-
-        ax[0].plot(y_dns, urmsf_dns, 'k--')
-        ax[1].plot(y_dns, vrmsf_dns, 'k--')
-        ax[2].plot(y_dns, wrmsf_dns, 'k--')
+        # --- odt runtime-calculated statistics vs. dns ---
+        filename = os.path.join(self.postRlzDir, "u_mean_convergence_runtime_statistics.jpg")
+        print(f"\nMAKING PLOT OF MEAN U PROFILE CONVERGENCE of ODT with RUNTIME-CALCULATED STATISTICS in {filename}" )
         
+        fig, ax = plt.subplots(figsize=(8,6))
+        ax.semilogx(yplus_rt, um_rt, label = [r"$T_{{avg}}={}$ (rt)".format(t) for t in averaging_times])
+        ax.semilogx(yplus_dns, um_dns, 'k--', label=r"DNS")
+        ax.set_xlabel(r'$y^+$')
+        ax.set_ylabel(r'$u^+$')
+        ax.legend(loc='upper center', ncol = 3, bbox_to_anchor=(0.5,1.35))
+        fig.subplots_adjust(top=0.75, bottom=0.15)  # Leave space for the legend above the first subplot
+        plt.savefig(filename, dpi=600)
+
+
+    def build_u_rmsf_profile_odt_convergence(self, yplus_rt, yplus_post, yplus_dns, \
+                                             urmsf_rt, vrmsf_rt, wrmsf_rt, \
+                                             urmsf_post, vrmsf_post, wrmsf_post, \
+                                             urmsf_dns, vrmsf_dns, wrmsf_dns, \
+                                             averaging_times):
+        
+        # --- odt post-processed statistics vs. dns ---
+
+        filename = os.path.join(self.postRlzDir, "u_rmsf_convergence_postprocessed_statistics.jpg")
+        print(f"\nMAKING PLOT OF RMS VEL PROFILES: ODT vs DNS in {filename}" )
+        fig, ax = plt.subplots(3, figsize=(9,9))
+        ax[0].plot(yplus_post,  urmsf_post)
+        ax[1].plot(yplus_post,  vrmsf_post)
+        ax[2].plot(yplus_post,  wrmsf_post)
+        ax[0].plot(yplus_dns, urmsf_dns, 'k--')
+        ax[1].plot(yplus_dns, vrmsf_dns, 'k--')
+        ax[2].plot(yplus_dns, wrmsf_dns, 'k--')
         # Axis: labels and limits
         ylabel_str = [r'$u_{rmsf}/u_\tau$', r'$v_{rmsf}/u_\tau$', r'$w_{rmsf}/u_\tau$']
         for axis in range(3):
             ax[axis].set_xlabel(r'$y^+$')
             ax[axis].set_ylabel(ylabel_str[axis])
-            ax[axis].set_xlim([0, np.max(np.concatenate([y_odt,y_dns]))])
+            ax[axis].set_xlim([0, np.max(np.concatenate([yplus_post,yplus_dns]))])
             ax[axis].set_ylim([0, int(np.max([urmsf_dns,vrmsf_dns,wrmsf_dns])+1)])
-        
         # Legend
         # Specify the legend of only for first subplot, idem for other
         labels_averaging_times = [r"$T_{{avg}}={}$".format(t) for t in averaging_times]
         labels_str = labels_averaging_times + ["DNS",]
         ax[0].legend(labels_str, loc='upper center', ncol = 3, bbox_to_anchor=(0.5,1.6))
         fig.subplots_adjust(top=0.85)  # Leave space for the legend above the first subplot
-        
+        plt.savefig(filename, dpi=600)
+
+        # --- odt runtime statistics vs. dns ---
+
+        filename = os.path.join(self.postRlzDir, "u_rmsf_convergence_runtime_statistics.jpg")
+        print(f"\nMAKING PLOT OF RMS VEL PROFILES: ODT vs DNS in {filename}" )
+        fig, ax = plt.subplots(3, figsize=(9,9))
+        ax[0].plot(yplus_rt,  urmsf_rt)
+        ax[1].plot(yplus_rt,  vrmsf_rt)
+        ax[2].plot(yplus_rt,  wrmsf_rt)
+        ax[0].plot(yplus_dns, urmsf_dns, 'k--')
+        ax[1].plot(yplus_dns, vrmsf_dns, 'k--')
+        ax[2].plot(yplus_dns, wrmsf_dns, 'k--')
+        # Axis: labels and limits
+        ylabel_str = [r'$u_{rmsf}/u_\tau$', r'$v_{rmsf}/u_\tau$', r'$w_{rmsf}/u_\tau$']
+        for axis in range(3):
+            ax[axis].set_xlabel(r'$y^+$')
+            ax[axis].set_ylabel(ylabel_str[axis])
+            ax[axis].set_xlim([0, np.max(np.concatenate([yplus_rt,yplus_dns]))])
+            ax[axis].set_ylim([0, int(np.max([urmsf_dns,vrmsf_dns,wrmsf_dns])+1)])
+        # Legend
+        # Specify the legend of only for first subplot, idem for other
+        labels_averaging_times = [r"$T_{{avg}}={}$".format(t) for t in averaging_times]
+        labels_str = labels_averaging_times + ["DNS",]
+        ax[0].legend(labels_str, loc='upper center', ncol = 3, bbox_to_anchor=(0.5,1.6))
+        fig.subplots_adjust(top=0.85)  # Leave space for the legend above the first subplot
         plt.savefig(filename, dpi=600)
 
     
@@ -685,5 +700,58 @@ class ChannelVisualizer():
         ax.tick_params( axis = 'y', direction = 'in', bottom = True, top = True, left = True, right = True )
         ax.tick_params(axis = 'both', pad = 5) 	# add padding to both x and y axes, dist between axis ticks and label
 
+        plt.savefig(filename, dpi=600)
+        plt.close()
+
+
+    def build_u_mean_tEndAvg_nRlz_RL_vs_nonRL_vs_baseline(self, yplus, rlzNArr, um_RL, urmsf_RL, um_nonRL, urmsf_nonRL, um_baseline, urmsf_baseline, time_nonConv, time_baseline):
+
+        # --------- plot um data ---------
+        
+        filename = os.path.join(self.postRlzDir, f"u_mean_RL_vs_nonRL_vs_baseline.jpg")
+        print(f"\nMAKING PLOT of um profile at tEndAvg for multiple realizations in {filename}")
+
+        fig, ax = plt.subplots()
+
+        # > RL non-converged (at time_nonConv):
+        nrlz = um_RL.shape[1]
+        for irlz in range(nrlz):
+            ax.plot(yplus, um_RL[:,irlz], label=f"RL: Rlz {rlzNArr[irlz]}")
+        # > non-RL non-converged (at time_nonConv):
+        ax.plot(yplus, um_nonRL, '--k', label=f"Non-RL: t={time_nonConv}")
+        # > non-RL baseline (at time_baseline)
+        ax.plot(yplus, um_baseline, '-k', label=f"Baseline: t={time_baseline}")
+
+        # configure plot
+        ax.set_xlabel(r'$y^+$')
+        ax.set_ylabel(r'$u^+$')
+        ax.legend(frameon=True, fontsize=10)
+        ax.set_title(f"time = {time_nonConv}s")
+        
+        plt.savefig(filename, dpi=600)
+        plt.close()
+
+        # --------- plot urmsf data ---------
+        
+        filename = os.path.join(self.postRlzDir, f"u_rmsf_RL_vs_nonRL_vs_baseline.jpg")
+        print(f"\nMAKING PLOT of urmsf profile at tEndAvg for multiple realizations in {filename}")
+
+        fig, ax = plt.subplots()
+
+        # > RL non-converged (at time_nonConv):
+        nrlz = um_RL.shape[1]
+        for irlz in range(nrlz):
+            ax.plot(yplus, urmsf_RL[:,irlz], label=f"RL: Rlz {rlzNArr[irlz]}")
+        # > non-RL non-converged (at time_nonConv):
+        ax.plot(yplus, urmsf_nonRL, '--k', label=f"Non-RL: t={time_nonConv}")
+        # > non-RL baseline (at time_baseline)
+        ax.plot(yplus, urmsf_baseline, '-k', label=f"Baseline: t={time_baseline}")
+
+        # configure plot
+        ax.set_xlabel(r'$y^+$')
+        ax.set_ylabel(r'$u_{rmsf}^+$')
+        ax.legend(frameon=True, fontsize=10)
+        ax.set_title(f"time = {time_nonConv}s")
+        
         plt.savefig(filename, dpi=600)
         plt.close()
