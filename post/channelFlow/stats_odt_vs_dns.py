@@ -47,7 +47,7 @@ if not os.path.exists(postRlzDir):
 
 # --- Get ODT input parameters ---
 
-odtInputDataFilepath  = "../../data/" + caseN + "/input/input.yaml"
+odtInputDataFilepath  = f"../../data/{caseN}/input/input.yaml"
 with open(odtInputDataFilepath) as ifile :
     yml = yaml.load(ifile, Loader=yaml.FullLoader)
 kvisc        = yml["params"]["kvisc0"] # kvisc = nu = mu / rho

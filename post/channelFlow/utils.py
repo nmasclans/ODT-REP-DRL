@@ -32,29 +32,29 @@ def get_odt_instantaneous(input_params):
 
     Returns:
         ODT instantaneous coordinates and fields
-        uvel, vvel, wvel (np.ndarrays)
+        ydelta, yplus, time, uvel, vvel, wvel (np.ndarrays)
     """
     # --- Get ODT input parameters ---
 
-    dxmin = input_params["dxmin"]
-    nunif = input_params["nunif"]
-    delta = input_params["delta"]
-    domainLength = input_params["domainLength"]
-    case_name    = input_params["caseN"]
-    rlzStr       = input_params["rlzStr"]
+    caseName = input_params["caseN"]
+    rlzStr   = input_params["rlzStr"]
+    delta    = input_params["delta"]
+    kvisc    = input_params["kvisc"]
+    nunif    = input_params["nunif"]
+    utau     = input_params["utau"]
 
-    dxmin *= domainLength       # un-normalize
-    nunif2 = int(nunif/2)       # half of num. points (for ploting to domain center, symmetry in y-axis)
-    nunifb, nunift = get_nunif2_walls(nunif, nunif2)
+    # half of the channel
+    nunif2   = int(nunif/2)                             # half of num. points (for ploting to domain center, symmetry in y-axis)
+    nunifb, nunift = get_nunif2_walls(nunif, nunif2)    # added for compatibility with nunif odd
 
     # --- Get ODT data ---
 
-    flist     = sorted(gb.glob(f'../../data/{case_name}/data/data_{rlzStr}/dmp_*.dat'))
+    flist     = sorted(gb.glob(f'../../data/{caseName}/data/data_{rlzStr}/dmp_*.dat'))
     num_files = len(flist)
-
     
-    yu    = np.linspace(-delta,delta,nunif) # uniform grid in y-axis
-    uvel = np.zeros([nunif, num_files])
+    yu   = np.linspace(-delta, delta, nunif)    # shape [nunif,] uniform grid in y-axis
+    time = np.zeros(num_files)                  # shape [num_files,]
+    uvel = np.zeros([nunif, num_files])         # shape [nunif, num_files]
     vvel = np.zeros([nunif, num_files])
     wvel = np.zeros([nunif, num_files])
 
@@ -77,12 +77,73 @@ def get_odt_instantaneous(input_params):
         vvel[:,i] = vv
         wvel[:,i] = ww
 
+        # get and store time
+        time[i] = get_time(ifile)
+
     # mirror data -> half channel
     uvel = 0.5*(uvel[:nunifb,:] + np.flipud(uvel[nunift:,:]))
     vvel = 0.5*(vvel[:nunifb,:] + np.flipud(vvel[nunift:,:]))
     wvel = 0.5*(wvel[:nunifb,:] + np.flipud(wvel[nunift:,:]))
 
-    return (uvel, vvel, wvel)
+    # coordinates in wall units y -> y+
+    yplus  = yu * utau / kvisc
+    ydelta = yu / delta
+
+    return (ydelta, yplus, time, uvel, vvel, wvel)
+
+
+def get_odt_instantaneous_in_adaptative_grid(input_params):
+    """
+    Get ODT instantaneous fields in adaptative grid
+
+    Parameters:
+        input_params (dict): ODT input parameters dictionary
+
+    Returns:
+        ODT instantaneous coordinates and fields in adaptative grid
+        y, yf, dy, time, uvel, vvel, wvel (np.ndarrays)
+    """
+    # --- Get ODT input parameters ---
+
+    caseName = input_params["caseN"]
+    rlzStr   = input_params["rlzStr"]
+
+    # --- Get ODT data ---
+
+    flist     = sorted(gb.glob(f'../../data/{caseName}/data/data_{rlzStr}/dmp_*.dat'))
+    num_files = len(flist)
+    
+    # Attention: we take data from adaptative grid: y,dy,u,v,w change size for each instantaneous data file
+    time = []       # will have shape [num_files,]
+    y    = []       # list of 1-d np.arrays of different length, as grid is adaptative
+    yf   = []       # idem. , but each np.array will be of +1 element than the other quantities
+    dy   = []       # idem.
+    uvel = []       # idem.
+    vvel = []       # idem.
+    wvel = []       # idem.
+
+    for i in range(num_files):
+
+        ifile = flist[i]
+        data = np.loadtxt(ifile)
+        y.append(data[:,0])    # = y/delta, as delta = 1
+        uvel.append(data[:,2]) # normalized by u_tau, u is in fact u+
+        vvel.append(data[:,3]) # normalized by u_tau, v is in fact v+
+        wvel.append(data[:,4]) # normalized by u_tau, w is in fact w+ 
+
+        # frontier positions of each cell, of length +1 than y,u,v,w
+        yf_ = data[:,1]     # missing last point of yf = 1, from how ODT stores data; dy is bigger by 1 element than y,u,v,w, but last element 1 is never stored because it is constant along simulation
+        yf_ = np.append(yf_, 1)
+        yf.append(yf_)
+
+        # dy of each cell, of length == than y,u,v,w
+        dy_ = yf_[1:] - yf_[:-1]
+        dy.append(dy_)
+
+        # get and store time
+        time.append(get_time(ifile))
+
+    return (y, yf, dy, time, uvel, vvel, wvel)
 
 
 def compute_odt_statistics(odt_statistics_filepath, input_params, plot_reynolds_stress_terms=False):
@@ -875,7 +936,7 @@ def get_odt_statistics_post_at_chosen_averaging_times(input_params, averaging_ti
     print(f"\n[get_odt_statistics_post_at_chosen_averaging_times] Expected Re_tau = {Retau} vs. Effective Re_tau = {RetauOdt}")
     print(f"[get_odt_statistics_post_at_chosen_averaging_times] Expected u_tau = {utau} vs. Effective u_tau = {utauOdt}")
     # scale y --> y+ (note: utau should be unity)
-    yplus = yu * utau/kvisc    
+    yplus = yu * utau / kvisc    
 
     return (ydelta, yplus,
             um, urmsf,
@@ -1186,7 +1247,7 @@ def compute_convergence_indicator_odt_tEnd(input_params):
     print("\n(ODT) Convergence Indicator at tEnd (CI, Esp_s) = ", CI)
 
     # ------------ scale y to y+ ------------
-    yplus = yu * utau/kvisc 
+    yplus = yu * utau / kvisc 
 
     return (CI, yplus, um, um_symmetric)
 
