@@ -762,7 +762,7 @@ class ChannelVisualizer():
         - err_RL:    np.array, shape [n_realizations]
         - err_nonRL: np.array, shape [] (scalar)
         """
-        filename = os.path.join(self.postRlzDir, f"RL_err_{error_name}_convergence.jpg")
+        filename = os.path.join(self.postRlzDir, f"RL_error_{error_name}_convergence.jpg")
         print(f"\nMAKING PLOT of error {error_name} profile at tEndAvg for multiple realizations in {filename}")
 
         nrlz = len(rlzNArr)

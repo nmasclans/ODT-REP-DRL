@@ -6,11 +6,6 @@ import pandas as pd
 
 from utils import *
 from ChannelVisualizer import ChannelVisualizer
-import matplotlib.pyplot as plt
-
-plt.rc( 'text', usetex = True )
-plt.rc( 'font', size = 14 )
-plt.rc('text.latex', preamble=r"\usepackage{amsmath} \usepackage{amsmath} \usepackage{amssymb} \usepackage{color}")
 
 #--------------------------------------------------------------------------------------------
 
@@ -38,7 +33,7 @@ try :
           f"- Realization Number Max RL: {rlzN_max_RL} \n" \
           f"- Realization Number Step RL: {rlzN_step_RL} \n" \
           f"- Time End Averaging non-converged (both RL and non-RL): {tEndAvg_nonConv} \n" \
-          f"- Time End Averaging converged (non-RL, baseline): {tEndAvg_conv} \n" \
+          f"- Time End Averaging converged (non-RL, baseline): {tEndAvg_conv} \n"
     )
 except :
     raise ValueError("Missing call arguments, should be: <1_Re_tau> <2_case_name_nonRL> <3_realization_number_nonRL> <4_case_name_RL> <5_realization_number_min_RL> <6_realization_number_max_RL> <7_realization_number_step_RL> <8_time_end_averaging_non_converged> <9_time_end_averaging_converged>")
@@ -155,16 +150,22 @@ tEndAvg_baseline = tEndAvg_conv
 
 # ------------- Calculate errors non-converged results vs converged baseline -------------
 
+# ---- Calculate NRMSE
+
 num_points = len(um_nonRL_conv)
-# Error of RL non-converged
-errL2_RL_nonConv = np.zeros(nrlz)
+# > Error of RL non-converged
+NRMSE_RL = np.zeros(nrlz)
 for irlz in range(nrlz):
-    errL2_RL_nonConv[irlz] = np.sum((um_RL_nonConv[:,irlz] - um_baseline)**2) / num_points
+    NRMSE_RL_num   = np.sqrt(np.sum((um_RL_nonConv[:,irlz] - um_baseline)**2))
+    NRMSE_RL_denum = np.sqrt(np.sum((um_baseline)**2))
+    NRMSE_RL[irlz] = NRMSE_RL_num / NRMSE_RL_denum 
 # Error of non-RL non-converged
-errL2_nonRL_nonConv = np.sum((um_nonRL_nonConv - um_baseline)**2) / num_points
+NRMSE_nonRL_num   = np.sqrt(np.sum((um_nonRL_nonConv - um_baseline)**2))
+NRMSE_nonRL_denum = np.sqrt(np.sum((um_baseline)**2))
+NRMSE_nonRL = NRMSE_nonRL_num / NRMSE_nonRL_denum
 
 
 # ------------------------ Build plots ------------------------
 visualizer = ChannelVisualizer(postMultipleRlzDir)
 visualizer.RL_u_mean_convergence(yplus, rlzN_Arr, um_RL_nonConv, urmsf_RL_nonConv, um_nonRL_nonConv, urmsf_nonRL_nonConv, um_baseline, urmsf_baseline, tEndAvg_nonConv, tEndAvg_baseline)
-visualizer.RL_err_convergence(rlzN_Arr, errL2_RL_nonConv, errL2_nonRL_nonConv, tEndAvg_nonConv, "L2")
+visualizer.RL_err_convergence(rlzN_Arr, NRMSE_RL, NRMSE_nonRL, tEndAvg_nonConv, "NRMSE")
