@@ -1,8 +1,12 @@
 #!/bin/bash
 
 # Single realization run
-# run as "./runOneRlz.sh" <caseName>
+# run as "./runOneRlz.sh" <caseName> <realizationNum>
 # note it requires a single input argument: caseName
+# Help: if not running the ODT docker container (where $ODT_PATH is defined), you should
+#       define environment variable $ODT_PATH in the bash terminal as:
+#       $ ODT_PATH="/home/jofre/Nuria/repositories/ODT"
+#       $ export ODT_PATH
 
 ###############################################################################
 echo "the start time is"
