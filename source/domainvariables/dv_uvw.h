@@ -34,6 +34,7 @@ class dv_uvw : public dv {
 
     public:
 
+        virtual void setModifiedParams();
         virtual void getRhsSrc(const int ipt=-1);
         virtual void getRhsMix(const vector<double> &gf, const vector<double> &dxc);
         virtual void getRhsStatConv(const vector<double> &gf, const vector<double> &dxc, const double &time);

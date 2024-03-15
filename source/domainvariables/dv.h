@@ -87,6 +87,7 @@ class dv {
     //////////////////// MEMBER FUNCTIONS /////////////////
 
         virtual void   setVar(const int ipt=-1){}
+        virtual void   setModifiedParams(){};
 
         virtual void   merge2cells(const int    imrg,
                                    const double m2,

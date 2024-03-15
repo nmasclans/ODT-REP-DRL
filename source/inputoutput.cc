@@ -620,9 +620,11 @@ void inputoutput::loadVarsFromRestartFile() {
 
     //------------- Set the variables
 
-    for(int k=0; k<domn->v.size(); k++)
-        domn->v[k]->setVar();                   // channelFlow: only defined for dv_pos (remains idem.), rho_const, dvisc_const (set ct. value as in input file)
-
+    for(int k=0; k<domn->v.size(); k++){
+        domn->v[k]->setVar();                   // channelFlow: only defined for 'dv_pos'
+        domn->v[k]->setModifiedParams();        // channelFlow: only defined for 'dv_uvw' for reseting tfRL acconrding to modified pram->trst)
+    }
+    
 }
 
 

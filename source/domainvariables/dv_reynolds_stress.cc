@@ -397,10 +397,10 @@ void dv_reynolds_stress::enforceRealizabilityXmap(double &xmap1, double &xmap2){
     // Check eigenvalues realizability from barycentric coordinates:
     if (!areRealizableBarycentricCoord(lambda)){ 
         // enforce realizability by truncating & normalizing barycentric coordinates 'lambda'
-        cout << "\nPerturbed xmap not realizable - outside barycentric map realizability triangle." << endl;
-        cout << "Non-realizable barycentric coordinates lambda = (" << lambda[0] << ", " << lambda[1] << ", " << lambda[2] << ")" << endl;
+        // cout << "\nPerturbed xmap not realizable - outside barycentric map realizability triangle." << endl;
+        // cout << "Non-realizable barycentric coordinates lambda = (" << lambda[0] << ", " << lambda[1] << ", " << lambda[2] << ")" << endl;
         truncateAndNormalizeBarycentricCoord(lambda);               // update lambda
-        cout << "Realizable barycentric coordinates lambda = (" << lambda[0] << ", " << lambda[1] << ", " << lambda[2] << ")" << endl;
+        // cout << "Realizable barycentric coordinates lambda = (" << lambda[0] << ", " << lambda[1] << ", " << lambda[2] << ")" << endl;
     }
     getCartesianCoordFromBarycentricCoord(lambda, xmap1, xmap2);    // update xmap1, xmap2
 }

@@ -326,3 +326,10 @@ void dv_uvw::updateTimeAveragedQuantities(const double &delta_t, const double &a
     }
 
 }
+
+
+////////////////////////////////////////////////////////////////////////////////
+void dv_uvw::setModifiedParams(){
+    // for updating tfRL after restart for both domn->dv_uvw and eddy->dv_uvw, according to restart time read in restart files (in inputoutput.cc)
+    tfRL = domn->pram->trst + domn->pram->dtActionRL;
+}
