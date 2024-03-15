@@ -3,6 +3,10 @@ Script to calculate total kinetic energy of the system in J/kg
 -> Turbulence is developed when kinetic energy converges
 -> Valid to inspect J/kg, because density rho is constant along the channel, 
    and adaptative grid is interpolated to uniform grid
+
+Run as: 
+python3 kinetic_energy_evolution.py channel180_2_5_2024_longSimulation 0
+
 """
 
 import os
