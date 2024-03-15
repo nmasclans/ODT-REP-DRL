@@ -16,27 +16,32 @@ plt.rc('text.latex', preamble=r"\usepackage{amsmath} \usepackage{amsmath} \usepa
 
 # --- Get CASE parameters ---
 
+# RL case is non-converged
+# baseline non-RL has both non-converged and baseline statistics
 try :
     i = 1
-    caseN_nonRL  = sys.argv[i];        i+=1
-    rlzN_nonRL   = int(sys.argv[i]);   i+=1
-    caseN_RL     = sys.argv[i];        i+=1
-    rlzN_min_RL  = int(sys.argv[i]);   i+=1
-    rlzN_max_RL  = int(sys.argv[i]);   i+=1
-    rlzN_step_RL = int(sys.argv[i]);   i+=1
-    Retau        = int(sys.argv[i]);   i+=1
-    tEndAvg      = float(sys.argv[i]); i+=1
+    Retau            = int(sys.argv[i]);   i+=1
+    caseN_nonRL      = sys.argv[i];        i+=1
+    rlzN_nonRL       = int(sys.argv[i]);   i+=1
+    caseN_RL         = sys.argv[i];        i+=1
+    rlzN_min_RL      = int(sys.argv[i]);   i+=1
+    rlzN_max_RL      = int(sys.argv[i]);   i+=1
+    rlzN_step_RL     = int(sys.argv[i]);   i+=1
+    tEndAvg_nonConv  = float(sys.argv[i]); i+=1
+    tEndAvg_conv     = float(sys.argv[i]); i+=1
     print(f"Script parameters: \n" \
+          f"- Re_tau: {Retau} \n" \
           f"- Case name non-RL: {caseN_nonRL} \n" \
           f"- Realization Number non-RL: {rlzN_nonRL} \n" \
           f"- Case name RL: {caseN_RL} \n" \
           f"- Realization Number Min RL: {rlzN_min_RL} \n" \
           f"- Realization Number Max RL: {rlzN_max_RL} \n" \
           f"- Realization Number Step RL: {rlzN_step_RL} \n" \
-          f"- Re_tau: {Retau} \n" \
-          f"- Time End Averaging: {tEndAvg} \n")
+          f"- Time End Averaging non-converged (both RL and non-RL): {tEndAvg_nonConv} \n" \
+          f"- Time End Averaging converged (non-RL, baseline): {tEndAvg_conv} \n" \
+    )
 except :
-    raise ValueError("Missing call arguments, should be: <case_name_nonRL> <case_name_RL> <realization_number_min_RL> <realization_number_max_RL> <reynolds_number> <time_end_averaging>")
+    raise ValueError("Missing call arguments, should be: <1_Re_tau> <2_case_name_nonRL> <3_realization_number_nonRL> <4_case_name_RL> <5_realization_number_min_RL> <6_realization_number_max_RL> <7_realization_number_step_RL> <8_time_end_averaging_non_converged> <9_time_end_averaging_converged>")
 
 # --- Get ODT input parameters ---
 
@@ -47,8 +52,8 @@ rlzN_last    = rlzN_max_RL
 rlzStr_last  = f"{rlzN_last:05d}"
 
 # get input data from first realization
-odtInputDataFilepath_RL  = f"../../data/{caseN_RL}/input/input.yaml"
-with open(odtInputDataFilepath_RL) as ifile :
+odtInputDataFilepath_RL_nonConv  = f"../../data/{caseN_RL}/input/input.yaml"
+with open(odtInputDataFilepath_RL_nonConv) as ifile :
     yml = yaml.load(ifile, Loader=yaml.FullLoader)
 kvisc        = yml["params"]["kvisc0"] # kvisc = nu = mu / rho
 rho          = yml["params"]["rho0"]
@@ -60,10 +65,11 @@ dTimeEnd     = get_effective_dTimeEnd(caseN_RL, rlzStr_first) # dTimeEnd = yml["
 dTimeStep    = yml["dumpTimesGen"]["dTimeStep"]
 delta        = domainLength * 0.5
 utau         = 1.0
-inputParams_RL = {"kvisc":kvisc, "rho":rho, "dxmin": dxmin, "nunif": nunif, "domainLength" : domainLength, "delta": delta, "Retau": Retau, "utau": utau,
-                  "caseN": caseN_RL, "rlzStr": rlzStr_first, 
-                  "dTimeStart": dTimeStart, "dTimeEnd": dTimeEnd, "dTimeStep": dTimeStep, 
-                  "tEndAvg": tEndAvg} 
+inputParams_RL_nonConv = {"kvisc":kvisc, "rho":rho, "dxmin": dxmin, "nunif": nunif, "domainLength" : domainLength, "delta": delta, "Retau": Retau, "utau": utau,
+                          "caseN": caseN_RL, "rlzStr": rlzStr_first, 
+                          "dTimeStart": dTimeStart, "dTimeEnd": dTimeEnd, "dTimeStep": dTimeStep, 
+                          "tEndAvg": tEndAvg_nonConv} 
+print(inputParams_RL_nonConv)
 
 # --- post-processing directories to store results
 
@@ -85,47 +91,80 @@ rlzStr_Arr = [f"{rlzN:05d}" for rlzN in rlzN_Arr]
 nrlz     = len(rlzN_Arr)
 
 # empty arrays
-um_RL    = np.zeros([int(nunif/2), nrlz])
-urmsf_RL = np.zeros([int(nunif/2), nrlz])
+um_RL_nonConv    = np.zeros([int(nunif/2), nrlz])
+urmsf_RL_nonConv = np.zeros([int(nunif/2), nrlz])
 
 for irlz in range(nrlz):
 
     # modify rlzN information in inputParams_RL:
-    inputParams_RL["rlzStr"] = rlzStr_Arr[irlz]
-    print(f"\n\n--- RL: Realization #{rlzN_Arr[irlz]}, Time " + str(inputParams_RL["tEndAvg"]) +  " ---")
+    inputParams_RL_nonConv["rlzStr"] = rlzStr_Arr[irlz]
+    print("\n\n--- RL: Realization #" + inputParams_RL_nonConv["rlzStr"] + ", Time " + str(inputParams_RL_nonConv["tEndAvg"]) +  " ---")
 
     # get u-statistics data
     if irlz == 0:
-        (ydelta, yplus, um_data, urmsf_data) = get_odt_udata_rt(inputParams_RL)
+        (ydelta, yplus, um_data, urmsf_data) = get_odt_udata_rt(inputParams_RL_nonConv)
     else:
-        (_, _, um_data, urmsf_data) = get_odt_udata_rt(inputParams_RL)
+        (_, _, um_data, urmsf_data) = get_odt_udata_rt(inputParams_RL_nonConv)
     
     # store realization data
-    um_RL[:,irlz]    = um_data
-    urmsf_RL[:,irlz] = urmsf_data
+    um_RL_nonConv[:,irlz]    = um_data
+    urmsf_RL_nonConv[:,irlz] = urmsf_data
 
 #------------ Get NON-CONVERGED runtime-calculated 'um' at t=tEndAvg for single ODT non-RL-realization ---------------
 
-# --- Build inputParams for non-RL case and realization, other params are idem.
-inputParams_nonRL = inputParams_RL.copy()
-inputParams_nonRL['caseN'] = caseN_nonRL
-inputParams_nonRL['rlzStr']    = f"{rlzN_nonRL:05d}"
+# --- Get input parameters
+odtInputDataFilepath_nonRL_nonConv  = f"../../data/{caseN_nonRL}/input/input.yaml"
+rlzStr_nonRL = f"{rlzN_nonRL:05d}"
+with open(odtInputDataFilepath_nonRL_nonConv) as ifile :
+    yml = yaml.load(ifile, Loader=yaml.FullLoader)
+kvisc        = yml["params"]["kvisc0"] # kvisc = nu = mu / rho
+rho          = yml["params"]["rho0"]
+dxmin        = yml["params"]["dxmin"]
+nunif        = yml["params"]["nunif"]
+domainLength = yml["params"]["domainLength"] 
+dTimeStart   = yml["dumpTimesGen"]["dTimeStart"]
+dTimeEnd     = get_effective_dTimeEnd(caseN_nonRL, rlzStr_nonRL) # dTimeEnd = yml["dumpTimesGen"]["dTimeEnd"] can lead to errors if dTimeEnd > tEnd
+dTimeStep    = yml["dumpTimesGen"]["dTimeStep"]
+delta        = domainLength * 0.5
+utau         = 1.0
+inputParams_nonRL_nonConv = {"kvisc":kvisc, "rho":rho, "dxmin": dxmin, "nunif": nunif, "domainLength" : domainLength, "delta": delta, "Retau": Retau, "utau": utau,
+                             "caseN": caseN_nonRL, "rlzStr": rlzStr_nonRL, 
+                             "dTimeStart": dTimeStart, "dTimeEnd": dTimeEnd, "dTimeStep": dTimeStep, 
+                             "tEndAvg": tEndAvg_nonConv} 
+print(inputParams_nonRL_nonConv)
 
 # --- Get data
-print(f"\n--- Non-RL: Realization #{rlzN_nonRL}, Time " + str(inputParams_nonRL["tEndAvg"]) + " ---")
-(_, _, um_nonRL, urmsf_nonRL) = get_odt_udata_rt(inputParams_nonRL)
+print(f"\n--- Non-RL: Realization #" + inputParams_nonRL_nonConv["rlzStr"] + ", Time " + str(inputParams_nonRL_nonConv["tEndAvg"]) + " ---")
+(_, _, um_nonRL_nonConv, urmsf_nonRL_nonConv) = get_odt_udata_rt(inputParams_nonRL_nonConv)
 
 #------------ Get BASELINE runtime-calculated 'um' at t=dTimeEnd (>>tEndAvg used before) for single ODT non-RL-realization ---------------
 
 # --- build input parameters, tEndAvg=dTimeEnd of the Baseline is >> tEndAvg used in previous NON-CONVERGED data
-inputParams_baseline = inputParams_nonRL.copy()
-inputParams_baseline["tEndAvg"]  = 500.0 # TODO: this value should be a variable, it is the dTimeEnd of the input yaml of nonRL case
-inputParams_baseline["dTimeEnd"] = 500.0 # TODO: this value should be a variable, it is the dTimeEnd of the input yaml of nonRL case
+inputParams_nonRL_conv = inputParams_nonRL_nonConv.copy()
+inputParams_nonRL_conv["tEndAvg"]  = tEndAvg_conv
+print(inputParams_nonRL_conv)
+
 # --- get data
-print(f"\n--- Non-RL Baseline: Realization #{rlzN_nonRL}, Time " + str(inputParams_baseline["tEndAvg"]) + " ---")
-(_, _, um_baseline, urmsf_baseline) = get_odt_udata_rt(inputParams_baseline)
+print(f"\n--- Non-RL Baseline: Realization #" + inputParams_nonRL_conv["rlzStr"] + ", Time " + str(inputParams_nonRL_conv["tEndAvg"]) + " ---")
+(_, _, um_nonRL_conv, urmsf_nonRL_conv) = get_odt_udata_rt(inputParams_nonRL_conv)
+
+# for further use:
+um_baseline      = um_nonRL_conv
+urmsf_baseline   = urmsf_nonRL_conv 
+tEndAvg_baseline = tEndAvg_conv
+
+# ------------- Calculate errors non-converged results vs converged baseline -------------
+
+num_points = len(um_nonRL_conv)
+# Error of RL non-converged
+errL2_RL_nonConv = np.zeros(nrlz)
+for irlz in range(nrlz):
+    errL2_RL_nonConv[irlz] = np.sum((um_RL_nonConv[:,irlz] - um_baseline)**2) / num_points
+# Error of non-RL non-converged
+errL2_nonRL_nonConv = np.sum((um_nonRL_nonConv - um_baseline)**2) / num_points
+
 
 # ------------------------ Build plots ------------------------
 visualizer = ChannelVisualizer(postMultipleRlzDir)
-visualizer.build_u_mean_tEndAvg_nRlz_RL_vs_nonRL_vs_baseline(yplus, rlzN_Arr, um_RL, urmsf_RL, um_nonRL, urmsf_nonRL, um_baseline, urmsf_baseline, inputParams_RL["tEndAvg"], inputParams_baseline["tEndAvg"])
-
+visualizer.RL_u_mean_convergence(yplus, rlzN_Arr, um_RL_nonConv, urmsf_RL_nonConv, um_nonRL_nonConv, urmsf_nonRL_nonConv, um_baseline, urmsf_baseline, tEndAvg_nonConv, tEndAvg_baseline)
+visualizer.RL_err_convergence(rlzN_Arr, errL2_RL_nonConv, errL2_nonRL_nonConv, tEndAvg_nonConv, "L2")

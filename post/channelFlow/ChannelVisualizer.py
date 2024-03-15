@@ -704,54 +704,79 @@ class ChannelVisualizer():
         plt.close()
 
 
-    def build_u_mean_tEndAvg_nRlz_RL_vs_nonRL_vs_baseline(self, yplus, rlzNArr, um_RL, urmsf_RL, um_nonRL, urmsf_nonRL, um_baseline, urmsf_baseline, time_nonConv, time_baseline):
+    def RL_u_mean_convergence(self, yplus, rlzNArr, um_RL_nonConv, urmsf_RL_nonConv, um_nonRL_nonConv, urmsf_nonRL_nonConv, um_baseline, urmsf_baseline, time_nonConv, time_baseline):
 
         # --------- plot um data ---------
         
-        filename = os.path.join(self.postRlzDir, f"u_mean_RL_vs_nonRL_vs_baseline.jpg")
+        filename = os.path.join(self.postRlzDir, f"RL_u_mean_convergence.jpg")
         print(f"\nMAKING PLOT of um profile at tEndAvg for multiple realizations in {filename}")
 
         fig, ax = plt.subplots()
 
         # > RL non-converged (at time_nonConv):
-        nrlz = um_RL.shape[1]
+        nrlz = um_RL_nonConv.shape[1]
         for irlz in range(nrlz):
-            ax.plot(yplus, um_RL[:,irlz], label=f"RL: Rlz {rlzNArr[irlz]}")
+            ax.semilogx(yplus, um_RL_nonConv[:,irlz], label=f"RL Rlz {rlzNArr[irlz]}: t={time_nonConv}")
         # > non-RL non-converged (at time_nonConv):
-        ax.plot(yplus, um_nonRL, '--k', label=f"Non-RL: t={time_nonConv}")
+        ax.semilogx(yplus, um_nonRL_nonConv, '--k', label=f"Non-RL: t={time_nonConv}")
         # > non-RL baseline (at time_baseline)
-        ax.plot(yplus, um_baseline, '-k', label=f"Baseline: t={time_baseline}")
+        ax.semilogx(yplus, um_baseline, '-k', label=f"Baseline: t={time_baseline}")
 
         # configure plot
         ax.set_xlabel(r'$y^+$')
-        ax.set_ylabel(r'$u^+$')
+        ax.set_ylabel(r'$u_{m}^+$')
         ax.legend(frameon=True, fontsize=10)
-        ax.set_title(f"time = {time_nonConv}s")
         
         plt.savefig(filename, dpi=600)
         plt.close()
 
         # --------- plot urmsf data ---------
         
-        filename = os.path.join(self.postRlzDir, f"u_rmsf_RL_vs_nonRL_vs_baseline.jpg")
+        filename = os.path.join(self.postRlzDir, f"RL_u_rmsf_convergence.jpg")
         print(f"\nMAKING PLOT of urmsf profile at tEndAvg for multiple realizations in {filename}")
 
         fig, ax = plt.subplots()
 
         # > RL non-converged (at time_nonConv):
-        nrlz = um_RL.shape[1]
+        nrlz = um_RL_nonConv.shape[1]
         for irlz in range(nrlz):
-            ax.plot(yplus, urmsf_RL[:,irlz], label=f"RL: Rlz {rlzNArr[irlz]}")
+            ax.semilogx(yplus, urmsf_RL_nonConv[:,irlz], label=f"RL Rlz {rlzNArr[irlz]}: t={time_nonConv}")
         # > non-RL non-converged (at time_nonConv):
-        ax.plot(yplus, urmsf_nonRL, '--k', label=f"Non-RL: t={time_nonConv}")
+        ax.semilogx(yplus, urmsf_nonRL_nonConv, '--k', label=f"Non-RL: t={time_nonConv}")
         # > non-RL baseline (at time_baseline)
-        ax.plot(yplus, urmsf_baseline, '-k', label=f"Baseline: t={time_baseline}")
+        ax.semilogx(yplus, urmsf_baseline, '-k', label=f"Baseline: t={time_baseline}")
 
         # configure plot
         ax.set_xlabel(r'$y^+$')
         ax.set_ylabel(r'$u_{rmsf}^+$')
         ax.legend(frameon=True, fontsize=10)
-        ax.set_title(f"time = {time_nonConv}s")
         
+        plt.tight_layout()
+        plt.savefig(filename, dpi=600)
+        plt.close()
+
+
+    def RL_err_convergence(self, rlzNArr, err_RL, err_nonRL, time_nonConv, error_name):
+        """
+        Params:
+        - err_RL:    np.array, shape [n_realizations]
+        - err_nonRL: np.array, shape [] (scalar)
+        """
+        filename = os.path.join(self.postRlzDir, f"RL_err_{error_name}_convergence.jpg")
+        print(f"\nMAKING PLOT of error {error_name} profile at tEndAvg for multiple realizations in {filename}")
+
+        nrlz = len(rlzNArr)
+        plt.figure()
+        # > RL non-converged (at time_nonConv):
+        plt.semilogy(rlzNArr, err_RL, '-o', label=f"RL: t={time_nonConv}")
+        # > non-RL non-converged (at time_nonConv):
+        plt.semilogy(rlzNArr, np.ones(nrlz) * err_nonRL, '--k', label=f"Non-RL: t={time_nonConv}")
+        
+        # configure plot
+        plt.xlabel('Realization Id.')
+        plt.ylabel(f'Error {error_name}')
+        plt.legend(frameon=True, fontsize=10)
+
+        plt.tight_layout()
         plt.savefig(filename, dpi=600)
         plt.close()
