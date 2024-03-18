@@ -107,9 +107,11 @@ int main(int argc, char*argv[]) {
     // Starting time
     time_t mytimeStart, mytimeEnd;
     mytimeStart = time(0);
-    *io.ostrm << endl << "#################################################################";
-    *io.ostrm << endl << "#  Start Time = " << ctime(&mytimeStart);
-    *io.ostrm << endl << "#################################################################";
+    cout << "[main.cc] *** ODT SIMULATION ***" << endl;
+    cout << "[main.cc] Start Time = " << ctime(&mytimeStart) << endl;
+    // *io.ostrm << endl << "#################################################################";
+    // *io.ostrm << endl << "#  Start Time = " << ctime(&mytimeStart);
+    // *io.ostrm << endl << "#################################################################";
 
 
     //-------------------
@@ -126,11 +128,7 @@ int main(int argc, char*argv[]) {
 
     // Ending time
     mytimeEnd = time(0);
-    *io.ostrm << endl << "#################################################################";
-    *io.ostrm << endl << "#  Start Time = " << ctime(&mytimeStart);
-    *io.ostrm << endl << "#  End Time   = " << ctime(&mytimeEnd);
-    *io.ostrm << endl << "#################################################################";
-    *io.ostrm << endl;
+    cout << "[main.cc] End Time   = " << ctime(&mytimeEnd) << endl;
 
     //-------------------
 
