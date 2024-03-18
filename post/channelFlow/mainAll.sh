@@ -47,6 +47,23 @@ echo "$#"
 if [ "$#" -ne 13 ]; then
     echo "Usage: $0 <1_Re_tau> <2_case_name_nonRL> <3_realization_number_nonRL> <4_case_name_RL> <5_realization_number_min_RL> <6_realization_number_max_RL> <7_realization_number_step_RL> <8_time_end_averaging_non_converged> <9_time_end_averaging_converged> <10_RL_run_id> <11_delta_time_stats> <12_delta_time_stats_anisotropy_gifs> <13_time_begin_averaging>"
     exit 1
+else
+    echo -e "\n\n\n****************************************************************"
+    echo -e "************************** mainAll.sh **************************"
+    echo -e "****************************************************************"
+    echo "- Reynolds number: $1"
+    echo "- Case name non-RL: $2"
+    echo "- Realization number non-RL: $3"
+    echo "- Case name RL: $4"
+    echo "- Realization number min RL: $5"
+    echo "- Realization number max RL: $6"
+    echo "- Realization number step RL: $7"
+    echo "- Time end averaging non-converged: $8"
+    echo "- Time end averaging converged: $9"
+    echo "- RL run id: ${10}"
+    echo "- dt statistics: ${11}"
+    echo "- dt statistics anisotropy gifs: ${12}"
+    echo "- Time begin averaging: ${13}"
 fi
 
 # Run main.sh for each realization
@@ -54,11 +71,11 @@ for ((rlzNum = $5; rlzNum <= $6; rlzNum+=$7)); do
     echo -e "\n\n\n****************************************************************"
     echo -e "****************** main.sh for realization #$rlzNum ******************"
     echo -e "****************************************************************"
-    ./main.sh "$4" "$rlzNum" "$1" "$11" "$12" "$13" "$8"
+    ./main.sh "$4" "$rlzNum" "$1" "${11}" "${12}" "${13}" "$8"
 done
 
 # Run mainRL.sh for multiple realizations
 echo -e "\n\n\n****************************************************************"
 echo -e "************************** mainRL.sh ***************************"
 echo -e "****************************************************************"
-./mainRL.sh "$1" "$2" "$3" "$4" "$5" "$6" "$7" "$8" "$9" "$10"
+./mainRL.sh "$1" "$2" "$3" "$4" "$5" "$6" "$7" "$8" "$9" "${10}"

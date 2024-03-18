@@ -18,6 +18,14 @@
 if [ "$#" -ne 7 ]; then
     echo "Usage: $0 <1_case_name> <2_realization_number> <3_reynolds_number> <4_delta_time_stats> <5_delta_time_stats_anisotropy_gifs> <6_time_begin_averaging> <7_time_end_averaging>"
     exit 1
+else
+    echo "- Case name: $1"
+    echo "- Realization number: $2"
+    echo "- Reynolds number: $3"
+    echo "- dt statistics: $4"
+    echo "- dt statistics anisotropy gifs: $5"
+    echo "- Time begin averaging: $6"
+    echo "- Time end averaging: $7"
 fi
 
 # Generate dmp file for odt_end.dat file (idem. for statistics & state) if last dmp file time < end file time
