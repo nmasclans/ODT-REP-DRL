@@ -1,17 +1,28 @@
 #!/bin/bash
 
-# Run as:
+# INSTRUCTIONS:
+#
+# Run as (e.g.):
 # ./main.sh channel180_2_5_2024 0 180 10 1 50
+#
+# Arguments:
+# - 1_case_name 
+# - 2_realization_number 
+# - 3_reynolds_number 
+# - 4_delta_time_stats 
+# - 5_delta_time_stats_anisotropy_gifs 
+# - 6_time_begin_averaging 
+# - 7_time_end_averaging 
 
 # Check if the correct number of arguments is provided
 if [ "$#" -ne 7 ]; then
-    echo "Usage: $0 <1_case_name> <2_realization_number> <3_reynolds_number> <4_delta_time_stats> <5_delta_time_stats_anisotropy> <6_time_begin_averaging> <7_time_end_averaging>"
+    echo "Usage: $0 <1_case_name> <2_realization_number> <3_reynolds_number> <4_delta_time_stats> <5_delta_time_stats_anisotropy_gifs> <6_time_begin_averaging> <7_time_end_averaging>"
     exit 1
 fi
 
 # Generate dmp file for odt_end.dat file (idem. for statistics & state) if last dmp file time < end file time
 echo -e "\n\n\n----------------------------------------------------------------"
-echo -e "------------------- load_end_file_to_dmp_file.py ---------------------"
+echo -e "----------------- load_end_file_to_dmp_file.py -----------------"
 echo -e "----------------------------------------------------------------\n\n\n"
 python3 load_end_file_to_dmp_file.py "$1" "$2"
 

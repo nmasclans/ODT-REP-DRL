@@ -28,7 +28,7 @@ try :
     tBeginAvg = float(sys.argv[5])
     tEndAvg   = float(sys.argv[6])
 except :
-    raise ValueError("Missing call arguments, should be: <case_name> <realization_number> <reynolds_number> <delta_time_stats_anisotropy> <time_begin_averaging> <time_end_averaging>")
+    raise ValueError("Missing call arguments, should be: <case_name> <realization_number> <reynolds_number> <delta_time_stats_anisotropy_gifs> <time_begin_averaging> <time_end_averaging>")
 
 
 # --- Define parameters ---

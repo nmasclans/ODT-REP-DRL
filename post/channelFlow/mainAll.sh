@@ -1,0 +1,64 @@
+#!/bin/bash
+
+# INSTRUCTIONS
+# This bash file will efectivelly run 'mainRL.sh' for multiple realizations comparison, and 'main.sh' for each realization,
+# with the required arguments for each bash file.
+#
+# Run as (e.g.):
+# ./mainAll.sh 180 channel180_2_5_2024_longSimulation 0 channel180_2_5_2024_run1710523569 0 2 1 111 1000 1710523569 1 0.1 100
+# 
+# Arguments (for mainAll.sh):
+# - 1_Re_tau                             (for mainRL.sh)   
+# - 2_case_name_nonRL                    (for mainRL.sh)           
+# - 3_realization_number_nonRL           (for mainRL.sh)                   
+# - 4_case_name_RL                       (for mainRL.sh & main.sh)       
+# - 5_realization_number_min_RL          (for mainRL.sh & main.sh)                   
+# - 6_realization_number_max_RL          (for mainRL.sh & main.sh)                   
+# - 7_realization_number_step_RL         (for mainRL.sh & main.sh)                       
+# - 8_time_end_averaging_non_converged   (for mainRL.sh & main.sh)                           
+# - 9_time_end_averaging_converged       (for mainRL.sh)                       
+# - 10_RL_run_id                         (for mainRL.sh)       
+# - 11_delta_time_stats                  (for main.sh)
+# - 12_delta_time_stats_anisotropy_gifs  (for main.sh)
+# - 13_time_begin_averaging              (for main.sh)
+# 
+# where:
+# A. Arguments (for mainRL.sh):
+#    - 1_Re_tau 
+#    - 2_case_name_nonRL
+#    - 3_realization_number_nonRL
+#    - 4_case_name_RL
+#    - 5_realization_number_min_RL
+#    - 6_realization_number_max_RL
+#    - 7_realization_number_step_RL
+#    - 8_time_end_averaging_non_converged
+#    - 9_time_end_averaging_converged
+#    - 10_RL_run_id
+# B. Arguments (for main.sh):
+#    - 1_case_name 
+#    - 2_realization_number 
+#    - 3_reynolds_number 
+#    - 4_delta_time_stats 
+#    - 5_delta_time_stats_anisotropy_gifs 
+#    - 6_time_begin_averaging 
+#    - 7_time_end_averaging 
+
+echo "$#"
+if [ "$#" -ne 13 ]; then
+    echo "Usage: $0 <1_Re_tau> <2_case_name_nonRL> <3_realization_number_nonRL> <4_case_name_RL> <5_realization_number_min_RL> <6_realization_number_max_RL> <7_realization_number_step_RL> <8_time_end_averaging_non_converged> <9_time_end_averaging_converged> <10_RL_run_id> <11_delta_time_stats> <12_delta_time_stats_anisotropy_gifs> <13_time_begin_averaging>"
+    exit 1
+fi
+
+# Run main.sh for each realization
+for ((rlzNum = $5; rlzNum <= $6; rlzNum+=$7)); do
+    echo -e "\n\n\n****************************************************************"
+    echo -e "****************** main.sh for realization #$rlzNum ******************"
+    echo -e "****************************************************************"
+    ./main.sh "$4" "$rlzNum" "$1" "$11" "$12" "$13" "$8"
+done
+
+# Run mainRL.sh for multiple realizations
+echo -e "\n\n\n****************************************************************"
+echo -e "************************** mainRL.sh ***************************"
+echo -e "****************************************************************"
+./mainRL.sh "$1" "$2" "$3" "$4" "$5" "$6" "$7" "$8" "$9" "$10"
