@@ -83,36 +83,40 @@ inputParams = {"kvisc":kvisc, "rho":rho, "dxmin": dxmin, "nunif":nunif, "domainL
 # --- Chosen averaging times ---
 
 averaging_times = np.arange(tBeginAvg, tEndAvg+1e-4, dtAvg).round(4)
+averaging_times_plots = averaging_times - dTimeStart
 
 # --- Get ODT computational data ---
 
-(ydelta_post, yplus_post, um_post, urmsf_post, vm_post, vrmsf_post, wm_post, wrmsf_post, 
- ufufm_post, vfvfm_post, wfwfm_post, ufvfm_post, ufwfm_post, vfwfm_post) \
-    = get_odt_statistics_post_at_chosen_averaging_times(inputParams, averaging_times)
+### (ydelta_post, yplus_post, 
+###  um_post, urmsf_post, vm_post, vrmsf_post, wm_post, wrmsf_post, 
+###  ufufm_post, vfvfm_post, wfwfm_post, ufvfm_post, ufwfm_post, vfwfm_post) \
+###     = get_odt_statistics_post_at_chosen_averaging_times(inputParams, averaging_times)
 
 #------------ ODT statistics-during-runtime data ---------------
 
-(_, _, _, CI, yplus_post_all, um_post_all, um_post_symmetric_all) \
+(_, _, _, CI, ydelta_post_all, um_post_all, um_post_symmetric_all) \
     = get_odt_statistics_rt_at_chosen_averaging_times_um_symmetry(inputParams, averaging_times)
 (ydelta_rt, yplus_rt, 
  um_rt, urmsf_rt, uFpert_rt, vm_rt, vrmsf_rt, vFpert_rt, wm_rt, wrmsf_rt, wFpert_rt,
  ufufm_rt, vfvfm_rt, wfwfm_rt, ufvfm_rt, ufwfm_rt, vfwfm_rt) \
     = get_odt_statistics_rt_at_chosen_averaging_times(inputParams, averaging_times)
 
-#------------ DNS data ---------------
+#------------ ODT Reference data ---------------
 
-(ydelta_dns, yplus_dns, 
- um_dns, urmsf_dns, vrmsf_dns, wrmsf_dns, ufufm_dns, vfvfm_dns, wfwfm_dns, ufvfm_dns, ufwfm_dns, vfwfm_dns, 
- viscous_stress_dns, reynolds_stress_dns, total_stress_dns, vt_u_plus_dns, p_u_plus_dns) \
-    = get_dns_statistics(Retau, inputParams)
+# (ODT-Reference) calculated-at-runtime statistics 
+(ydelta_ref, yplus_ref, 
+ um_ref, urmsf_ref, uFpert_ref, vm_ref, vrmsf_ref, vFpert_ref, wm_ref, wrmsf_ref, wFpert_ref,
+ ufufm_ref, vfvfm_ref, wfwfm_ref, ufvfm_ref, ufwfm_ref, vfwfm_ref,
+ _, _, _) \
+    = get_odt_statistics_reference(inputParams)
 
 #--------------------------------------------------------------------------------------------
 
 # Build plots
 
 visualizer = ChannelVisualizer(postRlzDir)
-visualizer.build_u_mean_profile_odt_convergence(yplus_rt, yplus_post, yplus_dns, um_rt, um_post, um_dns, averaging_times)
-visualizer.build_u_rmsf_profile_odt_convergence(yplus_rt, yplus_post, yplus_dns, urmsf_rt, vrmsf_rt, wrmsf_rt, urmsf_post, vrmsf_post, wrmsf_post, urmsf_dns, vrmsf_dns, wrmsf_dns, averaging_times)
-visualizer.build_reynolds_stress_diagonal_profile_odt_convergence(    yplus_rt, yplus_dns, ufufm_rt, vfvfm_rt, wfwfm_rt, ufufm_dns, vfvfm_dns, wfwfm_dns, averaging_times)
-visualizer.build_reynolds_stress_not_diagonal_profile_odt_convergence(yplus_rt, yplus_dns, ufvfm_rt, ufwfm_rt, vfwfm_rt, ufvfm_dns, ufwfm_dns, vfwfm_dns, averaging_times)
-visualizer.build_um_profile_symmetric_vs_nonsymmetric_odt_convergence(CI, yplus_post_all, um_post_all, um_post_symmetric_all, averaging_times)
+visualizer.build_u_mean_profile_odt_convergence(yplus_rt, yplus_ref, um_rt, um_ref, averaging_times_plots, "Reference")
+visualizer.build_u_rmsf_profile_odt_convergence(yplus_rt, yplus_ref, urmsf_rt, vrmsf_rt, wrmsf_rt, urmsf_ref, vrmsf_ref, wrmsf_ref, averaging_times_plots, "Reference")
+visualizer.build_reynolds_stress_diagonal_profile_odt_convergence(    yplus_rt, yplus_ref, ufufm_rt, vfvfm_rt, wfwfm_rt, ufufm_ref, vfvfm_ref, wfwfm_ref, averaging_times_plots, "Reference")
+visualizer.build_reynolds_stress_not_diagonal_profile_odt_convergence(yplus_rt, yplus_ref, ufvfm_rt, ufwfm_rt, vfwfm_rt, ufvfm_ref, ufwfm_ref, vfwfm_ref, averaging_times_plots, "Reference")
+visualizer.build_um_profile_symmetric_vs_nonsymmetric_odt_convergence(CI, ydelta_post_all, um_post_all, um_post_symmetric_all, averaging_times_plots)

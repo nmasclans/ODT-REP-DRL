@@ -87,6 +87,7 @@ inputParams = {"kvisc":kvisc, "rho":rho, "dxmin": dxmin, "nunif": nunif, "domain
 # --- Chosen averaging times ---
 
 averaging_times = np.arange(tBeginAvg, tEndAvg+1e-4, dtAvg).round(4)
+averaging_times_plots = averaging_times - dTimeStart
 # remove first time, as only 1 file is used to calculate the statistics, therefore 
 # they are just instantaneous, and make the reynolds stress tensor not satisfy realizability conditions
 ### averaging_times = averaging_times[1:] 
@@ -130,8 +131,8 @@ print("------ Calculate Rij dof from statistics calculated at runtime by ODT ---
 for i in range(len(averaging_times)): 
     (Rkk_rt, lambda1_rt, lambda2_rt, lambda3_rt, xmap1_rt, xmap2_rt) = compute_reynolds_stress_dof(Rxx_rt[:,i], Ryy_rt[:,i], Rzz_rt[:,i], Rxy_rt[:,i], Rxz_rt[:,i], Ryz_rt[:,i])
     eigenvalues_rt = np.array([lambda1_rt, lambda2_rt, lambda3_rt]).transpose()
-    frames_eig_rt  = visualizer.build_anisotropy_tensor_eigenvalues_frame(frames_eig_rt, ydelta_rt, eigenvalues_rt, averaging_times[i])
-    frames_bar_rt  = visualizer.build_anisotropy_tensor_barycentric_map_frame(frames_bar_rt, xmap1_rt, xmap2_rt, ydelta_rt, averaging_times[i])
+    frames_eig_rt  = visualizer.build_anisotropy_tensor_eigenvalues_frame(frames_eig_rt, ydelta_rt, eigenvalues_rt, averaging_times_plots[i])
+    frames_bar_rt  = visualizer.build_anisotropy_tensor_barycentric_map_frame(frames_bar_rt, xmap1_rt, xmap2_rt, ydelta_rt, averaging_times_plots[i])
 
 # -------------------------------------------------------------------------
 # ------------------ Create the animation from the frames -----------------

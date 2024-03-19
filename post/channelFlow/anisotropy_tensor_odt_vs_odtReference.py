@@ -103,48 +103,47 @@ inputParams  = {"kvisc":kvisc, "rho":rho, "dxmin": dxmin, "nunif": nunif, "domai
 ###     = compute_reynolds_stress_dof(ufufm_odt_post, vfvfm_odt_post, wfwfm_odt_post, ufvfm_odt_post, ufwfm_odt_post, vfwfm_odt_post)
 
 # calculated-at-runtime statistics
-(ydelta_odt_rt, yplus_odt_rt, 
+(ydelta_rt, yplus_rt, 
  _,_,_, _,_,_, _,_,_, 
- ufufm_odt_rt, vfvfm_odt_rt, wfwfm_odt_rt, ufvfm_odt_rt, ufwfm_odt_rt, vfwfm_odt_rt,
+ ufufm_rt, vfvfm_rt, wfwfm_rt, ufvfm_rt, ufwfm_rt, vfwfm_rt,
  _,_,_) \
     = get_odt_statistics_rt(inputParams)
-(Rkk_odt_rt, lambda1_odt_rt, lambda2_odt_rt, lambda3_odt_rt, xmap1_odt_rt, xmap2_odt_rt) \
-    = compute_reynolds_stress_dof(ufufm_odt_rt, vfvfm_odt_rt, wfwfm_odt_rt, ufvfm_odt_rt, ufwfm_odt_rt, vfwfm_odt_rt)
+(Rkk_rt, lambda1_rt, lambda2_rt, lambda3_rt, xmap1_rt, xmap2_rt) \
+    = compute_reynolds_stress_dof(ufufm_rt, vfvfm_rt, wfwfm_rt, ufvfm_rt, ufwfm_rt, vfwfm_rt)
 
-#------------ Get DNS statistics ---------------
+#------------ Get ODT-Reference statistics ---------------
 
-(ydelta_dns, yplus_dns, 
- _, _, _, _, 
- ufufm_dns, vfvfm_dns, wfwfm_dns, ufvfm_dns, ufwfm_dns, vfwfm_dns, 
- _, _, _, _, _) \
-    = get_dns_statistics(Retau, inputParams)
-(Rkk_dns, lambda1_dns, lambda2_dns, lambda3_dns, xmap1_dns, xmap2_dns) \
-    = compute_reynolds_stress_dof(ufufm_dns, vfvfm_dns, wfwfm_dns, ufvfm_dns, ufwfm_dns, vfwfm_dns)
+# (ODT-Reference) calculated-at-runtime statistics 
+(ydelta_ref, yplus_ref, 
+ _,_,_, _,_,_, _,_,_,
+ ufufm_ref, vfvfm_ref, wfwfm_ref, ufvfm_ref, ufwfm_ref, vfwfm_ref,
+ _,_,_) \
+    = get_odt_statistics_reference(inputParams)
+(Rkk_ref, lambda1_ref, lambda2_ref, lambda3_ref, xmap1_ref, xmap2_ref) \
+    = compute_reynolds_stress_dof(ufufm_ref, vfvfm_ref, wfwfm_ref, ufvfm_ref, ufwfm_ref, vfwfm_ref)
 
 
 #-----------------------------------------------------------------------------------------
 #           Anisotropy tensor, eigen-decomposition, mapping to barycentric map 
 #-----------------------------------------------------------------------------------------
 
-# ---------------------- Plot xmap 1st-coordinate vs. y (post-processing & runtime calculations) ---------------------- 
+tEndAvgPlot = tEndAvg - tBeginAvg
 
-# pdf plot of barycentric map 1st coordinate
-visualizer.plot_pdf(xmap1_odt_rt, [0.0, 1.0], "1st coord barycentric map", nbins, "anisotropy_tensor_pdf_barmapx_odt")
-visualizer.plot_pdf(xmap1_dns,    [0.0, 1.0], "1st coord barycentric map", nbins, "anisotropy_tensor_pdf_barmapx_dns")
+# ---------------------- Plot xmap coordinates vs. y (runtime & reference) ---------------------- 
 
-# plot of barycentric map 1st coordinate vs yplus
-### # post-processing calculations
-### visualizer.plot_line(yplus_odt_post, xmap1_odt_post, [0.0, yplus_odt_post.max()], [0.0, 1.0], r"$y^{+}$", "1st coord barycentric map", "anisotropy_tensor_yplus_vs_barmapx_post")
+visualizer.build_anisotropy_tensor_barycentric_xmap_coord(ydelta_rt, ydelta_ref, xmap1_rt, xmap2_rt, xmap1_ref, xmap2_ref, tEndAvgPlot)
+
+# ---------------------- Plot eigenvalues vs. y (runtime & reference) ---------------------- 
+
+eigenvalues_rt  = np.array([lambda1_rt,  lambda2_rt,  lambda3_rt]).transpose()
+eigenvalues_ref = np.array([lambda1_ref, lambda2_ref, lambda3_ref]).transpose()
+visualizer.build_anisotropy_tensor_eigenvalues(ydelta_rt, ydelta_ref, eigenvalues_rt, eigenvalues_ref, tEndAvgPlot)
+
+# ---------------------- Plot Barycentric Map in Barycentric Triangle ---------------------- 
+
 # runtime calculations
-visualizer.plot_line(yplus_odt_rt, xmap1_odt_rt, [0.0, yplus_odt_rt.max()], [0.0, 1.0], r"$y^{+}$", "1st coord barycentric map", "anisotropy_tensor_yplus_vs_barmapx_odt")
+visualizer.build_anisotropy_tensor_barycentric_map(xmap1_rt,  xmap2_rt,  yplus_rt,  tEndAvgPlot, f"anisotropy_tensor_barycentric_map_odt")
 # DNS data
-visualizer.plot_line(yplus_dns,    xmap1_dns,    [0.0, yplus_dns.max()],    [0.0, 1.0], r"$y^{+}$", "1st coord barycentric map", "anisotropy_tensor_yplus_vs_barmapx_dns")
+visualizer.build_anisotropy_tensor_barycentric_map(xmap1_ref, xmap2_ref, yplus_ref, 1000,        f"anisotropy_tensor_barycentric_map_odtReference")
 
-# ---------------------- Plot Barycentric Map ---------------------- 
 
-### # post-processing calculations
-### visualizer.build_anisotropy_tensor_barycentric_map(xmap1_odt_post, xmap2_odt_post, yplus_odt_post, tEndAvg, f"anisotropy_tensor_barycentric_map_post")
-# runtime calculations
-visualizer.build_anisotropy_tensor_barycentric_map(xmap1_odt_rt, xmap2_odt_rt, yplus_odt_rt, tEndAvg-tBeginAvg, f"anisotropy_tensor_barycentric_map_odt")
-# DNS data
-visualizer.build_anisotropy_tensor_barycentric_map(xmap1_dns,    xmap2_dns,    yplus_dns,    1000,              f"anisotropy_tensor_barycentric_map_dns")

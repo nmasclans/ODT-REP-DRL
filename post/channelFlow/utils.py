@@ -2,6 +2,7 @@
 Utils functions for post/channelFlow post-processing scripts
 """
 
+import os
 import yaml
 import math
 import glob as gb
@@ -146,7 +147,7 @@ def get_odt_instantaneous_in_adaptative_grid(input_params):
     return (y, yf, dy, time, uvel, vvel, wvel)
 
 
-def compute_odt_statistics(odt_statistics_filepath, input_params, plot_reynolds_stress_terms=False):
+def compute_odt_statistics_post(odt_statistics_filepath, input_params, plot_reynolds_stress_terms=False):
     """
     Compute ODT statistics from multiple .dat files with instantaneous data
     at increasing simulation time
@@ -170,6 +171,7 @@ def compute_odt_statistics(odt_statistics_filepath, input_params, plot_reynolds_
     nunif      = input_params["nunif"]
     case_name  = input_params["caseN"]
     rlzStr     = input_params["rlzStr"]
+    tBeginAvg  = input_params["tBeginAvg"]
     tEndAvg    = input_params["tEndAvg"]
     
     # un-normalize
@@ -203,52 +205,51 @@ def compute_odt_statistics(odt_statistics_filepath, input_params, plot_reynolds_
     ifile_total   = len(flist)
     for ifile in flist :
 
-        # Check file time is <= tEndAvg
+        # Check file tBeginAvg <= currentTime <= tEndAvg
         currentTime = get_time(ifile)
-        if currentTime > tEndAvg:
-            break
+        if tBeginAvg <= currentTime and currentTime <= tEndAvg: 
+                
+            # ------------------ (get) Instantaneous velocity ------------------
 
-        # ------------------ (get) Instantaneous velocity ------------------
+            data = np.loadtxt(ifile)
+            y    = data[:,0] # = y/delta, as delta = 1
+            u    = data[:,2] # normalized by u_tau, u is in fact u+
+            v    = data[:,3] # normalized by u_tau, v is in fact v+
+            w    = data[:,4] # normalized by u_tau, w is in fact w+ 
 
-        data = np.loadtxt(ifile)
-        y    = data[:,0] # = y/delta, as delta = 1
-        u    = data[:,2] # normalized by u_tau, u is in fact u+
-        v    = data[:,3] # normalized by u_tau, v is in fact v+
-        w    = data[:,4] # normalized by u_tau, w is in fact w+ 
+            # interpolate to uniform grid
+            uu = interp1d(y, u, fill_value='extrapolate')(yu)  
+            vv = interp1d(y, v, fill_value='extrapolate')(yu)
+            ww = interp1d(y, w, fill_value='extrapolate')(yu)
 
-        # interpolate to uniform grid
-        uu = interp1d(y, u, fill_value='extrapolate')(yu)  
-        vv = interp1d(y, v, fill_value='extrapolate')(yu)
-        ww = interp1d(y, w, fill_value='extrapolate')(yu)
+            # ------------------ (compute) Velocity statistics, from instantaneous values ------------------
 
-        # ------------------ (compute) Velocity statistics, from instantaneous values ------------------
+            # update mean profiles
+            um  += uu
+            vm  += vv
+            wm  += ww
+            u2m += uu*uu
+            v2m += vv*vv
+            w2m += ww*ww
+            uvm += uu*vv
+            uwm += uu*ww
+            vwm += vv*ww
+            
+            # update mean profile dudy2m = avg((du/dy)**2)
+            # top half of channel
+            uut    = uu[nunift:]
+            yut    = yu[nunift:]
+            dudy2t = ( (uut[2:]-uut[:-2])/(yut[2:]-yut[:-2]) )**2
+            # bottom half of channel
+            uub     = np.flip(uu[:nunifb])
+            yub     = - np.flip(yu[:nunifb])
+            dudy2b  = ( (uub[2:]-uub[:-2])/(yub[2:]-yub[:-2]) )**2
+            dudy2m += 0.5*(dudy2b + dudy2t)  # mirror data (symmetric)
 
-        # update mean profiles
-        um  += uu
-        vm  += vv
-        wm  += ww
-        u2m += uu*uu
-        v2m += vv*vv
-        w2m += ww*ww
-        uvm += uu*vv
-        uwm += uu*ww
-        vwm += vv*ww
-        
-        # update mean profile dudy2m = avg((du/dy)**2)
-        # top half of channel
-        uut    = uu[nunift:]
-        yut    = yu[nunift:]
-        dudy2t = ( (uut[2:]-uut[:-2])/(yut[2:]-yut[:-2]) )**2
-        # bottom half of channel
-        uub     = np.flip(uu[:nunifb])
-        yub     = - np.flip(yu[:nunifb])
-        dudy2b  = ( (uub[2:]-uub[:-2])/(yub[2:]-yub[:-2]) )**2
-        dudy2m += 0.5*(dudy2b + dudy2t)  # mirror data (symmetric)
-
-        # Logging info
-        file_counter += 1
-        if file_counter % logging_files_period == 1:
-            print(f"Calculating ODT statistics... {file_counter/ifile_total*100:.0f}%")
+            # Logging info
+            file_counter += 1
+            if file_counter % logging_files_period == 1:
+                print(f"Calculating ODT statistics... {file_counter/ifile_total*100:.0f}%")
 
     # (computed) means
     um /= file_counter
@@ -414,7 +415,7 @@ def compute_odt_statistics(odt_statistics_filepath, input_params, plot_reynolds_
         plt.close()
 
 
-def get_odt_statistics(odt_statistics_filepath, input_params):
+def get_odt_statistics_post(odt_statistics_filepath):
     """
     Get ODT statistics, previously saved in a .dat file using 'compute_odt_statistics' function
 
@@ -484,10 +485,11 @@ def get_odt_statistics_rt(input_params):
 
     # --- Get ODT input parameters ---
     
-    utau      = input_params["utau"]
-    delta      = input_params["delta"]
-    kvisc      = input_params["kvisc"]
+    utau       = input_params["utau"]
     Retau      = input_params["Retau"]
+    delta      = input_params["delta"]
+    rho        = input_params["rho"]
+    kvisc      = input_params["kvisc"]
     case_name  = input_params["caseN"]
     rlzStr     = input_params["rlzStr"]
     dTimeStart = input_params["dTimeStart"]
@@ -576,18 +578,136 @@ def get_odt_statistics_rt(input_params):
     yplus  = yu * utau / kvisc
 
     # Check: Re_tau and u_tau of ODT data
-    dudy     = (um_data[1]-um_data[0])/(yu[1]-yu[0])
-    utauOdt  = np.sqrt(kvisc * np.abs(dudy))
+    dumdy0     = (um_data[1]-um_data[0])/(yu[1]-yu[0])
+    utauOdt  = np.sqrt(kvisc * np.abs(dumdy0))
     RetauOdt = utauOdt * delta / kvisc
     print(f"\n[get_odt_statistics_rt] Expected Re_tau = {Retau} vs. Effective Re_tau = {RetauOdt}")
     print(f"[get_odt_statistics_rt] Expected u_tau = {utau} vs. Effective u_tau = {utauOdt}")
+
+    # ------------ Compute Stress Decomposition ------------
+    
+    # Stress decomposition: Viscous, Reynolds and Total stress
+    dumdy = (um_data[1:] - um_data[:-1])/(yu[1:] - yu[:-1])
+    viscous_stress_  = kvisc * rho * dumdy
+    reynolds_stress_ = - rho * ufvfm_data[:-1]
+    total_stress_    = viscous_stress_ + reynolds_stress_
+
+    # Add "0" at grid boundaries to quantities computed from 1st- and 2nd-order derivatives to vstack vectors of the same size
+    # -> involve 1st-order forward finite differences
+    viscous_stress  = np.zeros(nunifb); viscous_stress[:-1]  = viscous_stress_  
+    reynolds_stress = np.zeros(nunifb); reynolds_stress[:-1] = reynolds_stress_  
+    total_stress    = np.zeros(nunifb); total_stress[:-1]    = total_stress_  
 
     return (ydelta, yplus, 
             um_data, urmsf_data, uFpert_data,
             vm_data, vrmsf_data, vFpert_data,
             wm_data, wrmsf_data, wFpert_data,
             ufufm_data, vfvfm_data, wfwfm_data, ufvfm_data, ufwfm_data, vfwfm_data,
-            # lambda0_data, lambda1_data, lambda2_data, xmap1_data, xmap2_data,
+            viscous_stress, reynolds_stress, total_stress,
+    )
+
+
+def get_odt_statistics_reference(input_params):
+    
+    # --- Get ODT input parameters ---
+    
+    utau       = input_params["utau"]
+    Retau      = input_params["Retau"]
+    delta      = input_params["delta"]
+    rho        = input_params["rho"]
+    kvisc      = input_params["kvisc"]
+
+    # get filename of reference statistics
+    reference_dir = os.path.join(f"./ODT_reference/Re{Retau}")
+    reference_stat_file = os.path.join(reference_dir, "statistics_reference.dat")    
+    data_stat = np.loadtxt(reference_stat_file)
+
+    # -> check the file rows correspond to the expected variables:
+    with open(reference_stat_file,'r') as f:
+        rows_info = f.readlines()[3].split() # 4th line of the file
+    rows_info_expected = '#         1_posUnif        2_uvel_mean        3_uvel_rmsf       4_uvel_Fpert        5_vvel_mean        6_vvel_rmsf       7_vvel_Fpert        8_wvel_mean        9_wvel_rmsf      10_wvel_Fpert             11_Rxx             12_Ryy             13_Rzz             14_Rxy             15_Rxz             16_Ryz\n'.split()
+    assert rows_info == rows_info_expected, f"statistic files rows do not correspond to the expected variables" \
+        f"rows variables (expected): \n{rows_info_expected} \n" \
+        f"rows variables (current): \n{rows_info}"
+    
+    # -> get data
+    yu           = data_stat[:,0]
+    #
+    um_data      = data_stat[:,1] 
+    urmsf_data   = data_stat[:,2] 
+    uFpert_data  = data_stat[:,3]
+    #
+    vm_data      = data_stat[:,4] 
+    vrmsf_data   = data_stat[:,5] 
+    vFpert_data  = data_stat[:,6] 
+    #
+    wm_data      = data_stat[:,7] 
+    wrmsf_data   = data_stat[:,8] 
+    wFpert_data  = data_stat[:,9]  
+    # reynolds stress terms
+    ufufm_data   = data_stat[:,10]  # column header: 11_Rxx
+    vfvfm_data   = data_stat[:,11]  # 12_Ryy
+    wfwfm_data   = data_stat[:,12]  # 13_Rzz
+    ufvfm_data   = data_stat[:,13]  # 14_Rxy
+    ufwfm_data   = data_stat[:,14]  # 15_Rxz
+    vfwfm_data   = data_stat[:,15]  # 16_Ryz
+
+    ### Mirror data (symmetric in the y-direction from the channel center)
+    # mirror data indexs
+    nunif        = len(um_data)
+    nunif2       = int(nunif/2)
+    nunifb, nunift = get_nunif2_walls(nunif, nunif2)
+    # mirror data
+    um_data      = 0.5 * ( um_data[:nunifb]      + np.flipud(um_data[nunift:])      )
+    urmsf_data   = 0.5 * ( urmsf_data[:nunifb]   + np.flipud(urmsf_data[nunift:])   )
+    uFpert_data  = 0.5 * ( uFpert_data[:nunifb]  + np.flipud(uFpert_data[nunift:])  )
+    vm_data      = 0.5 * ( vm_data[:nunifb]      + np.flipud(vm_data[nunift:])      )
+    vrmsf_data   = 0.5 * ( vrmsf_data[:nunifb]   + np.flipud(vrmsf_data[nunift:])   )
+    vFpert_data  = 0.5 * ( vFpert_data[:nunifb]  + np.flipud(vFpert_data[nunift:])  )
+    wm_data      = 0.5 * ( wm_data[:nunifb]      + np.flipud(wm_data[nunift:])      )
+    wrmsf_data   = 0.5 * ( wrmsf_data[:nunifb]   + np.flipud(wrmsf_data[nunift:])   )
+    wFpert_data  = 0.5 * ( wFpert_data[:nunifb]  + np.flipud(wFpert_data[nunift:])  )
+    ufufm_data   = 0.5 * ( ufufm_data[:nunifb]   + np.flipud(ufufm_data[nunift:])   )
+    vfvfm_data   = 0.5 * ( vfvfm_data[:nunifb]   + np.flipud(vfvfm_data[nunift:])   )
+    wfwfm_data   = 0.5 * ( wfwfm_data[:nunifb]   + np.flipud(wfwfm_data[nunift:])   )
+    ufvfm_data   = 0.5 * ( ufvfm_data[:nunifb]   + np.flipud(ufvfm_data[nunift:])   )
+    ufwfm_data   = 0.5 * ( ufwfm_data[:nunifb]   + np.flipud(ufwfm_data[nunift:])   )
+    vfwfm_data   = 0.5 * ( vfwfm_data[:nunifb]   + np.flipud(vfwfm_data[nunift:])   )
+
+    # ------------ scale y to y+ ------------
+
+    # y-coordinates
+    yu     = yu[:nunifb] + delta
+    ydelta = yu/delta
+    yplus  = yu * utau / kvisc
+
+    # Check: Re_tau and u_tau of ODT data
+    dumdy0     = (um_data[1]-um_data[0])/(yu[1]-yu[0])
+    utauOdt  = np.sqrt(kvisc * np.abs(dumdy0))
+    RetauOdt = utauOdt * delta / kvisc
+    print(f"\n[get_odt_statistics_rt] Expected Re_tau = {Retau} vs. Effective Re_tau = {RetauOdt}")
+    print(f"[get_odt_statistics_rt] Expected u_tau = {utau} vs. Effective u_tau = {utauOdt}")
+
+    # ------------ Compute Stress Decomposition ------------
+    
+    # Stress decomposition: Viscous, Reynolds and Total stress
+    dumdy = (um_data[1:] - um_data[:-1])/(yu[1:] - yu[:-1])
+    viscous_stress_  = kvisc * rho * dumdy
+    reynolds_stress_ = - rho * ufvfm_data[:-1]
+    total_stress_    = viscous_stress_ + reynolds_stress_
+
+    # Add "0" at grid boundaries to quantities computed from 1st- and 2nd-order derivatives to vstack vectors of the same size
+    # -> involve 1st-order forward finite differences
+    viscous_stress  = np.zeros(nunifb); viscous_stress[:-1]  = viscous_stress_  
+    reynolds_stress = np.zeros(nunifb); reynolds_stress[:-1] = reynolds_stress_  
+    total_stress    = np.zeros(nunifb); total_stress[:-1]    = total_stress_  
+
+    return (ydelta, yplus, 
+            um_data, urmsf_data, uFpert_data,
+            vm_data, vrmsf_data, vFpert_data,
+            wm_data, wrmsf_data, wFpert_data,
+            ufufm_data, vfvfm_data, wfwfm_data, ufvfm_data, ufwfm_data, vfwfm_data,
+            viscous_stress, reynolds_stress, total_stress,
     )
 
 
@@ -945,6 +1065,7 @@ def get_odt_statistics_post_at_chosen_averaging_times(input_params, averaging_ti
             ufufm, vfvfm, wfwfm, ufvfm, ufwfm, vfwfm,
     )
 
+
 def get_odt_statistics_rt_at_chosen_averaging_times_um_symmetry(input_params, averaging_times):
     """
     Parameters:
@@ -1035,7 +1156,7 @@ def get_odt_statistics_rt_at_chosen_averaging_times_um_symmetry(input_params, av
     yu        = yu[:nunifb] + delta   # plotting to domain center
     ydelta    = yu / delta
     yplus     = yu * utau / kvisc 
-    yplus_all = yu_all * utau / kvisc
+    ydelta_all = yu_all / delta
     # Check: Re_tau and u_tau of ODT data
     dudy = (um[1,-1]-um[0,-1])/(yu[1]-yu[0])
     utauOdt = np.sqrt(kvisc * np.abs(dudy))
@@ -1043,7 +1164,7 @@ def get_odt_statistics_rt_at_chosen_averaging_times_um_symmetry(input_params, av
     print(f"\n[get_odt_statistics_rt_at_chosen_averaging_times_um_symmetry] Expected Re_tau = {Retau} vs. Effective Re_tau = {RetauOdt}")
     print(f"[get_odt_statistics_rt_at_chosen_averaging_times_um_symmetry] Expected u_tau = {utau} vs. Effective u_tau = {utauOdt}")
     
-    return (ydelta, yplus, um, CI, yplus_all, um_all, um_symmetric_all)
+    return (ydelta, yplus, um, CI, ydelta_all, um_all, um_symmetric_all)
 
 
 def get_odt_statistics_rt_at_chosen_averaging_times(input_params, averaging_times):
@@ -1192,7 +1313,7 @@ def get_odt_statistics_rt_at_chosen_averaging_times(input_params, averaging_time
     )
 
 
-def compute_convergence_indicator_odt_tEnd(input_params):
+def compute_convergence_indicator_odt_tEndAvg(input_params):
     
     # --- Get ODT input parameters ---
     utau         = input_params["utau"]
@@ -1247,12 +1368,12 @@ def compute_convergence_indicator_odt_tEnd(input_params):
     print("\n(ODT) Convergence Indicator at tEnd (CI, Esp_s) = ", CI)
 
     # ------------ scale y to y+ ------------
-    yplus = yu * utau / kvisc 
+    ydelta = yu / delta 
 
-    return (CI, yplus, um, um_symmetric)
+    return (CI, ydelta, um, um_symmetric)
 
 
-def compute_convergence_indicator_odt_along_time(input_params):
+def compute_convergence_indicator_odt_along_avg_time(input_params):
     
     # --- Get ODT input parameters ---
 
@@ -1261,6 +1382,7 @@ def compute_convergence_indicator_odt_along_time(input_params):
     case_name    = input_params["caseN"]
     rlzStr       = input_params["rlzStr"]
     nunif        = input_params["nunif"]
+    tBeginAvg    = input_params["tBeginAvg"]
     tEndAvg      = input_params["tEndAvg"]
     # un-normalize
     dxmin *= domainLength
@@ -1276,30 +1398,29 @@ def compute_convergence_indicator_odt_along_time(input_params):
 
     for ifile in flist_stat: 
 
-        # Check file time is <= tEndAvg
+        # Check file time is tBeginAvg <= currentTime <= tEndAvg
         currentTime = get_time(ifile)
-        if currentTime > tEndAvg:
-            break
+        if tBeginAvg <= currentTime and currentTime <= tEndAvg: 
+            
+            data = np.loadtxt(ifile)
+            # u_avg statistic runtime-calculated in u.f.g - '2_uvelmean'
+            um = data[:,1]
 
-        data = np.loadtxt(ifile)
-        # u_avg statistic runtime-calculated in u.f.g - '2_uvelmean'
-        um = data[:,1]
+            # ------------------------ Calculate symmetric field ------------------------
 
-        # ------------------------ Calculate symmetric field ------------------------
+            # calculate 'symmetric' part of um
+            um_symmetric_half      = 0.5*(um[:nunifb] + np.flipud(um[nunift:]))  
+            um_symmetric           = np.copy(um)
+            um_symmetric[:nunifb]  = um_symmetric_half
+            um_symmetric[nunift:]  = np.flipud(um_symmetric_half)
 
-        # calculate 'symmetric' part of um
-        um_symmetric_half      = 0.5*(um[:nunifb] + np.flipud(um[nunift:]))  
-        um_symmetric           = np.copy(um)
-        um_symmetric[:nunifb]  = um_symmetric_half
-        um_symmetric[nunift:]  = np.flipud(um_symmetric_half)
+            # ----------- Calculate indicate - Integral deviation from symmetry -----------
 
-        # ----------- Calculate indicate - Integral deviation from symmetry -----------
+            # CI = Eps_s : Convergence Indicator, from Pirozzoli207-A
+            CI = np.sqrt( 0.5 * np.sum( (um - um_symmetric)**2 ) ) # rmse
+            CI_list.append(CI)
 
-        # CI = Eps_s : Convergence Indicator, from Pirozzoli207-A
-        CI = np.sqrt( 0.5 * np.sum( (um - um_symmetric)**2 ) ) # rmse
-        CI_list.append(CI)
-
-        time_list.append(get_time(ifile))
+            time_list.append(get_time(ifile))
 
     return (time_list, CI_list)
 
@@ -1442,6 +1563,7 @@ def compute_odt_statistics_at_chosen_time(input_params, time_end):
 
     return (ydelta, yplus, um, urmsf, vrmsf, wrmsf, 
             ufufm, vfvfm, wfwfm, ufvfm, ufwfm, vfwfm)
+
 
 def get_effective_dTimeEnd(case_name, rlzStr):
 
