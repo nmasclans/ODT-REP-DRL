@@ -17,15 +17,13 @@ from ChannelVisualizer import ChannelVisualizer
 try :
     i = 1
     caseN    = sys.argv[i];        i+=1
-    runId    = int(sys.argv[i]);   i+=1
     envIdStr = "000"
     print(f"Script parameters: \n" \
           f"- RL Case name: {caseN} \n" \
-          f"- RL Run Id: {runId} \n" \
           f"- RL Env Id String: {envIdStr} \n"
     )
 except :
-    raise ValueError("Missing call arguments, should be: <1_case_name_RL> <2_RL_run_id>")
+    raise ValueError("Missing call arguments, should be: <1_case_name_RL>")
 
 # --- post-processing directories to store results
 
@@ -35,12 +33,12 @@ if not os.path.exists(postDir):
     os.mkdir(postDir)
 
 # post-processing sub-directory for run analysis
-postRunDir = os.path.join(postDir, f"run_{runId}")
+postRunDir = os.path.join(postDir, f"run_action_reward")
 if not os.path.exists(postRunDir):
     os.mkdir(postRunDir)
 
 # data run directory
-runDir    = os.path.join("../../data/{caseN}/run/{runId}/")
+runDir    = os.path.join("../../data/{caseN}/run/")
 runEnvDir = os.path.join(runDir, f"env_{envIdStr}")
 
 # --- Get Actions and Rewards
