@@ -782,7 +782,7 @@ class ChannelVisualizer():
         plt.close()
 
 # ------------------------------------ RL Convergence along ODT Realizations -------------------------------------------
-    def RL_u_mean_convergence(self, yplus, rlzNArr, um_RL_nonConv, urmsf_RL_nonConv, um_nonRL_nonConv, urmsf_nonRL_nonConv, um_baseline, urmsf_baseline, time_nonConv, time_baseline):
+    def RL_u_mean_convergence(self, yplus, rlzArr, um_RL_nonConv, urmsf_RL_nonConv, um_nonRL_nonConv, urmsf_nonRL_nonConv, um_baseline, urmsf_baseline, time_nonConv, time_baseline):
 
         # --------- plot um data ---------
         
@@ -794,7 +794,7 @@ class ChannelVisualizer():
         # > RL non-converged (at time_nonConv):
         nrlz = um_RL_nonConv.shape[1]
         for irlz in range(nrlz):
-            ax.semilogx(yplus, um_RL_nonConv[:,irlz], label=f"RL Rlz {rlzNArr[irlz]}: t={time_nonConv}")
+            ax.semilogx(yplus, um_RL_nonConv[:,irlz], label=f"RL Rlz {rlzArr[irlz]}: t={time_nonConv}")
         # > non-RL non-converged (at time_nonConv):
         ax.semilogx(yplus, um_nonRL_nonConv, '--k', label=f"Non-RL:  t={time_nonConv}")
         # > non-RL baseline (at time_baseline)
@@ -819,7 +819,7 @@ class ChannelVisualizer():
         # > RL non-converged (at time_nonConv):
         nrlz = um_RL_nonConv.shape[1]
         for irlz in range(nrlz):
-            ax.semilogx(yplus, urmsf_RL_nonConv[:,irlz], label=f"RL Rlz {rlzNArr[irlz]}: t={time_nonConv}")
+            ax.semilogx(yplus, urmsf_RL_nonConv[:,irlz], label=f"RL Rlz {rlzArr[irlz]}: t={time_nonConv}")
         # > non-RL non-converged (at time_nonConv):
         ax.semilogx(yplus, urmsf_nonRL_nonConv, '--k', label=f"Non-RL:  t={time_nonConv}")
         # > non-RL baseline (at time_baseline)
@@ -835,7 +835,7 @@ class ChannelVisualizer():
         plt.close()
 
 
-    def RL_variable_convergence(self, filename, ylabel, ydelta, rlzNArr, var_RL_nonConv, var_nonRL_nonConv, var_baseline, time_nonConv, time_baseline):
+    def RL_variable_convergence_along_ydelta(self, filename, ylabel, rlzArr, ydelta, var_RL_nonConv, var_nonRL_nonConv, var_baseline, time_nonConv, time_baseline):
         
         filename = os.path.join(self.postRlzDir, filename)
         print(f"\nMAKING PLOT {filename}")
@@ -843,9 +843,9 @@ class ChannelVisualizer():
         fig, ax = plt.subplots()
 
         # > RL non-converged (at time_nonConv):
-        nrlz = len(rlzNArr)
+        nrlz = len(rlzArr)
         for irlz in range(nrlz):
-            plt.plot(ydelta, var_RL_nonConv[:,irlz], label=f"RL Rlz {rlzNArr[irlz]}: t={time_nonConv}")
+            plt.plot(ydelta, var_RL_nonConv[:,irlz], label=f"RL Rlz {rlzArr[irlz]}: t={time_nonConv}")
         # > non-RL non-converged (at time_nonConv):
         plt.plot(ydelta, var_nonRL_nonConv, '--k', label=f"Non-RL:  t={time_nonConv}")
         # > non-RL baseline (at time_baseline)
@@ -860,25 +860,39 @@ class ChannelVisualizer():
         plt.savefig(filename, dpi=600)
         plt.close()
 
+    def RL_variable_convergence_along_time(self, filename, ylabel, rlzArr, timeArr, var_RL):
+        
+        filename = os.path.join(self.postRlzDir, filename)
+        print(f"\nMAKING PLOT {filename}")
+        plt.figure()
+        for irlz in range(len(rlzArr)):
+            plt.plot(timeArr, var_RL[irlz,:], label=f"RL Rlz {rlzArr[irlz]}")
+        plt.xlabel("FTT")
+        plt.ylabel(ylabel)
+        plt.legend(frameon=True, fontsize=10)
+        plt.tight_layout()
+        plt.savefig(filename, dpi=600)
+        plt.close()
 
-    def RL_Rij_convergence(self, ydelta, rlzNArr, 
+
+    def RL_Rij_convergence(self, ydelta, rlzArr, 
                            Rkk_RL_nonConv,    lambda1_RL_nonConv,    lambda2_RL_nonConv,    lambda3_RL_nonConv,    xmap1_RL_nonConv,    xmap2_RL_nonConv,
                            Rkk_nonRL_nonConv, lambda1_nonRL_nonConv, lambda2_nonRL_nonConv, lambda3_nonRL_nonConv, xmap1_nonRL_nonConv, xmap2_nonRL_nonConv,
                            Rkk_baseline,      lambda1_baseline,      lambda2_baseline,      lambda3_baseline,      xmap1_baseline,      xmap2_baseline,
                            time_nonConv, time_baseline):
         
         # --------- plot trace Rkk ---------
-        self.RL_variable_convergence("RL_Rkk_convergence.jpg",     r"$R_{kk}$",      ydelta, rlzNArr, Rkk_RL_nonConv, Rkk_nonRL_nonConv, Rkk_baseline, time_nonConv, time_baseline)
+        self.RL_variable_convergence_along_ydelta("RL_Rkk_convergence.jpg",     r"$R_{kk}$",      rlzArr, ydelta, Rkk_RL_nonConv, Rkk_nonRL_nonConv, Rkk_baseline, time_nonConv, time_baseline)
         # --------- plot eigenvalues lambda_i ---------
-        self.RL_variable_convergence("RL_lambda1_convergence.jpg", r"$\lambda_{1}$", ydelta, rlzNArr, lambda1_RL_nonConv, lambda1_nonRL_nonConv, lambda1_baseline, time_nonConv, time_baseline)
-        self.RL_variable_convergence("RL_lambda2_convergence.jpg", r"$\lambda_{2}$", ydelta, rlzNArr, lambda2_RL_nonConv, lambda2_nonRL_nonConv, lambda2_baseline, time_nonConv, time_baseline)
-        self.RL_variable_convergence("RL_lambda3_convergence.jpg", r"$\lambda_{3}$", ydelta, rlzNArr, lambda3_RL_nonConv, lambda3_nonRL_nonConv, lambda3_baseline, time_nonConv, time_baseline)
+        self.RL_variable_convergence_along_ydelta("RL_lambda1_convergence.jpg", r"$\lambda_{1}$", rlzArr, ydelta, lambda1_RL_nonConv, lambda1_nonRL_nonConv, lambda1_baseline, time_nonConv, time_baseline)
+        self.RL_variable_convergence_along_ydelta("RL_lambda2_convergence.jpg", r"$\lambda_{2}$", rlzArr, ydelta, lambda2_RL_nonConv, lambda2_nonRL_nonConv, lambda2_baseline, time_nonConv, time_baseline)
+        self.RL_variable_convergence_along_ydelta("RL_lambda3_convergence.jpg", r"$\lambda_{3}$", rlzArr, ydelta, lambda3_RL_nonConv, lambda3_nonRL_nonConv, lambda3_baseline, time_nonConv, time_baseline)
         # --------- plot barycentric map coordinates xmap_i ---------
-        self.RL_variable_convergence("RL_xmap1_convergence.jpg",   r"$xmap_{1}$",    ydelta, rlzNArr, xmap1_RL_nonConv, xmap1_nonRL_nonConv, xmap1_baseline, time_nonConv, time_baseline)
-        self.RL_variable_convergence("RL_xmap2_convergence.jpg",   r"$xmap_{2}$",    ydelta, rlzNArr, xmap2_RL_nonConv, xmap2_nonRL_nonConv, xmap2_baseline, time_nonConv, time_baseline)
+        self.RL_variable_convergence_along_ydelta("RL_xmap1_convergence.jpg",   r"$xmap_{1}$",    rlzArr, ydelta, xmap1_RL_nonConv, xmap1_nonRL_nonConv, xmap1_baseline, time_nonConv, time_baseline)
+        self.RL_variable_convergence_along_ydelta("RL_xmap2_convergence.jpg",   r"$xmap_{2}$",    rlzArr, ydelta, xmap2_RL_nonConv, xmap2_nonRL_nonConv, xmap2_baseline, time_nonConv, time_baseline)
 
 
-    def RL_err_convergence(self, rlzNArr, err_RL, err_nonRL, time_nonConv, error_name):
+    def RL_err_convergence(self, rlzArr, err_RL, err_nonRL, time_nonConv, error_name):
         """
         Params:
         - err_RL:    np.array, shape [n_realizations]
@@ -887,12 +901,12 @@ class ChannelVisualizer():
         filename = os.path.join(self.postRlzDir, f"RL_error_{error_name}_convergence.jpg")
         print(f"\nMAKING PLOT of error {error_name} profile at tEndAvg for multiple realizations in {filename}")
 
-        nrlz = len(rlzNArr)
+        nrlz = len(rlzArr)
         plt.figure()
         # > RL non-converged (at time_nonConv):
-        plt.semilogy(rlzNArr, err_RL, '-o', label=f"RL: t={time_nonConv}")
+        plt.semilogy(rlzArr, err_RL, '-o', label=f"RL: t={time_nonConv}")
         # > non-RL non-converged (at time_nonConv):
-        plt.semilogy(rlzNArr, np.ones(nrlz) * err_nonRL, '--k', label=f"Non-RL:  t={time_nonConv}")
+        plt.semilogy(rlzArr, np.ones(nrlz) * err_nonRL, '--k', label=f"Non-RL:  t={time_nonConv}")
         
         # configure plot
         plt.xlabel('Realization Id.')
@@ -902,3 +916,18 @@ class ChannelVisualizer():
         plt.tight_layout()
         plt.savefig(filename, dpi=600)
         plt.close()
+
+
+    def build_RL_rewards_convergence(self, rlzArr, timeArr, rewards):
+        # Plot RL rewards along time, for each realization
+        self.RL_variable_convergence_along_time("RL_rewards_convergence.jpg", "rewards", rlzArr, timeArr, rewards)
+
+        
+    def build_RL_actions_convergence(self, rlzArr, timeArr, actions):
+        # Plot RL actions along time, for each realization
+        nActDof = actions.shape[2]
+        assert nActDof == 6, "visualizer.build_RL_actions_convergence method only works with actions of 6 d.o.f, specifically: DeltaRkk, DeltaTheta_z, DeltaTheta_y, DeltaTheta_x, DeltaXmap1, DeltaXmap2"
+        dofNames      = ["DeltaRkk", "DeltaThetaZ", "DeltaThetaY", "DeltaThetaX", "DeltaXmap1", "DeltaXmap2"]
+        dofNamesLatex = [r"$\Delta R_{kk}$", r"$\Delta \theta_{z}$", r"$\Delta \theta_{y}$", r"$\Delta \theta_{x}$", r"$\Delta xmap_{1}$", r"$\Delta xmap_{2}$"]
+        for iActDof in range(nActDof):
+            self.RL_variable_convergence_along_time(f"RL_actions_convergence_{dofNames[iActDof]}.jpg", dofNamesLatex[iActDof], rlzArr, timeArr, actions[:,:,iActDof])

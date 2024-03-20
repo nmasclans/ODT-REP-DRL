@@ -16,39 +16,78 @@ from ChannelVisualizer import ChannelVisualizer
 # baseline non-RL has both non-converged and baseline statistics
 try :
     i = 1
-    caseN    = sys.argv[i];        i+=1
-    envIdStr = "000"
+    caseN        = sys.argv[i];        i+=1
+    rlzN_min_RL  = int(sys.argv[i]);   i+=1
+    rlzN_max_RL  = int(sys.argv[i]);   i+=1
+    rlzN_step_RL = int(sys.argv[i]);   i+=1
+    tBeginAvg    = float(sys.argv[i]); i+=1
+    tEndAvg      = float(sys.argv[i]); i+=1
+    dtActions    = 0.1
     print(f"Script parameters: \n" \
           f"- RL Case name: {caseN} \n" \
-          f"- RL Env Id String: {envIdStr} \n"
+          f"- Realization Number Min RL: {rlzN_min_RL} \n" \
+          f"- Realization Number Max RL: {rlzN_max_RL} \n" \
+          f"- Realization Number Step RL: {rlzN_step_RL} \n" \
+          f"- Time Begin Averaging non-converged (both RL and non-RL): {tBeginAvg} \n" \
+          f"- Time End Averaging non-converged (both RL and non-RL): {tEndAvg} \n" \
+          f"- dTime between actions: {dtActions}\n" \
     )
 except :
     raise ValueError("Missing call arguments, should be: <1_case_name_RL>")
 
 # --- post-processing directories to store results
 
+# first and last realizations
+rlzN_first   = rlzN_min_RL
+rlzStr_first = f"{rlzN_first:05d}"
+rlzN_last    = rlzN_max_RL
+rlzStr_last  = f"{rlzN_last:05d}"
+
 # post-processing directory
 postDir = f"../../data/{caseN}/post"
 if not os.path.exists(postDir):
     os.mkdir(postDir)
 
-# post-processing sub-directory for run analysis
-postRunDir = os.path.join(postDir, f"run_action_reward")
-if not os.path.exists(postRunDir):
-    os.mkdir(postRunDir)
+# post-processing sub-directory for multiples realizations comparison
+postMultipleRlzDir = os.path.join(postDir, f"comparative_{rlzStr_first}_{rlzStr_last}")
+if not os.path.exists(postMultipleRlzDir):
+    os.mkdir(postMultipleRlzDir)
 
 # data run directory
-runDir    = os.path.join("../../data/{caseN}/run/")
-runEnvDir = os.path.join(runDir, f"env_{envIdStr}")
+runDir    = os.path.join(f"../../data/{caseN}/run/")
 
-# --- Get Actions and Rewards
+# --------------- Get Actions and Rewards for RL training along realizations ---------------
 
-logFilepathList = glob.glob(os.path.join(runEnvDir, "log_*.npz")) 
-nlog = len(logFilepathList) 
+rlzArr          = np.arange(rlzN_min_RL, rlzN_max_RL+1, rlzN_step_RL)
+nrlz            = len(rlzArr) 
+logFilenameList = [f"log_{irlz}.npz" for irlz in rlzArr]
+logFilepathList = [os.path.join(runDir, logFilename) for logFilename in logFilenameList] 
 
-for ilog in range(nlog):
+# get data shape (from the first realization data)
+data_0 = np.load(logFilepathList[0])
+(nActSteps, nActDof) = data_0['act'].shape
+
+# initialize rewards and actions arrays for all realizations
+rewards = np.zeros([nrlz, nActSteps,])          # each rlz rewards have shape [nActSteps,]
+actions = np.zeros([nrlz, nActSteps, nActDof])  # each rlz actions have shape [nActSteps, nActDof]
+
+# get rewards and actions data
+for irlz in range(nrlz):
     
-    if ilog == 0:
-        # TODO: continue code
+    data = np.load(logFilepathList[irlz])
+    rewards[irlz,:]   = data['rew']  # shape [nActSteps,]
+    actions[irlz,:,:] = data['act']  # shape [nActSteps, nActDof]
 
+# --- Get reward from non-RL realization
+# TODO
+    
+# --------------- Plot rewards and actions ---------------
+
+timeRL = np.arange(tBeginAvg + dtActions, tEndAvg + 1e-8, dtActions) - tBeginAvg
+
+visualizer = ChannelVisualizer(postMultipleRlzDir)
+visualizer.build_RL_rewards_convergence(rlzArr, timeRL, rewards)
+visualizer.build_RL_actions_convergence(rlzArr, timeRL, actions)
+
+    
 
