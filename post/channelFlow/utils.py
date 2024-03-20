@@ -685,8 +685,8 @@ def get_odt_statistics_reference(input_params):
     dumdy0     = (um_data[1]-um_data[0])/(yu[1]-yu[0])
     utauOdt  = np.sqrt(kvisc * np.abs(dumdy0))
     RetauOdt = utauOdt * delta / kvisc
-    print(f"\n[get_odt_statistics_rt] Expected Re_tau = {Retau} vs. Effective Re_tau = {RetauOdt}")
-    print(f"[get_odt_statistics_rt] Expected u_tau = {utau} vs. Effective u_tau = {utauOdt}")
+    print(f"\n[get_odt_statistics_reference] Expected Re_tau = {Retau} vs. Effective Re_tau = {RetauOdt}")
+    print(f"[get_odt_statistics_reference] Expected u_tau = {utau} vs. Effective u_tau = {utauOdt}")
 
     # ------------ Compute Stress Decomposition ------------
     

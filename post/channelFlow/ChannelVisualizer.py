@@ -501,8 +501,9 @@ class ChannelVisualizer():
         plt.tight_layout()
         plt.savefig(filename, dpi=600)
 
+# --------------------- anisotropy tensor barycentric map in barycentric realizable triangle ------------------------
 
-    def build_anisotropy_tensor_barycentric_map(self, bar_map_x, bar_map_y, y_delta, avg_time, title):
+    def build_anisotropy_tensor_barycentric_xmap_triang(self, y_delta, bar_map_x, bar_map_y, avg_time, title):
         
         plt.figure()
 
@@ -538,7 +539,7 @@ class ChannelVisualizer():
         plt.savefig(filename, dpi=600)
 
 
-    def build_anisotropy_tensor_barycentric_map_frame(self, frames, bar_map_x, bar_map_y, y_delta, avg_time):
+    def build_anisotropy_tensor_barycentric_xmap_triang_frame(self, frames, y_delta, bar_map_x, bar_map_y, avg_time):
 
         plt.figure()
 
@@ -580,21 +581,56 @@ class ChannelVisualizer():
         fig.canvas.draw()
         img = Image.frombytes("RGB", fig.canvas.get_width_height(), fig.canvas.tostring_rgb())
         frames.append(img)
-
         plt.close()
 
         return frames
 
+
+# ------------------- anisotropy tensor barycentric map coordinates 'xmap_i' -------------------
+    
+    def build_reynolds_stress_tensor_trace_fig(self, ydelta_odt, ydelta_ref, Rkk_odt, Rkk_ref, avg_time):
+        
+        fig, ax = plt.subplots()
+        plt.plot(ydelta_odt, Rkk_odt, '-k', label=r"$R_{kk}$")
+        plt.plot(ydelta_ref, Rkk_ref, '--k', label=r"Reference $R_{kk}$")
+        plt.xlim([0.0, 1.0])
+        plt.xlabel(r"$y/\delta$")
+        plt.ylabel(r"Reynolds Stress Trace R_{kk}")
+        plt.grid(axis="y")
+        plt.title(f"averaging time = {avg_time:.1f}")
+        plt.legend(loc='upper right', ncol = 2, fontsize=12)
+        plt.tight_layout()
+        #fig = plt.gcf()
+        return fig
+    
+
+    def build_reynolds_stress_tensor_trace(self, ydelta_odt, ydelta_ref, Rkk_odt, Rkk_ref, avg_time):
+        
+        filename = os.path.join(self.postRlzDir, "reynolds_stress_tensor_trace.jpg")
+        print(f"\nMAKING PLOT OF Reynolds Stress tensor Trace at tavg = {avg_time} in {filename}")
+        fig = self.build_reynolds_stress_tensor_trace_fig(ydelta_odt, ydelta_ref, Rkk_odt, Rkk_ref, avg_time)
+        fig.savefig(filename)
+        plt.close()
+
+
+    def build_reynolds_stress_tensor_trace_frame(self, frames, ydelta_odt, ydelta_ref, Rkk_odt, Rkk_ref, avg_time):
+        
+        fig = self.build_reynolds_stress_tensor_trace_fig(ydelta_odt, ydelta_ref, Rkk_odt, Rkk_ref, avg_time)
+        fig.canvas.draw()
+        img = Image.frombytes("RGB", fig.canvas.get_width_height(), fig.canvas.tostring_rgb())
+        frames.append(img)
+        plt.close()
+        return frames
+
+# ------------------- anisotropy tensor barycentric map coordinates 'xmap_i' -------------------
+
     def build_anisotropy_tensor_barycentric_xmap_coord_fig(self, ydelta_odt, ydelta_ref, xmap1_odt, xmap2_odt, xmap1_ref, xmap2_ref, avg_time):
         
         fig, ax = plt.subplots()
-
         plt.plot(ydelta_odt, xmap1_odt, '-k', label=r"$x_1$")
         plt.plot(ydelta_odt, xmap2_odt, '-b', label=r"$x_2$")
-
         plt.plot(ydelta_ref, xmap1_ref, '--k', label=r"Reference $x_1$")
         plt.plot(ydelta_ref, xmap2_ref, '--b', label=r"Reference $x_2$")
-
         plt.xlim([0.0, 1.0])
         plt.ylim([0.0, 1.0])
         plt.xlabel(r"$y/\delta$")
@@ -603,31 +639,38 @@ class ChannelVisualizer():
         plt.title(f"averaging time = {avg_time:.1f}")
         plt.legend(loc='upper right', ncol = 2, fontsize=12)
         plt.tight_layout()
-
         #fig = plt.gcf()
         return fig
-    
+
     def build_anisotropy_tensor_barycentric_xmap_coord(self, ydelta_odt, ydelta_ref, xmap1_odt, xmap2_odt, xmap1_ref, xmap2_ref, avg_time):
-        
-        filename = os.path.join(self.postRlzDir, "anisotropy_tensor_barycentric_coordinates.jpg")
+        filename = os.path.join(self.postRlzDir, "anisotropy_tensor_barycentric_map_coord.jpg")
         print(f"\nMAKING PLOT OF Anisotropy Tensor Barycentric Coordinates at tavg = {avg_time} in {filename}")
         fig = self.build_anisotropy_tensor_barycentric_xmap_coord_fig(ydelta_odt, ydelta_ref, xmap1_odt, xmap2_odt, xmap1_ref, xmap2_ref, avg_time)
         fig.savefig(filename)
         plt.close()
 
 
+    def build_anisotropy_tensor_barycentric_xmap_coord_frame(self, frames, ydelta_odt, ydelta_ref, xmap1_odt, xmap2_odt, xmap1_ref, xmap2_ref, avg_time):
+        
+        fig = self.build_anisotropy_tensor_barycentric_xmap_coord_fig(ydelta_odt, ydelta_ref, xmap1_odt, xmap2_odt, xmap1_ref, xmap2_ref, avg_time)
+        fig.canvas.draw()
+        img = Image.frombytes("RGB", fig.canvas.get_width_height(), fig.canvas.tostring_rgb())
+        frames.append(img)
+        plt.close()
+        return frames
+
+
+# ------------------- anisotropy tensor eigenvalues 'lambda_i' -------------------
+
     def build_anisotropy_tensor_eigenvalues_fig(self, ydelta_odt, ydelta_ref, eigenvalues_odt, eigenvalues_ref, avg_time):
         
         fig, ax = plt.subplots()
-
         plt.plot(ydelta_odt, eigenvalues_odt[:,0], '-k', label=r"$\lambda_0$")
         plt.plot(ydelta_odt, eigenvalues_odt[:,1], '-b', label=r"$\lambda_1$")
         plt.plot(ydelta_odt, eigenvalues_odt[:,2], '-r', label=r"$\lambda_2$")
-
         plt.plot(ydelta_ref, eigenvalues_ref[:,0], '--k', label=r"Reference $\lambda_0$")
         plt.plot(ydelta_ref, eigenvalues_ref[:,1], '--b', label=r"Reference $\lambda_1$")
         plt.plot(ydelta_ref, eigenvalues_ref[:,2], '--r', label=r"Reference $\lambda_2$")
-
         plt.xlim([0.0, 1.0])
         plt.ylim([-0.5, 1.0])
         plt.yticks([-2/3, -1/3, 0, 1/3, 2/3], labels = ["-2/3", "-1/3", "0", "1/3", "2/3"])
@@ -637,7 +680,6 @@ class ChannelVisualizer():
         plt.title(f"averaging time = {avg_time:.1f}")
         plt.legend(loc='upper right', ncol = 2, fontsize=12)
         plt.tight_layout()
-
         #fig = plt.gcf()
         return fig
     
@@ -650,19 +692,16 @@ class ChannelVisualizer():
         fig.savefig(filename)
         plt.close()
     
-
-    def build_anisotropy_tensor_eigenvalues_frame(self, frames, ydelta, eigenvalues, avg_time):
+    def build_anisotropy_tensor_eigenvalues_frame(self, frames, ydelta_odt, ydelta_ref, eigenvalues_odt, eigenvalues_ref, avg_time):
         
-        fig = self.build_anisotropy_tensor_eigenvalues_fig(ydelta, eigenvalues, avg_time)
+        fig = self.build_anisotropy_tensor_eigenvalues_fig(ydelta_odt, ydelta_ref, eigenvalues_odt, eigenvalues_ref, avg_time)
         fig.canvas.draw()
         img = Image.frombytes("RGB", fig.canvas.get_width_height(), fig.canvas.tostring_rgb())
         frames.append(img)
-
         plt.close()
-
         return frames
 
-
+# ------------------------------------------------------------------------
     def plot_line(self, xdata, ydata, xlim, ylim, xlabel, ylabel, title):
 
         filename = os.path.join(self.postRlzDir, f"{title}.jpg")
@@ -742,7 +781,7 @@ class ChannelVisualizer():
         plt.savefig(filename, dpi=600)
         plt.close()
 
-
+# ------------------------------------ RL Convergence along ODT Realizations -------------------------------------------
     def RL_u_mean_convergence(self, yplus, rlzNArr, um_RL_nonConv, urmsf_RL_nonConv, um_nonRL_nonConv, urmsf_nonRL_nonConv, um_baseline, urmsf_baseline, time_nonConv, time_baseline):
 
         # --------- plot um data ---------
@@ -757,7 +796,7 @@ class ChannelVisualizer():
         for irlz in range(nrlz):
             ax.semilogx(yplus, um_RL_nonConv[:,irlz], label=f"RL Rlz {rlzNArr[irlz]}: t={time_nonConv}")
         # > non-RL non-converged (at time_nonConv):
-        ax.semilogx(yplus, um_nonRL_nonConv, '--k', label=f"Non-RL: t={time_nonConv}")
+        ax.semilogx(yplus, um_nonRL_nonConv, '--k', label=f"Non-RL:  t={time_nonConv}")
         # > non-RL baseline (at time_baseline)
         ax.semilogx(yplus, um_baseline, '-k', label=f"Baseline: t={time_baseline}")
 
@@ -782,7 +821,7 @@ class ChannelVisualizer():
         for irlz in range(nrlz):
             ax.semilogx(yplus, urmsf_RL_nonConv[:,irlz], label=f"RL Rlz {rlzNArr[irlz]}: t={time_nonConv}")
         # > non-RL non-converged (at time_nonConv):
-        ax.semilogx(yplus, urmsf_nonRL_nonConv, '--k', label=f"Non-RL: t={time_nonConv}")
+        ax.semilogx(yplus, urmsf_nonRL_nonConv, '--k', label=f"Non-RL:  t={time_nonConv}")
         # > non-RL baseline (at time_baseline)
         ax.semilogx(yplus, urmsf_baseline, '-k', label=f"Baseline: t={time_baseline}")
 
@@ -794,6 +833,49 @@ class ChannelVisualizer():
         plt.tight_layout()
         plt.savefig(filename, dpi=600)
         plt.close()
+
+
+    def RL_variable_convergence(self, filename, ylabel, ydelta, rlzNArr, var_RL_nonConv, var_nonRL_nonConv, var_baseline, time_nonConv, time_baseline):
+        
+        filename = os.path.join(self.postRlzDir, filename)
+        print(f"\nMAKING PLOT {filename}")
+
+        fig, ax = plt.subplots()
+
+        # > RL non-converged (at time_nonConv):
+        nrlz = len(rlzNArr)
+        for irlz in range(nrlz):
+            plt.plot(ydelta, var_RL_nonConv[:,irlz], label=f"RL Rlz {rlzNArr[irlz]}: t={time_nonConv}")
+        # > non-RL non-converged (at time_nonConv):
+        plt.plot(ydelta, var_nonRL_nonConv, '--k', label=f"Non-RL:  t={time_nonConv}")
+        # > non-RL baseline (at time_baseline)
+        plt.plot(ydelta, var_baseline, '-k', label=f"Baseline: t={time_baseline}")
+
+        # configure plot
+        ax.set_xlabel(r"$y/\delta$")
+        ax.set_ylabel(ylabel)
+        ax.legend(frameon=True, fontsize=10)
+        
+        plt.tight_layout()
+        plt.savefig(filename, dpi=600)
+        plt.close()
+
+
+    def RL_Rij_convergence(self, ydelta, rlzNArr, 
+                           Rkk_RL_nonConv,    lambda1_RL_nonConv,    lambda2_RL_nonConv,    lambda3_RL_nonConv,    xmap1_RL_nonConv,    xmap2_RL_nonConv,
+                           Rkk_nonRL_nonConv, lambda1_nonRL_nonConv, lambda2_nonRL_nonConv, lambda3_nonRL_nonConv, xmap1_nonRL_nonConv, xmap2_nonRL_nonConv,
+                           Rkk_baseline,      lambda1_baseline,      lambda2_baseline,      lambda3_baseline,      xmap1_baseline,      xmap2_baseline,
+                           time_nonConv, time_baseline):
+        
+        # --------- plot trace Rkk ---------
+        self.RL_variable_convergence("RL_Rkk_convergence.jpg",     r"$R_{kk}$",      ydelta, rlzNArr, Rkk_RL_nonConv, Rkk_nonRL_nonConv, Rkk_baseline, time_nonConv, time_baseline)
+        # --------- plot eigenvalues lambda_i ---------
+        self.RL_variable_convergence("RL_lambda1_convergence.jpg", r"$\lambda_{1}$", ydelta, rlzNArr, lambda1_RL_nonConv, lambda1_nonRL_nonConv, lambda1_baseline, time_nonConv, time_baseline)
+        self.RL_variable_convergence("RL_lambda2_convergence.jpg", r"$\lambda_{2}$", ydelta, rlzNArr, lambda2_RL_nonConv, lambda2_nonRL_nonConv, lambda2_baseline, time_nonConv, time_baseline)
+        self.RL_variable_convergence("RL_lambda3_convergence.jpg", r"$\lambda_{3}$", ydelta, rlzNArr, lambda3_RL_nonConv, lambda3_nonRL_nonConv, lambda3_baseline, time_nonConv, time_baseline)
+        # --------- plot barycentric map coordinates xmap_i ---------
+        self.RL_variable_convergence("RL_xmap1_convergence.jpg",   r"$xmap_{1}$",    ydelta, rlzNArr, xmap1_RL_nonConv, xmap1_nonRL_nonConv, xmap1_baseline, time_nonConv, time_baseline)
+        self.RL_variable_convergence("RL_xmap2_convergence.jpg",   r"$xmap_{2}$",    ydelta, rlzNArr, xmap2_RL_nonConv, xmap2_nonRL_nonConv, xmap2_baseline, time_nonConv, time_baseline)
 
 
     def RL_err_convergence(self, rlzNArr, err_RL, err_nonRL, time_nonConv, error_name):
@@ -810,7 +892,7 @@ class ChannelVisualizer():
         # > RL non-converged (at time_nonConv):
         plt.semilogy(rlzNArr, err_RL, '-o', label=f"RL: t={time_nonConv}")
         # > non-RL non-converged (at time_nonConv):
-        plt.semilogy(rlzNArr, np.ones(nrlz) * err_nonRL, '--k', label=f"Non-RL: t={time_nonConv}")
+        plt.semilogy(rlzNArr, np.ones(nrlz) * err_nonRL, '--k', label=f"Non-RL:  t={time_nonConv}")
         
         # configure plot
         plt.xlabel('Realization Id.')

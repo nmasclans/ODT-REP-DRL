@@ -50,18 +50,6 @@ postRlzDir = os.path.join(postDir, f"post_{rlzStr}")
 if not os.path.exists(postRlzDir):
     os.mkdir(postRlzDir)
 
-# --- Location of Barycentric map corners ---
-    
-x1c = np.array( [ 1.0 , 0.0 ] )
-x2c = np.array( [ 0.0 , 0.0 ] )
-x3c = np.array( [ 0.5 , np.sqrt(3.0)/2.0 ] )
-
-# --- Animation frames (gif) ---
-
-visualizer      = ChannelVisualizer(postRlzDir)
-frames_eig_post = [];   frames_bar_post = []
-frames_eig_rt   = [];   frames_bar_rt   = []
-
 # --- Get ODT input parameters ---
 
 odtInputDataFilepath  = "../../data/" + caseN + "/input/input.yaml"
@@ -87,15 +75,28 @@ inputParams = {"kvisc":kvisc, "rho":rho, "dxmin": dxmin, "nunif": nunif, "domain
 # --- Chosen averaging times ---
 
 averaging_times = np.arange(tBeginAvg, tEndAvg+1e-4, dtAvg).round(4)
-averaging_times_plots = averaging_times - dTimeStart
+tRL = averaging_times - tBeginAvg
 # remove first time, as only 1 file is used to calculate the statistics, therefore 
 # they are just instantaneous, and make the reynolds stress tensor not satisfy realizability conditions
 ### averaging_times = averaging_times[1:] 
 
+
 # -------------------------------------------------------------------------
+# ----------------------- ODT-Reference statistics ----------------------- 
+# -------------------------------------------------------------------------
+
+# (ODT-Reference) calculated-at-runtime statistics 
+(ydelta_ref, yplus_ref, 
+ _,_,_, _,_,_, _,_,_,
+ ufufm_ref, vfvfm_ref, wfwfm_ref, ufvfm_ref, ufwfm_ref, vfwfm_ref,
+ _,_,_) \
+    = get_odt_statistics_reference(inputParams)
+(Rkk_ref, lambda1_ref, lambda2_ref, lambda3_ref, xmap1_ref, xmap2_ref) \
+    = compute_reynolds_stress_dof(ufufm_ref, vfvfm_ref, wfwfm_ref, ufvfm_ref, ufwfm_ref, vfwfm_ref)
+eigenvalues_ref = np.array([lambda1_ref, lambda2_ref, lambda3_ref]).transpose()
+
 # -------------------------------------------------------------------------
 # ----------------------- Post-processed statistics ----------------------- 
-# -------------------------------------------------------------------------
 # -------------------------------------------------------------------------
 
 ### print("------ Calculate Rij dof from post-processed statistics ------")
@@ -119,20 +120,28 @@ averaging_times_plots = averaging_times - dTimeStart
 
 
 # -------------------------------------------------------------------------
-# -------------------------------------------------------------------------
 # --------------------------- Runtime statistics --------------------------
 # -------------------------------------------------------------------------
-# -------------------------------------------------------------------------
 
-print("------ Calculate Rij dof from statistics calculated at runtime by ODT ------")
+print("\n------ Calculate Rij dof from statistics calculated at runtime by ODT ------")
 
 (ydelta_rt, yplus_rt, _,_,_, _,_,_, _,_,_, Rxx_rt, Ryy_rt, Rzz_rt, Rxy_rt, Rxz_rt, Ryz_rt) = get_odt_statistics_rt_at_chosen_averaging_times(inputParams, averaging_times)
 
+# --- Animation frames (gif) ---
+visualizer      = ChannelVisualizer(postRlzDir)
+frames_rkk_rt = []; frames_eig_rt = []; frames_xmap_coord_rt = []; frames_xmap_triang_rt = []
+
 for i in range(len(averaging_times)): 
+
+    # get runtime-calculated dof of Rij
     (Rkk_rt, lambda1_rt, lambda2_rt, lambda3_rt, xmap1_rt, xmap2_rt) = compute_reynolds_stress_dof(Rxx_rt[:,i], Ryy_rt[:,i], Rzz_rt[:,i], Rxy_rt[:,i], Rxz_rt[:,i], Ryz_rt[:,i])
     eigenvalues_rt = np.array([lambda1_rt, lambda2_rt, lambda3_rt]).transpose()
-    frames_eig_rt  = visualizer.build_anisotropy_tensor_eigenvalues_frame(frames_eig_rt, ydelta_rt, eigenvalues_rt, averaging_times_plots[i])
-    frames_bar_rt  = visualizer.build_anisotropy_tensor_barycentric_map_frame(frames_bar_rt, xmap1_rt, xmap2_rt, ydelta_rt, averaging_times_plots[i])
+    
+    # build frames
+    frames_rkk_rt         = visualizer.build_reynolds_stress_tensor_trace_frame(frames_rkk_rt, ydelta_rt, ydelta_ref, Rkk_rt, Rkk_ref, tRL[i])
+    frames_eig_rt         = visualizer.build_anisotropy_tensor_eigenvalues_frame(frames_eig_rt, ydelta_rt, ydelta_ref, eigenvalues_rt, eigenvalues_ref, tRL[i])
+    frames_xmap_coord_rt  = visualizer.build_anisotropy_tensor_barycentric_xmap_coord_frame(frames_xmap_coord_rt, ydelta_rt, ydelta_ref, xmap1_rt, xmap2_rt, xmap1_ref, xmap2_ref, tRL[i])
+    frames_xmap_triang_rt = visualizer.build_anisotropy_tensor_barycentric_xmap_triang_frame(frames_xmap_triang_rt, ydelta_rt, xmap1_rt, xmap2_rt, tRL[i])
 
 # -------------------------------------------------------------------------
 # ------------------ Create the animation from the frames -----------------
@@ -147,10 +156,19 @@ for i in range(len(averaging_times)):
 ### frames_bar_post[0].save(filename, save_all=True, append_images=frames_bar_post[1:], duration=100, loop=0)
 
 # runtime statistics
-filename = os.path.join(postRlzDir, "anisotropy_tensor_eigenvalues_odt_convergence_rt.gif")
-print(f"\nMAKING GIF EIGENVALUES OF ANISOTROPY TENSOR for RUNTIME calculations ALONG AVG. TIME in {filename}" )
+filename = os.path.join(postRlzDir, "reynolds_stress_tensor_trace_convergence.gif")
+print(f"\nMAKING GIF TRACE/MAGNITUDE OF REYNOLDS STRESS TENSOR for RUNTIME calculations along AVG. TIME in {filename}" )
+frames_rkk_rt[0].save(filename, save_all=True, append_images=frames_rkk_rt[1:], duration=100, loop=0)    
+
+filename = os.path.join(postRlzDir, "anisotropy_tensor_eigenvalues_convergence.gif")
+print(f"\nMAKING GIF EIGENVALUES OF ANISOTROPY TENSOR for RUNTIME calculations along AVG. TIME in {filename}" )
 frames_eig_rt[0].save(filename, save_all=True, append_images=frames_eig_rt[1:], duration=100, loop=0)
-print(f"\nMAKING GIF OF BARYCENTRIC MAP OF ANISOTROPY TENSOR for RUNTIME calculations ALONG AVG. TIME in {filename}" )
-filename = os.path.join(postRlzDir, "anisotropy_tensor_barycentric_map_odt_convergence_rt.gif")
-frames_bar_rt[0].save(filename, save_all=True, append_images=frames_bar_rt[1:], duration=100, loop=0)
+
+print(f"\nMAKING GIF OF BARYCENTRIC MAP COORDINATES OF ANISOTROPY TENSOR for RUNTIME calculations along AVG. TIME in {filename}" )
+filename = os.path.join(postRlzDir, "anisotropy_tensor_barycentric_map_coord_convergence.gif")
+frames_xmap_coord_rt[0].save(filename, save_all=True, append_images=frames_xmap_coord_rt[1:], duration=100, loop=0)
+
+print(f"\nMAKING GIF OF BARYCENTRIC MAP REALIZABLE TRIANGLE OF ANISOTROPY TENSOR for RUNTIME calculations along AVG. TIME in {filename}" )
+filename = os.path.join(postRlzDir, "anisotropy_tensor_barycentric_map_triang_convergence.gif")
+frames_xmap_triang_rt[0].save(filename, save_all=True, append_images=frames_xmap_triang_rt[1:], duration=100, loop=0)
 

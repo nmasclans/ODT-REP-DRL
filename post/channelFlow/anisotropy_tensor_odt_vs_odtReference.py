@@ -127,23 +127,25 @@ inputParams  = {"kvisc":kvisc, "rho":rho, "dxmin": dxmin, "nunif": nunif, "domai
 #           Anisotropy tensor, eigen-decomposition, mapping to barycentric map 
 #-----------------------------------------------------------------------------------------
 
-tEndAvgPlot = tEndAvg - tBeginAvg
+tRL = tEndAvg - tBeginAvg
+
+# ---------------------- Plot Rkk (Rij trace, magnitude) vs. y (runtime & reference) ---------------------- 
+
+visualizer.build_reynolds_stress_tensor_trace(ydelta_rt, ydelta_ref, Rkk_rt, Rkk_ref, tRL)
 
 # ---------------------- Plot xmap coordinates vs. y (runtime & reference) ---------------------- 
 
-visualizer.build_anisotropy_tensor_barycentric_xmap_coord(ydelta_rt, ydelta_ref, xmap1_rt, xmap2_rt, xmap1_ref, xmap2_ref, tEndAvgPlot)
+visualizer.build_anisotropy_tensor_barycentric_xmap_coord(ydelta_rt, ydelta_ref, xmap1_rt, xmap2_rt, xmap1_ref, xmap2_ref, tRL)
 
 # ---------------------- Plot eigenvalues vs. y (runtime & reference) ---------------------- 
 
 eigenvalues_rt  = np.array([lambda1_rt,  lambda2_rt,  lambda3_rt]).transpose()
 eigenvalues_ref = np.array([lambda1_ref, lambda2_ref, lambda3_ref]).transpose()
-visualizer.build_anisotropy_tensor_eigenvalues(ydelta_rt, ydelta_ref, eigenvalues_rt, eigenvalues_ref, tEndAvgPlot)
+visualizer.build_anisotropy_tensor_eigenvalues(ydelta_rt, ydelta_ref, eigenvalues_rt, eigenvalues_ref, tRL)
 
 # ---------------------- Plot Barycentric Map in Barycentric Triangle ---------------------- 
 
 # runtime calculations
-visualizer.build_anisotropy_tensor_barycentric_map(xmap1_rt,  xmap2_rt,  yplus_rt,  tEndAvgPlot, f"anisotropy_tensor_barycentric_map_odt")
+visualizer.build_anisotropy_tensor_barycentric_xmap_triang(ydelta_rt,  xmap1_rt,  xmap2_rt,  tRL,  f"anisotropy_tensor_barycentric_map_triang_odt")
 # DNS data
-visualizer.build_anisotropy_tensor_barycentric_map(xmap1_ref, xmap2_ref, yplus_ref, 1000,        f"anisotropy_tensor_barycentric_map_odtReference")
-
-
+visualizer.build_anisotropy_tensor_barycentric_xmap_triang(ydelta_rt, xmap1_ref, xmap2_ref, 1000, f"anisotropy_tensor_barycentric_map_triang_odtReference")
