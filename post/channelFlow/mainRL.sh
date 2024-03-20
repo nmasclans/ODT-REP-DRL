@@ -13,13 +13,13 @@
 # - 5_realization_number_min_RL
 # - 6_realization_number_max_RL
 # - 7_realization_number_step_RL
-# - 8_time_end_averaging_non_converged
-# - 9_time_end_averaging_converged
-# - 10_RL_run_id
+# - 8_time_begin_averaging_non_converged
+# - 9_time_end_averaging_non_converged
+# - 10_time_end_averaging_converged
 
 # Check if the correct number of arguments is provided
 if [ "$#" -ne 10 ]; then
-    echo "Usage: $0 <1_Re_tau> <2_case_name_nonRL> <3_realization_number_nonRL> <4_case_name_RL> <5_realization_number_min_RL> <6_realization_number_max_RL> <7_realization_number_step_RL> <8_time_end_averaging_non_converged> <9_time_end_averaging_converged> <10_time_begin_averaging_non_converged>"
+    echo "Usage: $0 <1_Re_tau> <2_case_name_nonRL> <3_realization_number_nonRL> <4_case_name_RL> <5_realization_number_min_RL> <6_realization_number_max_RL> <7_realization_number_step_RL> <8_time_begin_averaging_non_converged> <9_time_end_averaging_non_converged> <10_time_end_averaging_converged>"
     exit 1
 else
     echo -e "\n\n\n****************************************************************"
@@ -32,9 +32,9 @@ else
     echo "- Realization number min RL: $5"
     echo "- Realization number max RL: $6"
     echo "- Realization number step RL: $7"
-    echo "- Time end averaging non-converged: $8"
-    echo "- Time end averaging converged: $9"
-    echo "- Time begin averaging: ${10}"
+    echo "- Time begin averaging: $8"
+    echo "- Time end averaging non-converged: $9"
+    echo "- Time end averaging converged: ${10}"
 fi
 
 ### # For each realization, if needed:

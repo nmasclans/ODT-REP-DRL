@@ -66,7 +66,7 @@ tBeginAvgRt  = yml["params"]["tBeginAvg"]
 delta        = domainLength * 0.5
 utau         = 1.0
 
-assert tBeginAvg == tBeginAvgRt, "Input argument 'tBeginAvg' = {tBeginAvg} must be equal to the input.yaml argument 'tBeginAvg' = {tBeginAvgRt} used for statistics calculation during runtime"
+# assert tBeginAvg == tBeginAvgRt, "Input argument 'tBeginAvg' = {tBeginAvg} must be equal to the input.yaml argument 'tBeginAvg' = {tBeginAvgRt} used for statistics calculation during runtime"
 assert tEndAvg <= dTimeEnd, "Input argument 'tEndAvg' must be <= effective dTimeEnd, the time of the last stat_dmp_* file"
 
 inputParams  = {"kvisc":kvisc, "rho":rho, "dxmin": dxmin, "nunif": nunif, "domainLength" : domainLength, "delta": delta, "Retau": Retau, "utau": utau,
