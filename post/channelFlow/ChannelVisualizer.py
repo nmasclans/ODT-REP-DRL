@@ -798,7 +798,7 @@ class ChannelVisualizer():
         # > non-RL non-converged (at time_nonConv):
         ax.semilogx(yplus, um_nonRL_nonConv, '--k', label=f"Non-RL:  t={time_nonConv}")
         # > non-RL baseline (at time_baseline)
-        ax.semilogx(yplus, um_baseline, '-k', label=f"Baseline: t={time_baseline}")
+        ax.semilogx(yplus, um_baseline, '-k', label=f"Reference: t={time_baseline}")
 
         # configure plot
         ax.set_xlabel(r'$y^+$')
@@ -823,7 +823,7 @@ class ChannelVisualizer():
         # > non-RL non-converged (at time_nonConv):
         ax.semilogx(yplus, urmsf_nonRL_nonConv, '--k', label=f"Non-RL:  t={time_nonConv}")
         # > non-RL baseline (at time_baseline)
-        ax.semilogx(yplus, urmsf_baseline, '-k', label=f"Baseline: t={time_baseline}")
+        ax.semilogx(yplus, urmsf_baseline, '-k', label=f"Reference: t={time_baseline}")
 
         # configure plot
         ax.set_xlabel(r'$y^+$')
@@ -849,7 +849,7 @@ class ChannelVisualizer():
         # > non-RL non-converged (at time_nonConv):
         plt.plot(ydelta, var_nonRL_nonConv, '--k', label=f"Non-RL:  t={time_nonConv}")
         # > non-RL baseline (at time_baseline)
-        plt.plot(ydelta, var_baseline, '-k', label=f"Baseline: t={time_baseline}")
+        plt.plot(ydelta, var_baseline, '-k', label=f"Reference: t={time_baseline}")
 
         # configure plot
         ax.set_xlabel(r"$y/\delta$")
