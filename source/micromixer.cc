@@ -151,7 +151,13 @@ void micromixer::advanceOdtSingleStep_Explicit(){
 
     set_oldrho_or_rhov();
 
-    if(domn->pram->Lspatial) transform(oldrho_or_rhov.begin(), oldrho_or_rhov.end(), domn->uvel->d.begin(), oldrho_or_rhov.begin(), multiplies<double>());
+    if(domn->pram->Lspatial) {
+        transform(oldrho_or_rhov.begin(), oldrho_or_rhov.end(), domn->uvel->d.begin(), oldrho_or_rhov.begin(), multiplies<double>());
+    }
+    
+    if(domn->pram->Lstatconv){
+        domn->Rij->getReynoldsStressDelta();  // update domn->Rij->RijDelta (in adaptative grid)
+    }
 
     // --> Get right-hand-side terms of the NS governing equation for the transported variables
     for(int k=0; k<domn->v.size(); k++){
@@ -166,7 +172,7 @@ void micromixer::advanceOdtSingleStep_Explicit(){
         if(domn->v.at(k)->L_transported) {
             domn->v.at(k)->getRhsMix(gf, dxc);
             domn->v.at(k)->getRhsSrc();
-            domn->v.at(k)->getRhsStatConv(gf, dxc, time);
+            domn->v.at(k)->getRhsStatConv(gf, dxc, time);   // update RhsStatConv, using previously updated domn->Rij->RijDelta
         }
     }
 
@@ -179,7 +185,7 @@ void micromixer::advanceOdtSingleStep_Explicit(){
             }
         }
     }
-        
+
     updateGrid();            // update cell sizes due to rho or rho*v variations (continuity)
 
     if(domn->pram->LdoDL) do_DL("set DL_2");

@@ -29,7 +29,8 @@ class dv_reynolds_stress : public dv
 
 
     private:
-
+        
+        const double                    EPS;
         vector<double>                  b;
         vector<double>                  t;
         vector<double>                  x1c;
@@ -44,7 +45,7 @@ class dv_reynolds_stress : public dv
         vector<vector<double>>          Binv;
         vector<vector<double>>          Tinv;
         vector<vector<double>>          Deltaij;
-        vector<vector<vector<double>>>  eigVect;                
+        vector<vector<vector<double>>>  Qij;                
 
 
         //////////////////// MEMBER FUNCTIONS /////////////////
@@ -72,11 +73,14 @@ class dv_reynolds_stress : public dv
         virtual void enforceRealizabilityRkk(double &rkk);
         virtual void enforceRealizabilityXmap(double &xmap1, double &xmap2);
 
+        // additional matrix functionalities
+        virtual void multiplyMatrices(const vector<vector<double>> &A, const vector<vector<double>> &B, vector<vector<double>> &result);
+
         //////////////////// CONSTRUCTOR FUNCTIONS /////////////////
 
     public:
 
-        dv_reynolds_stress(){};
+        dv_reynolds_stress();
         dv_reynolds_stress(domain *line,
                         const string s,
                         const bool Lt,

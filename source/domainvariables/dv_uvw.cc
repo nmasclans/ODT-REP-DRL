@@ -269,10 +269,7 @@ void dv_uvw::getRhsStatConv(const vector<double> &gf,
     rhsStatConv.resize(domn->ngrd, 0.0); 
 
     // update the rhs term for statistics convergence 'rhsStatConv'
-    if(L_converge_stat & (time < tfRL)){
-
-        // get updated RijDelta (in adaptative grid)
-        domn->Rij->getReynoldsStressDelta(); // updates RijDelta
+    if(L_converge_stat & (time < tfRL)) {
 
         // interpolate RijDelta from adaptative cells centers (size ngrd) to faces (size ngrd+1)
         vector<double> RixDelta;
