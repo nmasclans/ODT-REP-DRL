@@ -249,8 +249,8 @@ void inputoutput::outputProperties(const string fname, const double time) {
             string var_name_rmsf = var_name_dmb + "_rmsf"; 
             ofileStat << setw(18-var_name_rmsf.length()) << j++ << "_" << var_name_rmsf; 
             // F-perturbation for statistics convergence
-            string var_name_rhsfRatioAvg = var_name_dmb + "_rhsfRatioAvg";
-            ofileStat << setw(18-var_name_rhsfRatioAvg.length()) << j++ << "_" << var_name_rhsfRatioAvg;
+            string var_name_rhsfRatio = var_name_dmb + "_rhsfRatio";
+            ofileStat << setw(18-var_name_rhsfRatio.length()) << j++ << "_" << var_name_rhsfRatio;
         }
     }
     if (domn->Rij->L_output_stat) {
@@ -579,7 +579,7 @@ void inputoutput::loadVarsFromRestartFile() {
                 continue;
             ifileStat >> domn->v.at(k)->davg.at(i);
             ifileStat >> domn->v.at(k)->drmsf.at(i);
-            ifileStat >> domn->v.at(k)->rhsfRatioAvg.at(i);
+            ifileStat >> aux;       // >> domn->v.at(k)->rhsfRatioAvg.at(i); -> want to reset this average ALWAYS, reseted for each RL step, averaged during tActionRL
         }
         if (domn->Rij->L_output_stat) {
             // Reynolds stress tensor
