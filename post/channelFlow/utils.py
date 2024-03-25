@@ -511,8 +511,9 @@ def get_odt_statistics_rt(input_params):
     with open(fstat,'r') as f:
         rows_info = f.readlines()[3].split() # 4th line of the file
     rows_info_expected = '#         1_posUnif        2_uvel_mean        3_uvel_rmsf       4_uvel_Fpert        5_vvel_mean        6_vvel_rmsf       7_vvel_Fpert        8_wvel_mean        9_wvel_rmsf      10_wvel_Fpert             11_Rxx             12_Ryy             13_Rzz             14_Rxy             15_Rxz             16_Ryz\n'.split()
-    assert rows_info == rows_info_expected, f"statistic files rows do not correspond to the expected variables" \
-        f"rows variables (expected): \n{rows_info_expected} \n" \
+    rows_info_expected_new = '#         1_posUnif        2_uvel_mean        3_uvel_rmsf       4_uvel_rhsfRatio        5_vvel_mean        6_vvel_rmsf       7_vvel_rhsfRatio        8_wvel_mean        9_wvel_rmsf      10_wvel_rhsfRatio             11_Rxx             12_Ryy             13_Rzz             14_Rxy             15_Rxz             16_Ryz\n'.split()
+    assert rows_info == rows_info_expected or rows_info == rows_info_expected_new, f"statistic files rows do not correspond to the expected variables" \
+        f"rows variables (expected): \n{rows_info_expected} \nor rows variables (expected_new): \n{rows_info_expected_new}" \
         f"rows variables (current): \n{rows_info}"
     
     # -> get data
@@ -626,8 +627,9 @@ def get_odt_statistics_reference(input_params):
     with open(reference_stat_file,'r') as f:
         rows_info = f.readlines()[3].split() # 4th line of the file
     rows_info_expected = '#         1_posUnif        2_uvel_mean        3_uvel_rmsf       4_uvel_Fpert        5_vvel_mean        6_vvel_rmsf       7_vvel_Fpert        8_wvel_mean        9_wvel_rmsf      10_wvel_Fpert             11_Rxx             12_Ryy             13_Rzz             14_Rxy             15_Rxz             16_Ryz\n'.split()
-    assert rows_info == rows_info_expected, f"statistic files rows do not correspond to the expected variables" \
-        f"rows variables (expected): \n{rows_info_expected} \n" \
+    rows_info_expected_new = '#         1_posUnif        2_uvel_mean        3_uvel_rmsf       4_uvel_rhsfRatio        5_vvel_mean        6_vvel_rmsf       7_vvel_rhsfRatio        8_wvel_mean        9_wvel_rmsf      10_wvel_rhsfRatio             11_Rxx             12_Ryy             13_Rzz             14_Rxy             15_Rxz             16_Ryz\n'.split()
+    assert rows_info == rows_info_expected or rows_info == rows_info_expected_new, f"statistic files rows do not correspond to the expected variables" \
+        f"rows variables (expected): \n{rows_info_expected} \nor rows variables (expected_new): \n{rows_info_expected_new}" \
         f"rows variables (current): \n{rows_info}"
     
     # -> get data
@@ -743,8 +745,9 @@ def get_odt_udata_rt(input_params):
     with open(fstat,'r') as f:
         rows_info = f.readlines()[3].split() # 4th line of the file
     rows_info_expected = '#         1_posUnif        2_uvel_mean        3_uvel_rmsf       4_uvel_Fpert        5_vvel_mean        6_vvel_rmsf       7_vvel_Fpert        8_wvel_mean        9_wvel_rmsf      10_wvel_Fpert             11_Rxx             12_Ryy             13_Rzz             14_Rxy             15_Rxz             16_Ryz\n'.split()
-    assert rows_info == rows_info_expected, f"statistic files rows do not correspond to the expected variables" \
-        f"rows variables (expected): \n{rows_info_expected} \n" \
+    rows_info_expected_new = '#         1_posUnif        2_uvel_mean        3_uvel_rmsf       4_uvel_rhsfRatio        5_vvel_mean        6_vvel_rmsf       7_vvel_rhsfRatio        8_wvel_mean        9_wvel_rmsf      10_wvel_rhsfRatio             11_Rxx             12_Ryy             13_Rzz             14_Rxy             15_Rxz             16_Ryz\n'.split()
+    assert rows_info == rows_info_expected or rows_info == rows_info_expected_new, f"statistic files rows do not correspond to the expected variables" \
+        f"rows variables (expected): \n{rows_info_expected} \nor rows variables (expected_new): \n{rows_info_expected_new}" \
         f"rows variables (current): \n{rows_info}"
     
     # --- get data
@@ -1210,8 +1213,9 @@ def get_odt_statistics_rt_at_chosen_averaging_times(input_params, averaging_time
     with open(flist[0],'r') as f:
         rows_info = f.readlines()[3].split() # 4th line of the file
     rows_info_expected = '#         1_posUnif        2_uvel_mean        3_uvel_rmsf       4_uvel_Fpert        5_vvel_mean        6_vvel_rmsf       7_vvel_Fpert        8_wvel_mean        9_wvel_rmsf      10_wvel_Fpert             11_Rxx             12_Ryy             13_Rzz             14_Rxy             15_Rxz             16_Ryz\n'.split()
-    assert rows_info == rows_info_expected, f"statistic files rows do not correspond to the expected variables" \
-        f"rows variables (expected): \n{rows_info_expected} \n" \
+    rows_info_expected_new = '#         1_posUnif        2_uvel_mean        3_uvel_rmsf       4_uvel_rhsfRatio        5_vvel_mean        6_vvel_rmsf       7_vvel_rhsfRatio        8_wvel_mean        9_wvel_rmsf      10_wvel_rhsfRatio             11_Rxx             12_Ryy             13_Rzz             14_Rxy             15_Rxz             16_Ryz\n'.split()
+    assert rows_info == rows_info_expected or rows_info == rows_info_expected_new, f"statistic files rows do not correspond to the expected variables" \
+        f"rows variables (expected): \n{rows_info_expected} \nor rows variables (expected_new): \n{rows_info_expected_new}" \
         f"rows variables (current): \n{rows_info}"
 
     # --- initialize variables ---
