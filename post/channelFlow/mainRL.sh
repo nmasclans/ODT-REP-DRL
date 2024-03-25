@@ -3,7 +3,7 @@
 # INSTRUCTIONS
 # 
 # Run as (e.g.):
-# ./mainRL.sh 180 channel180_2_5_2024_longSimulation 0 channel180_2_5_2024 0 8 1 111 1000 1710481991
+# ./mainRL.sh 180 channel180_2_5_2024_longSimulation 0 channel180_2_5_2024 0 0 1 101 111 1000
 # 
 # Arguments:
 # - 1_Re_tau 

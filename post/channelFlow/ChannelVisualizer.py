@@ -918,9 +918,11 @@ class ChannelVisualizer():
         plt.close()
 
 
-    def build_RL_rewards_convergence(self, rlzArr, timeArr, rewards):
+    def build_RL_rewards_convergence(self, rlzArr, timeArr, rewards_total, rewards_bc, rewards_err):
         # Plot RL rewards along time, for each realization
-        self.RL_variable_convergence_along_time("RL_rewards_convergence.jpg", "rewards", rlzArr, timeArr, rewards)
+        self.RL_variable_convergence_along_time("RL_total_rewards_convergence.jpg", "rewards", rlzArr, timeArr, rewards_total)
+        self.RL_variable_convergence_along_time("RL_bc_rewards_convergence.jpg", "rewards", rlzArr, timeArr, rewards_bc)
+        self.RL_variable_convergence_along_time("RL_err_rewards_convergence.jpg", "rewards", rlzArr, timeArr, rewards_err)
 
         
     def build_RL_actions_convergence(self, rlzArr, timeArr, actions):
