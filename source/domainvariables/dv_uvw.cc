@@ -323,7 +323,7 @@ void dv_uvw::updateTimeAveragedQuantities(const double &delta_t, const double &a
         // interpolate instantaneous quantity in adaptative grid to uniform fine grid
         interpVarAdaptToUnifGrid(rhsfRatio, rhsfRatioUnif);  // update rhsfRatioUnif
         for (int i=0; i<nunif; i++) {
-            rhsfRatioAvg.at(i)  = updateTimeMeanQuantity(rhsfRatioUnif.at(i), rhsfRatioAvg.at(i), delta_t, averaging_time);
+            rhsfRatioAvg.at(i)  = updateTimeMeanQuantity(rhsfRatioUnif.at(i), rhsfRatioAvg.at(i), delta_t, time - domn->pram->trst); // "time - domn->pram->trst" instead of "averaging_time" to average for each dtActionRL
         }
     }
 }
