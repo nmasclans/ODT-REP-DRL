@@ -34,12 +34,12 @@ dv_uvw::dv_uvw(domain  *line,
     // parameters
     L_converge_stat = Lcs;
     L_output_stat   = true;
-    tfRL            = domn->pram->trst + domn->pram->dtActionRL;
     
     // -> N-S Eq data members 
     rhsSrc          = vector<double>(domn->ngrd, 0.0);
     rhsMix          = vector<double>(domn->ngrd, 0.0);
     rhsStatConv     = vector<double>(domn->ngrd, 0.0);
+    rhsfRatio       = vector<double>(domn->ngrd, 0.0);
 
     // ---------------------------- Statistics calc. during runtime ---------------------------- 
     
@@ -49,7 +49,8 @@ dv_uvw::dv_uvw(domain  *line,
     drmsf           = vector<double>(nunif, 0.0);
 
     // Statistics convergence framework
-    FstatConvUnif   = vector<double>(nunif, 0.0);
+    rhsfRatioUnif   = vector<double>(nunif, 0.0);
+    rhsfRatioAvg    = vector<double>(nunif, 0.0);
 
     // Perturbed & Delta anisotropy tensor dof (in adaptative grid)
     RxxDelta        = vector<double>(domn->ngrd, 0.0);
@@ -298,9 +299,6 @@ void dv_uvw::getRhsStatConv(const vector<double> &gf,
         rhsStatConv.at(0) = 0.0;
         rhsStatConv.at(domn->ngrd-1) = 0.0;
 
-        // interpolate to uniform grid for data saving (rhsStatConv defined in adaptative grid -> FstatConvUnif defined in uniform ct grid)
-        interpVarAdaptToUnifGrid(rhsStatConv, FstatConvUnif); // updates FstatConvUnif
-
     }
 
 }
@@ -309,24 +307,23 @@ void dv_uvw::getRhsStatConv(const vector<double> &gf,
 /*! Update statistics quantities
  */
 
-void dv_uvw::updateTimeAveragedQuantities(const double &delta_t, const double &averaging_time) {
+void dv_uvw::updateTimeAveragedQuantities(const double &delta_t, const double &averaging_time, const double &time) {
 
+    // Update time-averaged quantities at each grid point
     // interpolate instantaneous quantity in adaptative grid to uniform fine grid
-    interpVarAdaptToUnifGrid(d, dunif);
-
-    // update time-averaged quantities at each grid point
-    for(int i=0; i<nunif; i++) {
+    interpVarAdaptToUnifGrid(d, dunif); // update dunif
+    for (int i=0; i<nunif; i++) {
         // velocity time-average (fine grid)
         davg.at(i)  = updateTimeMeanQuantity(dunif.at(i), davg.at(i), delta_t, averaging_time);
         // velocity rmsf (fine grid)
         drmsf.at(i) = updateTimeRmsfQuantity(dunif.at(i), davg.at(i), drmsf.at(i), delta_t, averaging_time); // note that davg is the updated value in the previous line!
     }
-
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-void dv_uvw::setModifiedParams(){
-    // for updating tfRL after restart for both domn->dv_uvw and eddy->dv_uvw, according to restart time read in restart files (in inputoutput.cc)
-    tfRL = domn->pram->trst + domn->pram->dtActionRL;
+    // Update ratio ( abs(rhs) / abs(rhs + f_statconv) ), if adding RL-loading
+    if(L_converge_stat & (time < tfRL)) {
+        // interpolate instantaneous quantity in adaptative grid to uniform fine grid
+        interpVarAdaptToUnifGrid(rhsfRatio, rhsfRatioUnif);  // update rhsfRatioUnif
+        for (int i=0; i<nunif; i++) {
+            rhsfRatioAvg.at(i)  = updateTimeMeanQuantity(rhsfRatioUnif.at(i), rhsfRatioAvg.at(i), delta_t, averaging_time);
+        }
+    }
 }

@@ -68,7 +68,8 @@ class param {
         bool    Lstatconv;       ///<  flag to turn on statistics convergence (by added source term)
         int     nunif;           ///<  number of sampled points in uniform fine grid to evaluate & store the statistics (statistics convergence)
         double  dtActionRL;      ///<  time instant from which it is applied the F-perturbation statistics convergence 
-        
+        double  fEps;            ///<  TODO: add description
+
         int     dqnNObserv;      ///<  (DQN) observation dimensionality, number of observers placed in the domain for observation collection
         int     dqnNActions;     ///<  (DQN) action dimensionality, number of actuators
         int     dqnNeuronsPerLayer;    ///< (DQN) number of neurons per hidden layer, in policy and target networks

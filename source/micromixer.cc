@@ -32,6 +32,7 @@ micromixer::micromixer() {
 void micromixer::init(domain *p_domn) {
     domn      = p_domn;
     tBeginAvg = domn->pram->tBeginAvg;
+    fEps       = domn->pram->fEps;
 
     bool LincludeRhsMix = (domn->pram->Lsolver=="SEMI-IMPLICIT") ? true : false;
     cvode->init(domn, LincludeRhsMix);
@@ -177,12 +178,27 @@ void micromixer::advanceOdtSingleStep_Explicit(){
     }
 
     // --> Diffuse transported variables using the NS governing equations   
+    
     // update transported variables value
     for(int k=0; k<domn->v.size(); k++){
         if(domn->v.at(k)->L_transported) {
-            for(int i=0; i < domn->ngrd; i++) {
-                domn->v.at(k)->d.at(i) = domn->v.at(k)->d.at(i) + dt*( domn->v.at(k)->rhsMix.at(i) + domn->v.at(k)->rhsSrc.at(i) + domn->v.at(k)->rhsStatConv.at(i) ); 
+            
+            // if adding RL-loading term for statistics convergence:
+            if (domn->v.at(k)->L_converge_stat & (time < domn->v.at(k)->tfRL)){
+                domn->v.at(k)->rhsfRatio.resize(domn->ngrd, 0.0);
+                for(int i=0; i < domn->ngrd; i++) {
+                    rhsTerm   = domn->v.at(k)->rhsMix.at(i) + domn->v.at(k)->rhsSrc.at(i);
+                    fTerm     = fEps * domn->v.at(k)->rhsStatConv.at(i);
+                    domn->v.at(k)->rhsfRatio.at(i) = abs(rhsTerm) / abs(rhsTerm + fTerm + 1e-8);
+                    domn->v.at(k)->d.at(i) = domn->v.at(k)->d.at(i) + dt*( rhsTerm + domn->v.at(k)->rhsfRatio.at(i) * fTerm ); 
+                }
+            // else no RL-loading term:
+            } else {
+                for(int i=0; i < domn->ngrd; i++) {
+                    domn->v.at(k)->d.at(i) = domn->v.at(k)->d.at(i) + dt * ( domn->v.at(k)->rhsMix.at(i) + domn->v.at(k)->rhsSrc.at(i) ); 
+                }
             }
+            
         }
     }
 
@@ -428,10 +444,10 @@ void micromixer::updateTimeAveragedQuantitiesIfNeeded(const double &delta_t) {
     if (averaging_time > 0.0) {
         // update velocity time-average and rmsf
         for(int k=0; k<domn->v.size(); k++) {
-            domn->v.at(k)->updateTimeAveragedQuantities(delta_t, averaging_time); // todo: revisar si 'time' is the proper input
+            domn->v.at(k)->updateTimeAveragedQuantities(delta_t, averaging_time, time);
         }
         // update reynolds stress tensor
-        domn->Rij->updateTimeAveragedQuantities(delta_t, averaging_time);
+        domn->Rij->updateTimeAveragedQuantities(delta_t, averaging_time, time);
     } 
 }
 

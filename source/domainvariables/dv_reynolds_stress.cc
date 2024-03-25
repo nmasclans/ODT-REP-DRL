@@ -121,7 +121,7 @@ dv_reynolds_stress::dv_reynolds_stress(domain    *line,
 
 }
 
-void dv_reynolds_stress::updateTimeAveragedQuantities(const double &delta_t, const double &averaging_time) {
+void dv_reynolds_stress::updateTimeAveragedQuantities(const double &delta_t, const double &averaging_time, const double &time) {
 
     double uvel_fluct, vvel_fluct, wvel_fluct;
     double Rxx_inst, Ryy_inst, Rzz_inst, Rxy_inst, Rxz_inst, Ryz_inst;

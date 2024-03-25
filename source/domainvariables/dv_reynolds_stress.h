@@ -52,7 +52,7 @@ class dv_reynolds_stress : public dv
 
     public:
         
-        virtual void updateTimeAveragedQuantities(const double &delta_t, const double &averaging_time);
+        virtual void updateTimeAveragedQuantities(const double &delta_t, const double &averaging_time, const double &time);
         virtual void getReynoldsStressDelta();
 
     private:

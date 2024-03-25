@@ -249,8 +249,8 @@ void inputoutput::outputProperties(const string fname, const double time) {
             string var_name_rmsf = var_name_dmb + "_rmsf"; 
             ofileStat << setw(18-var_name_rmsf.length()) << j++ << "_" << var_name_rmsf; 
             // F-perturbation for statistics convergence
-            string var_name_F_statConv = var_name_dmb + "_Fpert";
-            ofileStat << setw(18-var_name_F_statConv.length()) << j++ << "_" << var_name_F_statConv;
+            string var_name_rhsfRatioAvg = var_name_dmb + "_rhsfRatioAvg";
+            ofileStat << setw(18-var_name_rhsfRatioAvg.length()) << j++ << "_" << var_name_rhsfRatioAvg;
         }
     }
     if (domn->Rij->L_output_stat) {
@@ -305,7 +305,7 @@ void inputoutput::outputProperties(const string fname, const double time) {
                 // rmsf quantity
                 ofileStat << setw(19) << domn->v.at(k)->drmsf.at(i);
                 // F-perturbation for statistics convergence
-                ofileStat << setw(19) << domn->v.at(k)->FstatConvUnif.at(i);
+                ofileStat << setw(19) << domn->v.at(k)->rhsfRatioAvg.at(i);
             }
         }
         if (domn->Rij->L_output_stat) {
@@ -579,7 +579,7 @@ void inputoutput::loadVarsFromRestartFile() {
                 continue;
             ifileStat >> domn->v.at(k)->davg.at(i);
             ifileStat >> domn->v.at(k)->drmsf.at(i);
-            ifileStat >> domn->v.at(k)->FstatConvUnif.at(i);
+            ifileStat >> domn->v.at(k)->rhsfRatioAvg.at(i);
         }
         if (domn->Rij->L_output_stat) {
             // Reynolds stress tensor

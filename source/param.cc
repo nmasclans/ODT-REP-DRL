@@ -63,7 +63,8 @@ param::param(inputoutput *p_io) {
     Lstatconv          = io->params["Lstatconv"]          ? io->params["Lstatconv"].as<bool>()         : false;
     nunif              = io->params["nunif"]              ? io->params["nunif"].as<int>()              : 1000;
     dtActionRL         = io->params["dtActionRL"]         ? io->params["dtActionRL"].as<double>()      : 0.0;
-    
+    fEps               = io->params["fEps"]               ? io->params["fEps"].as<double>()            : 1.0;  
+
     dqnNObserv         = io->params["dqnNObserv"]         ? io->params["dqnNObserv"].as<int>()         : 1;
     dqnNActions        = io->params["dqnNActions"]        ? io->params["dqnNActions"].as<int>()        : 1;
     dqnNeuronsPerLayer = io->params["dqnNeuronsPerLayer"] ? io->params["dqnNeuronsPerLayer"].as<int>() : 5;

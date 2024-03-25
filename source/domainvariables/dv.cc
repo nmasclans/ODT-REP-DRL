@@ -27,6 +27,8 @@ dv::dv(domain    *line,
     L_transported = Lt;
     L_output      = Lo;
     d             = vector<double>(domn->ngrd, 0.0);
+    
+    tfRL          = domn->pram->trst + domn->pram->dtActionRL;
 
     LagSrc = false;
 
@@ -296,4 +298,10 @@ void dv::coutMatrix(const vector<vector<double>> varValue, const string varName)
         }
         cout << endl;        
     }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+void dv::setModifiedParams(){
+    // for updating tfRL after restart for both domn->dv_uvw and eddy->dv_uvw, according to restart time read in restart files (in inputoutput.cc)
+    tfRL = domn->pram->trst + domn->pram->dtActionRL;
 }

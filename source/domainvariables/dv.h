@@ -39,6 +39,8 @@ class dv {
         vector<double>                rhsSrc;                 ///< the data
         vector<double>                rhsMix;                 ///< the data
         vector<double>                rhsStatConv;            ///< the data
+        vector<double>                rhsfRatio;
+        double                        tfRL;
 
         vector<double>                flux;
 
@@ -52,7 +54,8 @@ class dv {
         vector<double>                drmsf;
 
         // statistics convergence framework
-        vector<double>                FstatConvUnif;
+        vector<double>                rhsfRatioUnif;
+        vector<double>                rhsfRatioAvg;
 
         // reynolds stress tensor
         vector<double>                Rxx;
@@ -87,7 +90,7 @@ class dv {
     //////////////////// MEMBER FUNCTIONS /////////////////
 
         virtual void   setVar(const int ipt=-1){}
-        virtual void   setModifiedParams(){};
+        virtual void   setModifiedParams();
 
         virtual void   merge2cells(const int    imrg,
                                    const double m2,
@@ -110,7 +113,7 @@ class dv {
         
         virtual void   setDvFromRegion(const int i1, const int i2);
         virtual void   resize();
-        virtual void   updateTimeAveragedQuantities(const double &delta_t, const double &averaging_time){};
+        virtual void   updateTimeAveragedQuantities(const double &delta_t, const double &averaging_time, const double &time){};
         virtual double updateTimeMeanQuantity(const double &quantity, const double &mean_quantity, const double &delta_t, const double &averaging_time);
         virtual double updateTimeRmsfQuantity(const double &quantity, const double &mean_quantity, const double &rmsf_quantity, const double &delta_t, const double &averaging_time);
         virtual void   getReynoldsStressDelta(){};

@@ -52,7 +52,15 @@ class micromixer {
 
         int nsteps;                    ///< total number of timesteps taken during simulation
 
+    private:
+
+        double          rhsTerm;
+        double          fEps;
+        double          fTerm;
+
     //////////////////// MEMBER FUNCTIONS /////////////////
+
+    public:
 
         virtual void advanceOdt(const double p_tstart, const double p_tend, const int iLevel = -1);   
 
