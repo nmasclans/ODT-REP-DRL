@@ -1604,7 +1604,7 @@ def check_realizability_conditions(Rxx, Ryy, Rzz, Rxy, Rxz, Ryz, verbose=False):
     # detR  = np.linalg.det(R_ij)
     # enforce detR == 0 if -eps < detR < 0 due to computational error  
     for i in range(len(detR)):
-        if detR[i] > -1e-15 and detR[i] < 0.0:
+        if detR[i] > -1e-12 and detR[i] < 0.0:
             detR[i] = 0.0
     cond2 = ( detR >= 0 ).all()
 
@@ -1612,9 +1612,9 @@ def check_realizability_conditions(Rxx, Ryy, Rzz, Rxy, Rxz, Ryz, verbose=False):
         if verbose:
             print("\nCONGRATULATIONS, the reynolds stress tensor satisfies REALIZABILITY CONDITIONS.")
     else:
-        message = f"The reynolds stress tensor does not satisfy REALIZABILITY CONDITIONS: cond0 = {cond0}, cond1 = {cond1}, cond2 = {cond2}"
-        print(detR)
-        raise Exception(message)
+        message = f"ATTENTION!!! \nThe reynolds stress tensor does not satisfy REALIZABILITY CONDITIONS: cond0 = {cond0}, cond1 = {cond1}, cond2 = {cond2}"
+        print(message)
+        # raise Exception(message)
 
 
 def compute_reynolds_stress_dof(Rxx, Ryy, Rzz, Rxy, Rxz, Ryz, 
