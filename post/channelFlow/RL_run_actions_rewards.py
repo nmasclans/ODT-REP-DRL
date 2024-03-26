@@ -68,19 +68,21 @@ data_0 = np.load(logFilepathList[0])
 (nActSteps, nActDof) = data_0['act'].shape
 
 # initialize rewards and actions arrays for all realizations
-actions = np.zeros([nrlz, nActSteps, nActDof])  # each rlz actions have shape [nActSteps, nActDof]
-rewards_total = np.zeros([nrlz, nActSteps,])    # each rlz rewards have shape [nActSteps,]
-rewards_bc    = np.zeros([nrlz, nActSteps,])    # each rlz rewards have shape [nActSteps,]
-rewards_err   = np.zeros([nrlz, nActSteps,])    # each rlz rewards have shape [nActSteps,]
+actions           = np.zeros([nrlz, nActSteps, nActDof])    # each rlz actions have shape [nActSteps, nActDof]
+rewards_total     = np.zeros([nrlz, nActSteps,])            # each rlz rewards have shape [nActSteps,]
+rewards_bc        = np.zeros([nrlz, nActSteps,])            # each rlz rewards have shape [nActSteps,]
+rewards_err       = np.zeros([nrlz, nActSteps,])            # each rlz rewards have shape [nActSteps,]
+rewards_rhsfRatio = np.zeros([nrlz, nActSteps,])            # each rlz rewards have shape [nActSteps,]
 
 # get rewards and actions data
 for irlz in range(nrlz):
     
     data = np.load(logFilepathList[irlz])
-    actions[irlz,:,:]     = data['act']         # shape [nActSteps, nActDof]
-    rewards_total[irlz,:] = data['rew']         # shape [nActSteps,]
-    rewards_bc[irlz,:]    = data['rew_bc']      # shape [nActSteps,]
-    rewards_err[irlz,:]   = data['rew_err']     # shape [nActSteps,]
+    actions[irlz,:,:]         = data['act']                 # shape [nActSteps, nActDof]
+    rewards_total[irlz,:]     = data['rew']                 # shape [nActSteps,]
+    rewards_bc[irlz,:]        = data['rew_bc']              # shape [nActSteps,]
+    rewards_err[irlz,:]       = data['rew_err']             # shape [nActSteps,]
+    rewards_rhsfRatio[irlz,:] = data['rew_rhsfRatio']       # shape [nActSteps,]
 
 # --- Get reward from non-RL realization
 # TODO
@@ -90,7 +92,7 @@ for irlz in range(nrlz):
 timeRL = np.arange(tBeginAvg + dtActions, tEndAvg + 1e-8, dtActions) - tBeginAvg
 
 visualizer = ChannelVisualizer(postMultipleRlzDir)
-visualizer.build_RL_rewards_convergence(rlzArr, timeRL, rewards_total, rewards_bc, rewards_err)
+visualizer.build_RL_rewards_convergence(rlzArr, timeRL, rewards_total, rewards_bc, rewards_err, rewards_rhsfRatio)
 visualizer.build_RL_actions_convergence(rlzArr, timeRL, actions)
 
     

@@ -918,11 +918,12 @@ class ChannelVisualizer():
         plt.close()
 
 
-    def build_RL_rewards_convergence(self, rlzArr, timeArr, rewards_total, rewards_bc, rewards_err):
+    def build_RL_rewards_convergence(self, rlzArr, timeArr, rewards_total, rewards_bc, rewards_err, rewards_rhsfRatio):
         # Plot RL rewards along time, for each realization
-        self.RL_variable_convergence_along_time("RL_total_rewards_convergence.jpg", "rewards", rlzArr, timeArr, rewards_total)
-        self.RL_variable_convergence_along_time("RL_bc_rewards_convergence.jpg", "rewards", rlzArr, timeArr, rewards_bc)
-        self.RL_variable_convergence_along_time("RL_err_rewards_convergence.jpg", "rewards", rlzArr, timeArr, rewards_err)
+        self.RL_variable_convergence_along_time("RL_rewards_total_convergence.jpg", "rewards", rlzArr, timeArr, rewards_total)
+        self.RL_variable_convergence_along_time("RL_rewards_term_bc_convergence.jpg", "rewards", rlzArr, timeArr, rewards_bc)
+        self.RL_variable_convergence_along_time("RL_rewards_term_relL2Err_convergence.jpg", "rewards", rlzArr, timeArr, rewards_err)
+        self.RL_variable_convergence_along_time("RL_rewards_term_rhsfRatio_convergence.jpg", "rewards", rlzArr, timeArr, rewards_rhsfRatio)
 
         
     def build_RL_actions_convergence(self, rlzArr, timeArr, actions):
