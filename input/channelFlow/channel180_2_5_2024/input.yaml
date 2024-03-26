@@ -19,7 +19,7 @@ params:
   Lsolver: EXPLICIT
   Lstatconv: true
   nunif: 361
-  dtActionRL: 0.002
+  dtActionRL: 0.01
   bcType: WALL
   cCoord: 1
   Lrestart: true
