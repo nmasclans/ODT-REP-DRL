@@ -162,7 +162,7 @@ void solver::calculateSolution() {
 
         raiseDtSmean();                 // may reset PaSum, nPaSum, dtSmean
 
-        *domn->io->ostrm << endl << "time = " << time;
+        // *domn->io->ostrm << endl << "time = " << time;   // comment to reduce runtime output data
 
     }
 
