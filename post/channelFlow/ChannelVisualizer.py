@@ -875,6 +875,31 @@ class ChannelVisualizer():
         plt.close()
 
 
+    def RL_variable_convergence_along_time_and_pdf(self, filename, ylabel, rlzArr, timeArr, var_RL):
+        import seaborn as sns
+        filename = os.path.join(self.postRlzDir, filename)
+        print(f"\nMAKING PLOT {filename}")
+        
+        fig, ax = plt.subplots(1,2, figsize=(10,5))
+
+        # var_RL vs timeArr
+        for irlz in range(len(rlzArr)):
+            ax[0].plot(timeArr, var_RL[irlz,:], label=f"RL Rlz {rlzArr[irlz]}")
+        ax[0].set_xlabel("FTT")
+        ax[0].set_ylabel(ylabel)
+        ax[0].legend(frameon=True, fontsize=10)
+
+        # var_RL kde or pdf
+        for irlz in range(len(rlzArr)):
+            sns.kdeplot(y=var_RL[irlz,:], label=f"RL Rlz {rlzArr[irlz]}", ax=ax[1], cut=0, warn_singular=False)
+        ax[1].set_xlabel("PDF")
+        ax[1].set_ylabel(ylabel)
+
+        plt.tight_layout()
+        plt.savefig(filename, dpi=600)
+        plt.close()
+
+
     def RL_Rij_convergence(self, ydelta, rlzArr, 
                            Rkk_RL_nonConv,    lambda1_RL_nonConv,    lambda2_RL_nonConv,    lambda3_RL_nonConv,    xmap1_RL_nonConv,    xmap2_RL_nonConv,
                            Rkk_nonRL_nonConv, lambda1_nonRL_nonConv, lambda2_nonRL_nonConv, lambda3_nonRL_nonConv, xmap1_nonRL_nonConv, xmap2_nonRL_nonConv,
@@ -933,4 +958,4 @@ class ChannelVisualizer():
         dofNames      = ["DeltaRkk", "DeltaThetaZ", "DeltaThetaY", "DeltaThetaX", "DeltaXmap1", "DeltaXmap2"]
         dofNamesLatex = [r"$\Delta R_{kk}$", r"$\Delta \theta_{z}$", r"$\Delta \theta_{y}$", r"$\Delta \theta_{x}$", r"$\Delta xmap_{1}$", r"$\Delta xmap_{2}$"]
         for iActDof in range(nActDof):
-            self.RL_variable_convergence_along_time(f"RL_actions_convergence_{dofNames[iActDof]}.jpg", dofNamesLatex[iActDof], rlzArr, timeArr, actions[:,:,iActDof])
+            self.RL_variable_convergence_along_time_and_pdf(f"RL_actions_convergence_{dofNames[iActDof]}.jpg", dofNamesLatex[iActDof], rlzArr, timeArr, actions[:,:,iActDof])
