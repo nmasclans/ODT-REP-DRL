@@ -244,6 +244,29 @@ void dv_reynolds_stress::getReynoldsStressDelta(){
     // Delta Rij (adaptative grid)
     interpRijDeltaUniformToAdaptativeGrid();                                  // update RijDelta
 
+    // ODT simplified Rij
+    // ODT satisfy by construction R01 = R02 and R11 = R22 = R12; let's impose these equalities to the introduced DeltaRij
+    //// double oldTr, newTr, deltaTrThird;
+    for (int i=0; i<domn->ngrd; i++) {
+        // Enforce R01 = R02 -> Rxy = Rxz already, we must enforce DeltaRxy = DeltaRxz
+        RxyDelta.at(i) = 0.5 * (RxyDelta.at(i) + RxzDelta.at(i)); 
+        RxzDelta.at(i) = RxyDelta.at(i);
+        /*
+        // NOT NECESSARY TO ENFORCE, because in ODT NS-equations only DeltaRxx, DeltaRxy & DeltaRxz are introduced
+        // Enforce R11 = R22 = R12:
+        oldTr = RxxDelta.at(i) + RyyDelta.at(i) + RzzDelta.at(i);
+        RyyDelta.at(i) = 0.25 * (RyyDelta.at(i) + RzzDelta.at(i) + 2 * RyzDelta.at(i));
+        RyzDelta.at(i) = RyyDelta.at(i);
+        RzzDelta.at(i) = RyyDelta.at(i);
+        newTr = RxxDelta.at(i) + RyyDelta.at(i) + RzzDelta.at(i);
+        // Enfore Tr(Rij) remains the same as before Ryy and Rzz where modified
+        deltaTrThird = ( 1.0 / 3.0 ) * (newTr - oldTr);
+        RxxDelta.at(i) = RxxDelta.at(i) - deltaTrThird;
+        RyyDelta.at(i) = RyyDelta.at(i) - deltaTrThird;
+        RzzDelta.at(i) = RzzDelta.at(i) - deltaTrThird;
+        */
+    }
+
 }
 
 // Direct barycentric mapping: from eigenvalues to barycentric coordinates
