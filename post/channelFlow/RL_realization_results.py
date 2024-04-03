@@ -194,13 +194,6 @@ print(f"\n--- Non-RL: Realization #" + inputParams_nonRL_nonConv["rlzStr"] + ", 
 (Rkk_nonRL_nonConv, lambda1_nonRL_nonConv, lambda2_nonRL_nonConv, lambda3_nonRL_nonConv, xmap1_nonRL_nonConv, xmap2_nonRL_nonConv) \
     = compute_reynolds_stress_dof(ufufm_nonRL_nonConv, vfvfm_nonRL_nonConv, wfwfm_nonRL_nonConv, ufvfm_nonRL_nonConv, ufwfm_nonRL_nonConv, vfwfm_nonRL_nonConv)
 
-#------------ Get NON-CONVERGED runtime-calculated 'um' for chosen averaging times for single ODT non-RL-realization ---------------
-
-# Attention: um_nonRL_nonConv_tk & rmsf_nonRL_nonConv_tk shape: [int(nunif/2), ntk_nonConv]
-
-(_, _, um_nonRL_nonConv_tk, urmsf_nonRL_nonConv_tk, _, _, _, _, _, _, _, _, _, _, _, _, _) \
-    = get_odt_statistics_rt_at_chosen_averaging_times(inputParams_nonRL_nonConv, averaging_times_nonConv)
-
 #------------ Get BASELINE runtime-calculated 'um' at t=dTimeEnd (>>tEndAvg used before) for single ODT non-RL-realization ---------------
 
 # --- build input parameters, tEndAvg=dTimeEnd of the Baseline is >> tEndAvg used in previous NON-CONVERGED data
@@ -283,11 +276,6 @@ for irlz in range(nrlz):
     for itk in range(ntk_nonConv):
         NRMSE_RL_nonConv_tk[itk, irlz] = np.linalg.norm(um_RL_nonConv_tk[:,itk,irlz] - um_baseline, 2) / NRMSE_denum
 
-# non-RL non-converged
-NRMSE_nonRL_nonConv_tk = np.zeros(ntk_nonConv)
-for itk in range(ntk_nonConv):
-    NRMSE_nonRL_nonConv_tk[itk] = np.linalg.norm(um_nonRL_nonConv_tk[:,itk] - um_baseline, 2) / NRMSE_denum
-
 # non-RL converged
 NRMSE_nonRL_conv_tk = np.zeros(ntk_conv)
 for itk in range(ntk_conv):
@@ -309,7 +297,7 @@ visualizer = ChannelVisualizer(postMultipleRlzDir)
 visualizer.RL_u_mean_convergence(yplus[1:], rlzN_Arr, um_RL_nonConv[1:], urmsf_RL_nonConv[1:], um_nonRL_nonConv[1:], urmsf_nonRL_nonConv[1:], um_baseline[1:], urmsf_baseline[1:], tEndAvg_nonConv_plots, tEndAvg_baseline)
 visualizer.RL_err_convergence(rlzN_Arr, NRMSE_RL, NRMSE_nonRL, tEndAvg_nonConv_plots, "NRMSE")
 ### visualizer.RL_err_convergence(rlzN_Arr, relL2Err_RL, relL2Err_nonRL, tEndAvg_nonConv_plots, "RelL2Err")
-visualizer.RL_err_convergence_along_time(rlzN_Arr, NRMSE_RL_nonConv_tk, NRMSE_nonRL_nonConv_tk, NRMSE_nonRL_conv_tk, averaging_times_nonConv_plots, averaging_times_conv_plots, "NRMSE")
+visualizer.RL_err_convergence_along_time(rlzN_Arr, NRMSE_RL_nonConv_tk, NRMSE_nonRL_conv_tk, averaging_times_nonConv_plots, averaging_times_conv_plots, "NRMSE")
 visualizer.RL_Rij_convergence(ydelta, rlzN_Arr, 
                               Rkk_RL_nonConv,    lambda1_RL_nonConv,    lambda2_RL_nonConv,    lambda3_RL_nonConv,    xmap1_RL_nonConv,    xmap2_RL_nonConv,
                               Rkk_nonRL_nonConv, lambda1_nonRL_nonConv, lambda2_nonRL_nonConv, lambda3_nonRL_nonConv, xmap1_nonRL_nonConv, xmap2_nonRL_nonConv,

@@ -1020,7 +1020,7 @@ class ChannelVisualizer():
         plt.close()
 
 
-    def RL_err_convergence_along_time(self, rlzArr, err_RL, err_nonRL, err_ref, averaging_times_nonConv, averaging_times_ref, error_name):
+    def RL_err_convergence_along_time(self, rlzArr, err_RL, err_ref, averaging_times_RL, averaging_times_ref, error_name):
         
         filename = os.path.join(self.postRlzDir, f"RL_error_{error_name}_temporal_convergence.jpg")
         print(f"\nMAKING PLOT of error {error_name} profile for chosen times for multiple realizations in {filename}")
@@ -1029,9 +1029,7 @@ class ChannelVisualizer():
         # RL non-converged:
         nrlz = len(rlzArr)
         for irlz in range(nrlz):
-            plt.semilogy(averaging_times_nonConv, err_RL[:,irlz], '-', label=f"RL Rlz {rlzArr[irlz]}")
-        # non-RL non-converged:
-        plt.semilogy(averaging_times_nonConv, err_nonRL, '--k', label="Non-RL")
+            plt.semilogy(averaging_times_RL, err_RL[:,irlz], '-', label=f"RL Rlz {rlzArr[irlz]}")
         # non-RL converged / Reference:
         plt.semilogy(averaging_times_ref, err_ref, '-k', label="Reference")
 
