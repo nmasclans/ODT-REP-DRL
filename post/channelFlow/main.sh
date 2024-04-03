@@ -4,6 +4,7 @@
 #
 # Run as (e.g.):
 # ./main.sh channel180_2_5_2024 0 180 10 1 50
+# ./main.sh channel590_longSimulation 0 590 1.0 1.0 101 111
 #
 # Arguments:
 # - 1_case_name 
