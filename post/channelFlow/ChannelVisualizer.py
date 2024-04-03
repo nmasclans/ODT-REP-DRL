@@ -789,22 +789,34 @@ class ChannelVisualizer():
         filename = os.path.join(self.postRlzDir, f"RL_u_mean_convergence.jpg")
         print(f"\nMAKING PLOT of um profile at tEndAvg for multiple realizations in {filename}")
 
-        fig, ax = plt.subplots()
+        fig, ax = plt.subplots(1,2,figsize=(10,5))
 
         # > RL non-converged (at time_nonConv):
         nrlz = um_RL_nonConv.shape[1]
         for irlz in range(nrlz):
-            ax.semilogx(yplus, um_RL_nonConv[:,irlz], label=f"RL Rlz {rlzArr[irlz]}: t={time_nonConv}")
+            ax[0].semilogx(yplus, um_RL_nonConv[:,irlz], label=f"RL Rlz {rlzArr[irlz]}: t={time_nonConv}")
         # > non-RL non-converged (at time_nonConv):
-        ax.semilogx(yplus, um_nonRL_nonConv, '--k', label=f"Non-RL:  t={time_nonConv}")
+        ax[0].semilogx(yplus, um_nonRL_nonConv, '--k', label=f"Non-RL:  t={time_nonConv}")
         # > non-RL baseline (at time_baseline)
-        ax.semilogx(yplus, um_baseline, '-k', label=f"Reference: t={time_baseline}")
-
-        # configure plot
-        ax.set_xlabel(r'$y^+$')
-        ax.set_ylabel(r'$u_{m}^+$')
+        ax[0].semilogx(yplus, um_baseline, '-k', label=f"Reference: t={time_baseline}")
+        ax[0].set_xlabel(r'$y^+$')
+        ax[0].set_ylabel(r'$u_{m}^+$')
         if nrlz < 10:
-            ax.legend(frameon=True, fontsize=10)
+            ax[0].legend(frameon=True, fontsize=10)
+
+        # NRMSE variable vs. realization
+        NRMSE_RL = np.zeros(nrlz)
+        for irlz in range(nrlz):
+            NRMSE_RL[irlz] = np.linalg.norm(um_RL_nonConv[:,irlz] - um_baseline, 2) \
+                             / np.linalg.norm(um_baseline, 2)
+        NRMSE_nonRL = np.linalg.norm(um_nonRL_nonConv - um_baseline, 2) \
+                      / np.linalg.norm(um_baseline, 2)
+        ax[1].plot(rlzArr, NRMSE_RL, '-o', label="RL")
+        ax[1].plot(rlzArr, NRMSE_nonRL * np.ones(nrlz), '--k', label="non-RL")
+        ax[1].set_xlabel('Rlz')
+        ax[1].set_ylabel(r'NRMSE($u_{m}^+$)')
+        ax[1].legend()
+
         plt.tight_layout()
         plt.savefig(filename, dpi=600)
         plt.close()
@@ -814,23 +826,34 @@ class ChannelVisualizer():
         filename = os.path.join(self.postRlzDir, f"RL_u_rmsf_convergence.jpg")
         print(f"\nMAKING PLOT of urmsf profile at tEndAvg for multiple realizations in {filename}")
 
-        fig, ax = plt.subplots()
+        fig, ax = plt.subplots(1,2,figsize=(10,5))
 
         # > RL non-converged (at time_nonConv):
         nrlz = um_RL_nonConv.shape[1]
         for irlz in range(nrlz):
-            ax.semilogx(yplus, urmsf_RL_nonConv[:,irlz], label=f"RL Rlz {rlzArr[irlz]}: t={time_nonConv}")
+            ax[0].semilogx(yplus, urmsf_RL_nonConv[:,irlz], label=f"RL Rlz {rlzArr[irlz]}: t={time_nonConv}")
         # > non-RL non-converged (at time_nonConv):
-        ax.semilogx(yplus, urmsf_nonRL_nonConv, '--k', label=f"Non-RL:  t={time_nonConv}")
+        ax[0].semilogx(yplus, urmsf_nonRL_nonConv, '--k', label=f"Non-RL:  t={time_nonConv}")
         # > non-RL baseline (at time_baseline)
-        ax.semilogx(yplus, urmsf_baseline, '-k', label=f"Reference: t={time_baseline}")
-
-        # configure plot
-        ax.set_xlabel(r'$y^+$')
-        ax.set_ylabel(r'$u_{rmsf}^+$')
+        ax[0].semilogx(yplus, urmsf_baseline, '-k', label=f"Reference: t={time_baseline}")
+        ax[0].set_xlabel(r'$y^+$')
+        ax[0].set_ylabel(r'$u_{rmsf}^+$')
         if nrlz < 10:
             ax.legend(frameon=True, fontsize=10)
-        
+
+        # NRMSE variable vs. realization
+        NRMSE_RL = np.zeros(nrlz)
+        for irlz in range(nrlz):
+            NRMSE_RL[irlz] = np.linalg.norm(urmsf_RL_nonConv[:,irlz] - urmsf_baseline, 2) \
+                             / np.linalg.norm(urmsf_baseline, 2)
+        NRMSE_nonRL = np.linalg.norm(urmsf_nonRL_nonConv - urmsf_baseline, 2) \
+                      / np.linalg.norm(urmsf_baseline, 2)
+        ax[1].plot(rlzArr, NRMSE_RL, '-o', label="RL")
+        ax[1].plot(rlzArr, NRMSE_nonRL * np.ones(nrlz), '--k', label="non-RL")
+        ax[1].set_xlabel('Rlz')
+        ax[1].set_ylabel(r'NRMSE($u_{rmsf}^+$)')
+        ax[1].legend()
+
         plt.tight_layout()
         plt.savefig(filename, dpi=600)
         plt.close()
@@ -841,22 +864,35 @@ class ChannelVisualizer():
         filename = os.path.join(self.postRlzDir, filename)
         print(f"\nMAKING PLOT {filename}")
 
-        fig, ax = plt.subplots()
+        fig, ax = plt.subplots(1, 2, figsize=(10,5))
 
+        # variable vs. y-coordinate, for each realization
         # > RL non-converged (at time_nonConv):
         nrlz = len(rlzArr)
         for irlz in range(nrlz):
-            plt.plot(ydelta, var_RL_nonConv[:,irlz], label=f"RL Rlz {rlzArr[irlz]}: t={time_nonConv}")
+            ax[0].plot(ydelta, var_RL_nonConv[:,irlz], label=f"RL Rlz {rlzArr[irlz]}: t={time_nonConv}")
         # > non-RL non-converged (at time_nonConv):
-        plt.plot(ydelta, var_nonRL_nonConv, '--k', label=f"Non-RL:  t={time_nonConv}")
+        ax[0].plot(ydelta, var_nonRL_nonConv, '--k', label=f"Non-RL:  t={time_nonConv}")
         # > non-RL baseline (at time_baseline)
-        plt.plot(ydelta, var_baseline, '-k', label=f"Reference: t={time_baseline}")
-
-        # configure plot
-        ax.set_xlabel(r"$y/\delta$")
-        ax.set_ylabel(ylabel)
+        ax[0].plot(ydelta, var_baseline, '-k', label=f"Reference: t={time_baseline}")
+        ax[0].set_xlabel(r"$y/\delta$")
+        ax[0].set_ylabel(ylabel)
         if nrlz < 10:
-            ax.legend(frameon=True, fontsize=10)
+            ax[0].legend(frameon=True, fontsize=10)
+
+        # NRMSE variable vs. realization
+        NRMSE_RL = np.zeros(nrlz)
+        for irlz in range(nrlz):
+            NRMSE_RL[irlz] = np.linalg.norm(var_RL_nonConv[:,irlz] - var_baseline, 2) \
+                             / np.linalg.norm(var_baseline, 2)
+        NRMSE_nonRL = np.linalg.norm(var_nonRL_nonConv - var_baseline, 2) \
+                      / np.linalg.norm(var_baseline, 2)
+        ax[1].plot(rlzArr, NRMSE_RL, '-o', label="RL")
+        ax[1].plot(rlzArr, NRMSE_nonRL * np.ones(nrlz), '--k', label="non-RL")
+        ax[1].set_xlabel("Rlz")
+        ax[1].set_ylabel(f"NRMSE({ylabel})")
+        ax[1].legend()
+
         plt.tight_layout()
         plt.savefig(filename, dpi=600)
         plt.close()
@@ -866,14 +902,28 @@ class ChannelVisualizer():
         filename = os.path.join(self.postRlzDir, filename)
         print(f"\nMAKING PLOT {filename}")
 
-        plt.figure()
+        fig, ax = plt.subplots(1,3,figsize=(15,5))
         nrlz = len(rlzArr)
         for irlz in range(nrlz):
-            plt.plot(timeArr, var_RL[irlz,:], label=f"RL Rlz {rlzArr[irlz]}")
-        plt.xlabel("FTT")
-        plt.ylabel(ylabel)
+            ax[0].plot(timeArr, var_RL[irlz,:], label=f"RL Rlz {rlzArr[irlz]}")
+        ax[0].set_xlabel("FTT")
+        ax[0].set_ylabel(ylabel)
         if nrlz < 10:
-            plt.legend(frameon=True, fontsize=10)
+            ax[0].legend(frameon=True, fontsize=10)
+
+        # Mean variable vs. realization
+        mean_RL = np.zeros(nrlz)
+        for irlz in range(nrlz):
+            mean_RL[irlz] = np.mean(var_RL[irlz,:])
+        ax[1].plot(rlzArr, mean_RL, '-o')
+        ax[1].set_xlabel("Rlz")
+        ax[1].set_ylabel(f"Mean {ylabel}")
+
+        # Final value variable vs. realization
+        ax[2].plot(rlzArr, var_RL[:,-1], '-o')
+        ax[2].set_xlabel("Rlz")
+        ax[2].set_ylabel(f"Terminal value {ylabel}")
+        
         plt.tight_layout()
         plt.savefig(filename, dpi=600)
         plt.close()
@@ -884,7 +934,7 @@ class ChannelVisualizer():
         filename = os.path.join(self.postRlzDir, filename)
         print(f"\nMAKING PLOT {filename}")
         
-        fig, ax = plt.subplots(1,2, figsize=(10,5))
+        fig, ax = plt.subplots(1,3, figsize=(15,5))
 
         # var_RL vs timeArr
         nrlz = len(rlzArr)
@@ -895,11 +945,17 @@ class ChannelVisualizer():
         if nrlz < 10:
             ax[0].legend(frameon=True, fontsize=10)
 
-        # var_RL kde or pdf
+        # var_RL kde or pdf for each rlz
         for irlz in range(nrlz):
             sns.kdeplot(y=var_RL[irlz,:], label=f"RL Rlz {rlzArr[irlz]}", ax=ax[1], cut=0, warn_singular=False)
         ax[1].set_xlabel("PDF")
         ax[1].set_ylabel(ylabel)
+
+        # var_RL mean for each rlz
+        var_mean = np.mean(var_RL, axis=1)
+        ax[2].plot(rlzArr, var_mean, '-o')
+        ax[2].set_xlabel('Realization Id.')
+        ax[2].set_ylabel(f'{ylabel} mean')
 
         plt.tight_layout()
         plt.savefig(filename, dpi=600)
@@ -951,10 +1007,10 @@ class ChannelVisualizer():
 
     def build_RL_rewards_convergence(self, rlzArr, timeArr, rewards_total, rewards_bc, rewards_err, rewards_rhsfRatio):
         # Plot RL rewards along time, for each realization
-        self.RL_variable_convergence_along_time("RL_rewards_total_convergence.jpg", "rewards", rlzArr, timeArr, rewards_total)
-        self.RL_variable_convergence_along_time("RL_rewards_term_bc_convergence.jpg", "rewards", rlzArr, timeArr, rewards_bc)
-        self.RL_variable_convergence_along_time("RL_rewards_term_relL2Err_convergence.jpg", "rewards", rlzArr, timeArr, rewards_err)
-        self.RL_variable_convergence_along_time("RL_rewards_term_rhsfRatio_convergence.jpg", "rewards", rlzArr, timeArr, rewards_rhsfRatio)
+        self.RL_variable_convergence_along_time("RL_rewards_total_convergence.jpg", "Reward", rlzArr, timeArr, rewards_total)
+        self.RL_variable_convergence_along_time("RL_rewards_term_bc_convergence.jpg", "BC term", rlzArr, timeArr, rewards_bc)
+        self.RL_variable_convergence_along_time("RL_rewards_term_relL2Err_convergence.jpg", "um relative L2 Error", rlzArr, timeArr, rewards_err)
+        self.RL_variable_convergence_along_time("RL_rewards_term_rhsfRatio_convergence.jpg", "RHS-f Ratio", rlzArr, timeArr, rewards_rhsfRatio)
 
         
     def build_RL_actions_convergence(self, rlzArr, timeArr, actions):

@@ -200,7 +200,7 @@ tEndAvg_baseline = tEndAvg_conv
 # ---- Calculate NRMSE
 
 num_points = len(um_nonRL_conv)
-# > Error of RL non-converged
+# Error of RL non-converged
 NRMSE_RL = np.zeros(nrlz)
 for irlz in range(nrlz):
     NRMSE_RL_num   = np.sqrt(np.sum((um_RL_nonConv[:,irlz] - um_baseline)**2))
@@ -211,6 +211,18 @@ NRMSE_nonRL_num   = np.sqrt(np.sum((um_nonRL_nonConv - um_baseline)**2))
 NRMSE_nonRL_denum = np.sqrt(np.sum((um_baseline)**2))
 NRMSE_nonRL = NRMSE_nonRL_num / NRMSE_nonRL_denum
 
+# ---- Calculate relative L2 Error, relL2Err
+
+# Error of RL non-converged
+relL2Err_RL = np.zeros(nrlz)
+for irlz in range(nrlz):
+    relL2Err_RL_num   = np.linalg.norm(um_RL_nonConv[:,irlz] - um_baseline, 2)
+    relL2Err_RL_denum = np.linalg.norm(um_baseline, 2)
+    relL2Err_RL[irlz] = relL2Err_RL_num / relL2Err_RL_denum
+# Error of non-RL non-converged
+relL2Err_nonRL_num    = np.linalg.norm(um_nonRL_nonConv - um_baseline, 2)
+relL2Err_nonRL_denum  = np.linalg.norm(um_baseline, 2)
+relL2Err_nonRL        = relL2Err_nonRL_num / relL2Err_nonRL_denum
 
 # ------------------------ Build plots ------------------------
 
@@ -227,6 +239,7 @@ tEndAvg_nonConv_plots = tEndAvg_nonConv - tBeginAvg_nonConv
 visualizer = ChannelVisualizer(postMultipleRlzDir)
 visualizer.RL_u_mean_convergence(yplus[1:], rlzN_Arr, um_RL_nonConv[1:], urmsf_RL_nonConv[1:], um_nonRL_nonConv[1:], urmsf_nonRL_nonConv[1:], um_baseline[1:], urmsf_baseline[1:], tEndAvg_nonConv_plots, tEndAvg_baseline)
 visualizer.RL_err_convergence(rlzN_Arr, NRMSE_RL, NRMSE_nonRL, tEndAvg_nonConv_plots, "NRMSE")
+visualizer.RL_err_convergence(rlzN_Arr, relL2Err_RL, relL2Err_nonRL, tEndAvg_nonConv_plots, "RelL2Err")
 visualizer.RL_Rij_convergence(ydelta, rlzN_Arr, 
                               Rkk_RL_nonConv,    lambda1_RL_nonConv,    lambda2_RL_nonConv,    lambda3_RL_nonConv,    xmap1_RL_nonConv,    xmap2_RL_nonConv,
                               Rkk_nonRL_nonConv, lambda1_nonRL_nonConv, lambda2_nonRL_nonConv, lambda3_nonRL_nonConv, xmap1_nonRL_nonConv, xmap2_nonRL_nonConv,
