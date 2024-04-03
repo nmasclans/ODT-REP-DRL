@@ -803,8 +803,8 @@ class ChannelVisualizer():
         # configure plot
         ax.set_xlabel(r'$y^+$')
         ax.set_ylabel(r'$u_{m}^+$')
-        ax.legend(frameon=True, fontsize=10)
-        
+        if nrlz < 10:
+            ax.legend(frameon=True, fontsize=10)
         plt.tight_layout()
         plt.savefig(filename, dpi=600)
         plt.close()
@@ -828,7 +828,8 @@ class ChannelVisualizer():
         # configure plot
         ax.set_xlabel(r'$y^+$')
         ax.set_ylabel(r'$u_{rmsf}^+$')
-        ax.legend(frameon=True, fontsize=10)
+        if nrlz < 10:
+            ax.legend(frameon=True, fontsize=10)
         
         plt.tight_layout()
         plt.savefig(filename, dpi=600)
@@ -854,8 +855,8 @@ class ChannelVisualizer():
         # configure plot
         ax.set_xlabel(r"$y/\delta$")
         ax.set_ylabel(ylabel)
-        ax.legend(frameon=True, fontsize=10)
-        
+        if nrlz < 10:
+            ax.legend(frameon=True, fontsize=10)
         plt.tight_layout()
         plt.savefig(filename, dpi=600)
         plt.close()
@@ -864,12 +865,15 @@ class ChannelVisualizer():
         
         filename = os.path.join(self.postRlzDir, filename)
         print(f"\nMAKING PLOT {filename}")
+
         plt.figure()
-        for irlz in range(len(rlzArr)):
+        nrlz = len(rlzArr)
+        for irlz in range(nrlz):
             plt.plot(timeArr, var_RL[irlz,:], label=f"RL Rlz {rlzArr[irlz]}")
         plt.xlabel("FTT")
         plt.ylabel(ylabel)
-        plt.legend(frameon=True, fontsize=10)
+        if nrlz < 10:
+            plt.legend(frameon=True, fontsize=10)
         plt.tight_layout()
         plt.savefig(filename, dpi=600)
         plt.close()
@@ -883,14 +887,16 @@ class ChannelVisualizer():
         fig, ax = plt.subplots(1,2, figsize=(10,5))
 
         # var_RL vs timeArr
-        for irlz in range(len(rlzArr)):
+        nrlz = len(rlzArr)
+        for irlz in range(nrlz):
             ax[0].plot(timeArr, var_RL[irlz,:], label=f"RL Rlz {rlzArr[irlz]}")
         ax[0].set_xlabel("FTT")
         ax[0].set_ylabel(ylabel)
-        ax[0].legend(frameon=True, fontsize=10)
+        if nrlz < 10:
+            ax[0].legend(frameon=True, fontsize=10)
 
         # var_RL kde or pdf
-        for irlz in range(len(rlzArr)):
+        for irlz in range(nrlz):
             sns.kdeplot(y=var_RL[irlz,:], label=f"RL Rlz {rlzArr[irlz]}", ax=ax[1], cut=0, warn_singular=False)
         ax[1].set_xlabel("PDF")
         ax[1].set_ylabel(ylabel)
@@ -936,8 +942,8 @@ class ChannelVisualizer():
         # configure plot
         plt.xlabel('Realization Id.')
         plt.ylabel(f'Error {error_name}')
-        plt.legend(frameon=True, fontsize=10)
-
+        if nrlz < 10:
+            plt.legend(frameon=True, fontsize=10)
         plt.tight_layout()
         plt.savefig(filename, dpi=600)
         plt.close()
