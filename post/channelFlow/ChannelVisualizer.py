@@ -287,7 +287,8 @@ class ChannelVisualizer():
         ax.semilogx(yplus_ref, um_ref, 'k--', label=reference_data_name)
         ax.set_xlabel(r'$y^+$')
         ax.set_ylabel(r'$u^+$')
-        ax.legend(loc='upper center', ncol = 3, bbox_to_anchor=(0.5,1.35), fontsize=12)
+        if len(averaging_times) <= 15:
+            ax.legend(loc='upper center', ncol = 3, bbox_to_anchor=(0.5,1.35), fontsize=12)
         fig.subplots_adjust(top=0.75, bottom=0.15)  # Leave space for the legend above the first subplot
         plt.savefig(filename, dpi=600)
 
@@ -492,10 +493,9 @@ class ChannelVisualizer():
 
         ax.set_xlabel(r'$y/\delta$')
         ax.set_ylabel(r"$um^+$")
-
-        ax.legend(loc='best', frameon=False, fontsize=6)
-        ax.legend(loc='lower center', ncol = 2, fontsize=8)
-
+        if num_profiles < 10:
+            ax.legend(loc='best', frameon=False, fontsize=6)
+            ax.legend(loc='lower center', ncol = 2, fontsize=8)
         plt.tight_layout()
         plt.savefig(filename, dpi=600)
 
@@ -1013,6 +1013,31 @@ class ChannelVisualizer():
         # configure plot
         plt.xlabel('Realization Id.')
         plt.ylabel(f'Error {error_name}')
+        if nrlz < 10:
+            plt.legend(frameon=True, fontsize=10)
+        plt.tight_layout()
+        plt.savefig(filename, dpi=600)
+        plt.close()
+
+
+    def RL_err_convergence_along_time(self, rlzArr, err_RL, err_nonRL, err_ref, averaging_times_nonConv, averaging_times_ref, error_name):
+        
+        filename = os.path.join(self.postRlzDir, f"RL_error_{error_name}_temporal_convergence.jpg")
+        print(f"\nMAKING PLOT of error {error_name} profile for chosen times for multiple realizations in {filename}")
+
+        plt.figure()
+        # RL non-converged:
+        nrlz = len(rlzArr)
+        for irlz in range(nrlz):
+            plt.semilogy(averaging_times_nonConv, err_RL[:,irlz], '-', label=f"RL Rlz {rlzArr[irlz]}")
+        # non-RL non-converged:
+        plt.semilogy(averaging_times_nonConv, err_nonRL, '--k', label="Non-RL")
+        # non-RL converged / Reference:
+        plt.semilogy(averaging_times_ref, err_ref, '-k', label="Reference")
+
+        # configure plot
+        plt.xlabel(r'averaging time [s]')
+        plt.ylabel(error_name)
         if nrlz < 10:
             plt.legend(frameon=True, fontsize=10)
         plt.tight_layout()
