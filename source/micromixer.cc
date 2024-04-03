@@ -190,7 +190,7 @@ void micromixer::advanceOdtSingleStep_Explicit(){
                     rhsTerm   = domn->v.at(k)->rhsMix.at(i) + domn->v.at(k)->rhsSrc.at(i);
                     fTerm     = fEps * domn->v.at(k)->rhsStatConv.at(i);
                     domn->v.at(k)->rhsfRatio.at(i) = abs(rhsTerm) / abs(rhsTerm + fTerm + 1e-8);
-                    domn->v.at(k)->d.at(i) = domn->v.at(k)->d.at(i) + dt*( rhsTerm + domn->v.at(k)->rhsfRatio.at(i) * fTerm ); 
+                    domn->v.at(k)->d.at(i) = domn->v.at(k)->d.at(i) + dt*( rhsTerm - domn->v.at(k)->rhsfRatio.at(i) * fTerm ); 
                 }
             // else no RL-loading term:
             } else {
