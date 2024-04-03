@@ -25,6 +25,7 @@ try :
     tBeginAvg_nonConv = float(sys.argv[i]); i+=1
     tEndAvg_nonConv   = float(sys.argv[i]); i+=1
     tEndAvg_conv      = float(sys.argv[i]); i+=1
+    dtAvg             = float(sys.argv[i]); i+=1
     print(f"Script parameters: \n" \
           f"- Re_tau: {Retau} \n" \
           f"- Case name non-RL: {caseN_nonRL} \n" \
@@ -36,6 +37,7 @@ try :
           f"- Time Begin Averaging non-converged (both RL and non-RL): {tBeginAvg_nonConv} \n" \
           f"- Time End Averaging non-converged (both RL and non-RL): {tEndAvg_nonConv} \n" \
           f"- Time End Averaging converged (non-RL, baseline): {tEndAvg_conv} \n"
+          f"- dt averaging: {dtAvg}"
     )
 except :
     raise ValueError("Missing call arguments, should be: <1_Re_tau> <2_case_name_nonRL> <3_realization_number_nonRL> <4_case_name_RL> <5_realization_number_min_RL> <6_realization_number_max_RL> <7_realization_number_step_RL> <8_time_end_averaging_non_converged> <9_time_end_averaging_converged>")

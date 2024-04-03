@@ -291,6 +291,21 @@ class ChannelVisualizer():
         fig.subplots_adjust(top=0.75, bottom=0.15)  # Leave space for the legend above the first subplot
         plt.savefig(filename, dpi=600)
 
+        ########################################################################
+
+        filename = os.path.join(self.postRlzDir, "u_mean_error_convergence.jpg")
+        print(f"\nMAKING PLOT OF MEAN U NRMSE CONVERGENCE of ODT vs {reference_data_name} in {filename}" )
+        nt = len(averaging_times)
+        NRMSE_um = np.zeros(nt)
+        for it in range(nt):
+            NRMSE_um[it] = np.linalg.norm(um_odt[:,it]-um_ref, 2) / np.linalg.norm(um_ref, 2)
+        # --- build plot odt vs. reference ---
+        fig, ax = plt.subplots(figsize=(8,6))
+        ax.semilogy(averaging_times, NRMSE_um)
+        ax.set_xlabel(r'averaging time [s]')
+        ax.set_ylabel(r'NRMSE($u^+$)')
+        plt.savefig(filename, dpi=600)
+
 
     def build_u_rmsf_profile_odt_convergence(self, yplus_odt, yplus_ref, urmsf_odt, vrmsf_odt, wrmsf_odt, urmsf_ref, vrmsf_ref, wrmsf_ref, averaging_times, reference_data_name):
         
@@ -839,7 +854,7 @@ class ChannelVisualizer():
         ax[0].set_xlabel(r'$y^+$')
         ax[0].set_ylabel(r'$u_{rmsf}^+$')
         if nrlz < 10:
-            ax.legend(frameon=True, fontsize=10)
+            ax[0].legend(frameon=True, fontsize=10)
 
         # NRMSE variable vs. realization
         NRMSE_RL = np.zeros(nrlz)
@@ -1010,7 +1025,7 @@ class ChannelVisualizer():
         self.RL_variable_convergence_along_time("RL_rewards_total_convergence.jpg", "Reward", rlzArr, timeArr, rewards_total)
         self.RL_variable_convergence_along_time("RL_rewards_term_bc_convergence.jpg", "BC term", rlzArr, timeArr, rewards_bc)
         self.RL_variable_convergence_along_time("RL_rewards_term_relL2Err_convergence.jpg", "um relative L2 Error", rlzArr, timeArr, rewards_err)
-        self.RL_variable_convergence_along_time("RL_rewards_term_rhsfRatio_convergence.jpg", "RHS-f Ratio", rlzArr, timeArr, rewards_rhsfRatio)
+        self.RL_variable_convergence_along_time("RL_rewards_term_rhsfRatio_convergence.jpg", "abs(RHS-f Ratio - 1)", rlzArr, timeArr, rewards_rhsfRatio)
 
         
     def build_RL_actions_convergence(self, rlzArr, timeArr, actions):
