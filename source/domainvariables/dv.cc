@@ -188,26 +188,29 @@ double dv::linearInterpToFace(const int &iface, const vector<double> &vec) {
 */
 
 // Interpolate variable from adaptative grid to uniform fine grid
-/*
 void dv::interpVarAdaptToUnifGrid(const vector<double> &dAdapt, vector<double> &dUnif){
-    //// add wall values, where pos(bw) = -1, pos(tw) = 1, dAdapt(bw,tw) = 0
-    size_t nAdapt = dAdapt.size();
-    // Create dmb with 2 extra
-    vector<double> var_dmb(nAdapt + 2, 0.0);
+    
+    //// Add wall values, where pos(bw) = -1, pos(tw) = 1, dAdapt(bw,tw) = 0
+    //> Variable
+    size_t nPointsAdaptExt = dAdapt.size() + 2;
+    vector<double> var_dmb_extended(nPointsAdaptExt, 0.0);
     // Copy dAdapt into dmb starting from index 1
-    copy(dAdapt.begin(), dAdapt.end(), var_dmb.begin() + 1); 
-    vector<double> pos_dmb(nAdapt + 2, 0.0);
-    pos_dmb.at(0)        = - domn->pram->domainLength * 0.5;
-    pos_dmb.at(nAdapt-1) = domn->pram->domainLength * 0.5;
-    copy(domn->pos->d.begin(), domn->pos->d.end(), pos_dmb.begin() + 1); 
-    Linear_interp Linterp(pos_dmb, var_dmb);
+    copy(dAdapt.begin(), dAdapt.end(), var_dmb_extended.begin() + 1); 
+    //> Positions
+    vector<double> pos_dmb_extended(nPointsAdaptExt, 0.0);
+    copy(domn->pos->d.begin(), domn->pos->d.end(), pos_dmb_extended.begin() + 1); 
+    pos_dmb_extended.at(0) = - domn->pram->domainLength * 0.5;
+    pos_dmb_extended.at(nPointsAdaptExt-1) = domn->pram->domainLength * 0.5;
+
+    //// Perform linear interpolation
+    Linear_interp Linterp(pos_dmb_extended, var_dmb_extended);
     for (int i=0; i<nunif; i++) {
         // velocity instantaneous (fine grid)
         dUnif.at(i) = Linterp.interp(posUnif.at(i));
     } 
 }
-*/
 
+/* previous version: more computationally efficient, but erroneously does dUnif[0,-1]!=0 at walls posUnif[0,-1]
 void dv::interpVarAdaptToUnifGrid(const vector<double> &dAdapt, vector<double> &dUnif){
     vector<double> dmb = dAdapt;
     Linear_interp Linterp(domn->pos->d, dmb);
@@ -216,8 +219,7 @@ void dv::interpVarAdaptToUnifGrid(const vector<double> &dAdapt, vector<double> &
         dUnif.at(i) = Linterp.interp(posUnif.at(i));
     } 
 }
-
-
+*/
 
 // Interpolate variable from uniform fine grid to adaptative grid
 void dv::interpVarUnifToAdaptGrid(const vector<double> &dUnif, vector<double> &dAdapt){
