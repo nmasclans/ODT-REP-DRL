@@ -188,6 +188,7 @@ double dv::linearInterpToFace(const int &iface, const vector<double> &vec) {
 */
 
 // Interpolate variable from adaptative grid to uniform fine grid
+/*
 void dv::interpVarAdaptToUnifGrid(const vector<double> &dAdapt, vector<double> &dUnif){
     //// add wall values, where pos(bw) = -1, pos(tw) = 1, dAdapt(bw,tw) = 0
     size_t nAdapt = dAdapt.size();
@@ -205,8 +206,8 @@ void dv::interpVarAdaptToUnifGrid(const vector<double> &dAdapt, vector<double> &
         dUnif.at(i) = Linterp.interp(posUnif.at(i));
     } 
 }
+*/
 
-/* OLD FUNCTION - did not impose dAdapt = 0 at the walls
 void dv::interpVarAdaptToUnifGrid(const vector<double> &dAdapt, vector<double> &dUnif){
     vector<double> dmb = dAdapt;
     Linear_interp Linterp(domn->pos->d, dmb);
@@ -215,7 +216,7 @@ void dv::interpVarAdaptToUnifGrid(const vector<double> &dAdapt, vector<double> &
         dUnif.at(i) = Linterp.interp(posUnif.at(i));
     } 
 }
-*/
+
 
 
 // Interpolate variable from uniform fine grid to adaptative grid
