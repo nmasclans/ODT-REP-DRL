@@ -196,8 +196,8 @@ void dv::interpVarAdaptToUnifGrid(const vector<double> &dAdapt, vector<double> &
     // Copy dAdapt into dmb starting from index 1
     copy(dAdapt.begin(), dAdapt.end(), var_dmb.begin() + 1); 
     vector<double> pos_dmb(nAdapt + 2, 0.0);
-    pos_dmb.at(0) = - domn->pram->domainLength * 0.5;
-    pos_dmb.at(nAdapt) = domn->pram->domainLength * 0.5;
+    pos_dmb.at(0)        = - domn->pram->domainLength * 0.5;
+    pos_dmb.at(nAdapt-1) = domn->pram->domainLength * 0.5;
     copy(domn->pos->d.begin(), domn->pos->d.end(), pos_dmb.begin() + 1); 
     Linear_interp Linterp(pos_dmb, var_dmb);
     for (int i=0; i<nunif; i++) {
