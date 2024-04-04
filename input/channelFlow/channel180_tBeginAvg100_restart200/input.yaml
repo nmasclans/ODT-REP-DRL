@@ -47,6 +47,6 @@ bcCond:
   sBClo: 0.0
   sBChi: 0.0
 dumpTimesGen:
-  dTimeStart: 200.0
+  dTimeStart: 100.0
   dTimeEnd: 1000.0
   dTimeStep: 0.1
