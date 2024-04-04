@@ -189,6 +189,25 @@ double dv::linearInterpToFace(const int &iface, const vector<double> &vec) {
 
 // Interpolate variable from adaptative grid to uniform fine grid
 void dv::interpVarAdaptToUnifGrid(const vector<double> &dAdapt, vector<double> &dUnif){
+    //// add wall values, where pos(bw) = -1, pos(tw) = 1, dAdapt(bw,tw) = 0
+    size_t nAdapt = dAdapt.size();
+    // Create dmb with 2 extra
+    vector<double> var_dmb(nAdapt + 2, 0.0);
+    // Copy dAdapt into dmb starting from index 1
+    copy(dAdapt.begin(), dAdapt.end(), var_dmb.begin() + 1); 
+    vector<double> pos_dmb(nAdapt + 2, 0.0);
+    pos_dmb.at(0) = - domn->pram->domainLength * 0.5;
+    pos_dmb.at(nAdapt) = domn->pram->domainLength * 0.5;
+    copy(domn->pos->d.begin(), domn->pos->d.end(), pos_dmb.begin() + 1); 
+    Linear_interp Linterp(pos_dmb, var_dmb);
+    for (int i=0; i<nunif; i++) {
+        // velocity instantaneous (fine grid)
+        dUnif.at(i) = Linterp.interp(posUnif.at(i));
+    } 
+}
+
+/* OLD FUNCTION - did not impose dAdapt = 0 at the walls
+void dv::interpVarAdaptToUnifGrid(const vector<double> &dAdapt, vector<double> &dUnif){
     vector<double> dmb = dAdapt;
     Linear_interp Linterp(domn->pos->d, dmb);
     for (int i=0; i<nunif; i++) {
@@ -196,6 +215,8 @@ void dv::interpVarAdaptToUnifGrid(const vector<double> &dAdapt, vector<double> &
         dUnif.at(i) = Linterp.interp(posUnif.at(i));
     } 
 }
+*/
+
 
 // Interpolate variable from uniform fine grid to adaptative grid
 void dv::interpVarUnifToAdaptGrid(const vector<double> &dUnif, vector<double> &dAdapt){

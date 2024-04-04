@@ -299,7 +299,7 @@ def compute_odt_statistics_post(odt_statistics_filepath, input_params, plot_reyn
     
     dudyOdt = (um[1]-um[0])/(yu[1]-yu[0])
     utauOdt = np.sqrt(kvisc * np.abs(dudyOdt) / rho)
-    RetauOdt = utau * delta / kvisc
+    RetauOdt = utauOdt * delta / kvisc
     print(f"\n[compute_odt_statistics] Expected Re_tau = {Retau} vs. Effective Re_tau = {RetauOdt}")
     print(f"[compute_odt_statistics] Expected u_tau = {utau} vs. Effective u_tau = {utauOdt}")
 
