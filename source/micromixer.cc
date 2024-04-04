@@ -14,6 +14,8 @@
 
 using namespace std;
 
+#define _CONTROL_RATIO_RHS_FRL_ 0       // TODO: eliminate corresponding code if not used
+
 ///////////////////////////////////////////////////////////////////////////////
 /** micromixer constructor function
  */
@@ -185,6 +187,7 @@ void micromixer::advanceOdtSingleStep_Explicit(){
             
             // if adding RL-loading term for statistics convergence:
             if (domn->v.at(k)->L_converge_stat & (time < domn->v.at(k)->tfRL)){
+#if _CONTROL_RATIO_RHS_FRL_
                 domn->v.at(k)->rhsfRatio.resize(domn->ngrd, 0.0);
                 for(int i=0; i < domn->ngrd; i++) {
                     rhsTerm   = domn->v.at(k)->rhsMix.at(i) + domn->v.at(k)->rhsSrc.at(i);
@@ -192,6 +195,11 @@ void micromixer::advanceOdtSingleStep_Explicit(){
                     domn->v.at(k)->rhsfRatio.at(i) = abs(rhsTerm) / abs(rhsTerm + fTerm + 1e-8);
                     domn->v.at(k)->d.at(i) = domn->v.at(k)->d.at(i) + dt*( rhsTerm - domn->v.at(k)->rhsfRatio.at(i) * fTerm ); 
                 }
+#else
+                for(int i=0; i < domn->ngrd; i++) {
+                    domn->v.at(k)->d.at(i) = domn->v.at(k)->d.at(i) + dt * ( domn->v.at(k)->rhsMix.at(i) + domn->v.at(k)->rhsSrc.at(i) + domn->v.at(i)->rhsStatConv.at(i) ); 
+                }
+#endif
             // else no RL-loading term:
             } else {
                 for(int i=0; i < domn->ngrd; i++) {

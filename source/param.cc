@@ -37,6 +37,7 @@ param::param(inputoutput *p_io) {
     chemMechFile       = io->params["chemMechFile"]       ? io->params["chemMechFile"].as<string>()    : errMsg<string>("chemMechFile");
     probType           = io->params["probType"]           ? io->params["probType"].as<string>()        : errMsg<string>("probType");
     tBeginAvg          = io->params["tBeginAvg"]          ? io->params["tBeginAvg"].as<double>()       : 0.0;
+    utauTarget         = io->params["utauTarget"]         ? io->params["utauTarget"].as<double>()      : 1.0;
 
     Z_param            = io->params["Z_param"]            ? io->params["Z_param"].as<double>()         : 400.0;    //errMsg<double>("Z_param");
     A_param            = io->params["A_param"]            ? io->params["A_param"].as<double>()         : 0.666667; //errMsg<double>("A_param");

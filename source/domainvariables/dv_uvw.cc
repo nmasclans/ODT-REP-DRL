@@ -12,8 +12,10 @@
 
 using namespace std;
 
-#define _CONSTANT_RHS_CONV_STAT_ 0 // todo: set to 0, or better erase! just for testing RhsStatConv is well implemented
-#define _ENFORCED_TAU_PERTURBATION_ 1
+////////// COMPILATION DIRECTIVES //////////
+#define _FEEDBACK_LOOP_BODY_FORCE_ 1	/// Activate feedback loop for the body force moving the flow
+                                        // Attention! _FEEDBACK_LOOP_BODY_FORCE_ assumes rho_ct!
+#define _CONTROL_RATIO_RHS_FRL_ 0       // TODO: eliminate corresponding code if not used
 
 ////////////////////////////////////////////////////////////////////////////////
 /*! dv_uvw  constructor function
@@ -40,7 +42,7 @@ dv_uvw::dv_uvw(domain  *line,
     rhsMix          = vector<double>(domn->ngrd, 0.0);
     rhsStatConv     = vector<double>(domn->ngrd, 0.0);
     rhsfRatio       = vector<double>(domn->ngrd, 0.0);
-
+    
     // ---------------------------- Statistics calc. during runtime ---------------------------- 
     
     // Instantaneous and Averaged quantities, defined in the uniform fine grid
@@ -59,6 +61,14 @@ dv_uvw::dv_uvw(domain  *line,
     RyyDelta        = vector<double>(domn->ngrd, 0.0);
     RyzDelta        = vector<double>(domn->ngrd, 0.0);
     RzzDelta        = vector<double>(domn->ngrd, 0.0);
+
+#if _FEEDBACK_LOOP_BODY_FORCE_
+    /// Estimated uniform body force to drive the flow
+    controller_output = - domn->pram->dPdx / domn->pram->rho0;  /// Initialize controller output
+    controller_error  = 0.0;			        	            /// Initialize controller error
+    controller_K_p    = 1.0e-1;		        	                /// Controller proportional gain
+    halfChannel       = 0.5 * domn->pram->domainLength;
+#endif
 
 }
 
@@ -84,6 +94,32 @@ void dv_uvw::getRhsSrc(const int ipt){
      * The 'rhsSrc' vector will eventually store the calculated source terms (Src) in the right-hand side (rhs)  
      */
     rhsSrc.resize(domn->ngrd, 0.0);
+
+#if _FEEDBACK_LOOP_BODY_FORCE_
+
+    if(var_name == "uvel" && domn->pram->cCoord != 3.0) {
+
+        // Calculate numerical u_tau using instantaneous u velocity 
+        double utauNumerical = sqrt(
+            domn->pram->kvisc0 * 0.5 * (
+                domn->uvel->d.at(0) / ( domn->pos->d.at(0) + halfChannel )
+                + domn->uvel->d.at(domn->ngrd-1) / (halfChannel - domn->pos->d.at(domn->ngrd-1) )
+            )
+        );
+        
+        // Update controller variables
+        controller_error   = domn->pram->utauTarget - utauNumerical;
+        controller_output += controller_K_p * controller_error;
+        cout << "numerical utau = " << utauNumerical << endl;
+        cout << "controller error = " << controller_error << endl;
+        cout << "controller output = " << controller_output << endl;
+        // update source term with controlled feedback loop
+        for(int i=0; i<domn->ngrd; i++) {
+            rhsSrc.at(i) = controller_output;
+        }
+    }
+
+#else
 
     //-------------------------
     // Calculation of source terms based on conditions
@@ -120,6 +156,7 @@ void dv_uvw::getRhsSrc(const int ipt){
                     rhsSrc.at(i) += (domn->rho->d.at(i) - domn->rho->d.at(domn->ngrd-1))*domn->pram->g;
                 rhsSrc.at(i) /= domn->rho->d.at(i);
             }
+
         }
 
         /* Parameter domn->pram->Lspatial = False by default, if not specified differently in the input.yaml
@@ -143,6 +180,9 @@ void dv_uvw::getRhsSrc(const int ipt){
         if(domn->pram->Lspatial)
             rhsSrc.at(ipt) /= domn->uvel->d.at(ipt);
     }
+
+#endif
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -318,6 +358,7 @@ void dv_uvw::updateTimeAveragedQuantities(const double &delta_t, const double &a
         // velocity rmsf (fine grid)
         drmsf.at(i) = updateTimeRmsfQuantity(dunif.at(i), davg.at(i), drmsf.at(i), delta_t, averaging_time); // note that davg is the updated value in the previous line!
     }
+#if _CONTROL_RATIO_RHS_FRL_
     // Update ratio ( abs(rhs) / abs(rhs + f_statconv) ), if adding RL-loading
     if(L_converge_stat & (time < tfRL)) {
         // interpolate instantaneous quantity in adaptative grid to uniform fine grid
@@ -326,4 +367,5 @@ void dv_uvw::updateTimeAveragedQuantities(const double &delta_t, const double &a
             rhsfRatioAvg.at(i)  = updateTimeMeanQuantity(rhsfRatioUnif.at(i), rhsfRatioAvg.at(i), delta_t, time - domn->pram->trst); // "time - domn->pram->trst" instead of "averaging_time" to average for each dtActionRL
         }
     }
+#endif
 }

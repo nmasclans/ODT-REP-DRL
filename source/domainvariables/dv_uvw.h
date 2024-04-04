@@ -36,6 +36,11 @@ class dv_uvw : public dv {
         
     private:
 
+        double controller_output;
+        double controller_error;
+        double controller_K_p;
+        double halfChannel;
+
     //////////////////// CONSTRUCTOR FUNCTIONS /////////////////
 
     public:
