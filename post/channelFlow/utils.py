@@ -1671,9 +1671,12 @@ def compute_reynolds_stress_dof(Rxx, Ryy, Rzz, Rxy, Rxz, Ryz,
         ###TKE = 0.5 * (urmsf[p]**2 + vrmsf[p]**2 + wrmsf[p]**2)    # shape: scalar
 
         # omit grid point if reynolds stress tensor trace (2 * TKE) is too small
+        discarded_points = []
         if np.abs(Rkk[p]) < tensor_kk_tolerance:
-            print(f"Discarded point #{p}")
+            discarded_points.append(p)
             continue
+        if len(discarded_points)>0:
+            print(f"Discarded points id:", discarded_points)
 
         # construct anisotropy tensor
         a_ij = (1.0 / (2*TKE)) * R_ij - (1.0 / 3.0) * delta_ij   # shape: [3,3]
