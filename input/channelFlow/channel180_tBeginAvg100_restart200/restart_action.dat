@@ -1,4 +1,4 @@
-# time = 10.2
+# time = 200
 # FINE UNIFORM Grid points = 361
 # Pressure (Pa) = 101325.0
 #           1_posUnif          2_DeltaRkk       3_DeltaThetaZ       4_DeltaThetaY       5_DeltaThetaX        6_DeltaXmap1        7_DeltaXmap2

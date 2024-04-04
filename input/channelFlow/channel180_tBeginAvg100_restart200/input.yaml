@@ -1,8 +1,8 @@
 params:
   seed: -1
-  tEnd: 101.0
+  tEnd: 201.0
   domainLength: 2.0
-  ngrd0: 200
+  ngrd0: 361
   rho0: 1.0
   kvisc0: 0.005556
   dPdx: -1.0
@@ -47,6 +47,6 @@ bcCond:
   sBClo: 0.0
   sBChi: 0.0
 dumpTimesGen:
-  dTimeStart: 100.0
-  dTimeEnd: 150.0
+  dTimeStart: 200.0
+  dTimeEnd: 1000.0
   dTimeStep: 0.1
