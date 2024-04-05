@@ -206,7 +206,8 @@ void dv_reynolds_stress::getReynoldsStressDelta(){
     vector<vector<double>> RijPert(3, vector<double>(3, 0.0));
     vector<vector<double>> rotMatrix(3, vector<double>(3, 0.0));
 
-    for (int i = 0; i < nunif; i++){
+    // Attention: we do not loop along all points, wall points eliminated to force delta dof. = 0 and avoid nan values (as done previously on 'state' variables calculation, i.e. update of Rij, thetaX,Y,X, xmap1,2)
+    for (int i = 1; i < nunif-1; i++){
 
         // If NULL RL-action perturbation in i-th nunif grid point -> no Delta Reynolds stress tensor is applied:
         if (abs(RkkDelta[i]) < EPS && abs(xmap1Delta[i]) < EPS && abs(xmap2Delta[i]) < EPS && abs(thetaZDelta[i]) < EPS && abs(thetaYDelta[i]) < EPS && abs(thetaXDelta[i]) < EPS) {
@@ -257,6 +258,7 @@ void dv_reynolds_stress::getReynoldsStressDelta(){
         RxyDelta.at(i) = 0.5 * (RxyDelta.at(i) + RxzDelta.at(i)); 
         RxzDelta.at(i) = RxyDelta.at(i);
         /*
+        // TODO: erase commented code below! 
         // NOT NECESSARY TO ENFORCE, because in ODT NS-equations only DeltaRxx, DeltaRxy & DeltaRxz are introduced
         // Enforce R11 = R22 = R12:
         oldTr = RxxDelta.at(i) + RyyDelta.at(i) + RzzDelta.at(i);
