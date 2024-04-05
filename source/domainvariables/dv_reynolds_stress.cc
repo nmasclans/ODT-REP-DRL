@@ -130,7 +130,12 @@ void dv_reynolds_stress::updateTimeAveragedQuantities(const double &delta_t, con
     vector<vector<double>> Aij(3, vector<double>(3, 0.0));
     vector<vector<double>> Dij(3, vector<double>(3, 0.0));
 
-    for(int i=0; i<nunif; i++) {
+    // Attention: we do not loop along all points:
+    // " for(int i=0; i<nunif; i++) { "
+    // because in the walls (indexes 0, nunif-1) Rij = 0, thus the eigen-decomposition and further
+    // calculation of Rij dof leads to  thetaY, thetaX, xmap1 & xmap2 nan value in the bottom wall (top has computational errors O(-16) which avoid nan values)
+    // Solution: we will force dof = 0 in the walls, never to be updated from the initial 0.0 values -> we do not update them
+    for(int i=1; i<nunif-1; i++) {
 
         // ----------------- update reynolds stress tensor -----------------
 
