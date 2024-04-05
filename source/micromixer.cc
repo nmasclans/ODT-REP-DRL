@@ -14,7 +14,7 @@
 
 using namespace std;
 
-#define _CONTROL_RATIO_RHS_FRL_ 0       // TODO: eliminate corresponding code if not used
+#define _CONTROL_RATIO_RHS_FRL_ 1       // TODO: eliminate corresponding code if not used
 
 ///////////////////////////////////////////////////////////////////////////////
 /** micromixer constructor function
@@ -184,7 +184,7 @@ void micromixer::advanceOdtSingleStep_Explicit(){
     // update transported variables value
     for(int k=0; k<domn->v.size(); k++){
         if(domn->v.at(k)->L_transported) {
-            
+
             // if adding RL-loading term for statistics convergence:
             if (domn->v.at(k)->L_converge_stat & (time < domn->v.at(k)->tfRL)){
 #if _CONTROL_RATIO_RHS_FRL_

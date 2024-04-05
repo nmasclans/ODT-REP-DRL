@@ -15,7 +15,7 @@ using namespace std;
 ////////// COMPILATION DIRECTIVES //////////
 #define _FEEDBACK_LOOP_BODY_FORCE_ 1	/// Activate feedback loop for the body force moving the flow
                                         // Attention! _FEEDBACK_LOOP_BODY_FORCE_ assumes rho_ct!
-#define _CONTROL_RATIO_RHS_FRL_ 0       // TODO: eliminate corresponding code if not used
+#define _CONTROL_RATIO_RHS_FRL_ 1       // TODO: eliminate corresponding code if not used
 
 ////////////////////////////////////////////////////////////////////////////////
 /*! dv_uvw  constructor function
@@ -114,9 +114,11 @@ void dv_uvw::getRhsSrc(const int ipt){
         cout << "controller error = " << controller_error << endl;
         cout << "controller output = " << controller_output << endl;
         // update source term with controlled feedback loop
+        cout << "[dv_uvw] line 117" << endl;
         for(int i=0; i<domn->ngrd; i++) {
             rhsSrc.at(i) = controller_output;
         }
+        cout << "[dv_uvw] line 121" << endl;
     }
 
 #else
