@@ -1,8 +1,1 @@
 #**/*.dat
-
-/channel180_*
-!/channel180_2_5_2024_longSimulation
-!/channel180_tBeginAvg100_restart100
-!/channel180_tBeginAvg100_restart200
-
-/channel590_Gprima*

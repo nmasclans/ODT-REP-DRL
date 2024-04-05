@@ -1,6 +1,6 @@
 params:
   seed: -1
-  tEnd: 150.0
+  tEnd: 100.0
   domainLength: 2.0
   ngrd0: 200
   rho0: 1.0
@@ -9,7 +9,7 @@ params:
   pres: 101325.0
   chemMechFile: not_used.yaml
   probType: CHANNEL
-  tBeginAvg: 9.0
+  tBeginAvg: 50.0
   Z_param: 450.0
   A_param: 0.66666666667
   C_param: 7.0
@@ -47,6 +47,6 @@ bcCond:
   sBClo: 0.0
   sBChi: 0.0
 dumpTimesGen:
-  dTimeStart: 9.0
-  dTimeEnd: 150.0
-  dTimeStep: 0.1
+  dTimeStart: 50.0
+  dTimeEnd: 100.0
+  dTimeStep: 1.0
