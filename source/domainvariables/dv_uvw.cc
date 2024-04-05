@@ -66,7 +66,7 @@ dv_uvw::dv_uvw(domain  *line,
     /// Estimated uniform body force to drive the flow
     controller_output = - domn->pram->dPdx / domn->pram->rho0;  /// Initialize controller output
     controller_error  = 0.0;			        	            /// Initialize controller error
-    controller_K_p    = 1.0e-1;		        	                /// Controller proportional gain
+    controller_K_p    = 1.0e-2;		        	                /// Controller proportional gain
     halfChannel       = 0.5 * domn->pram->domainLength;
 #endif
 
