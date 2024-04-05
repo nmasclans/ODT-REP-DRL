@@ -74,7 +74,6 @@ utau  = 1.0
 dTimeStart  = yml["dumpTimesGen"]["dTimeStart"]
 dTimeEnd    = get_effective_dTimeEnd(caseN, rlzStr) # dTimeEnd = yml["dumpTimesGen"]["dTimeEnd"] can lead to errors if dTimeEnd > tEnd
 dTimeStep   = yml["dumpTimesGen"]["dTimeStep"]
-assert tBeginAvg >= dTimeStart
 assert tEndAvg <= dTimeEnd, "Averaging end time for calculations and plots must be <= dTimeEnd and/or tEnd."
 inputParams = {"kvisc":kvisc, "rho":rho, "dxmin": dxmin, "nunif":nunif, "domainLength" : domainLength, "delta": delta, "Retau": Retau, "utau": utau,
                "caseN": caseN, "rlzStr": rlzStr,
@@ -82,8 +81,11 @@ inputParams = {"kvisc":kvisc, "rho":rho, "dxmin": dxmin, "nunif":nunif, "domainL
 
 # --- Chosen averaging times ---
 
-averaging_times = np.arange(tBeginAvg, tEndAvg+1e-4, dtAvg).round(4)
-averaging_times_plots = averaging_times - dTimeStart
+if tBeginAvg >= dTimeStart:
+    averaging_times = np.arange(tBeginAvg, tEndAvg+1e-4, dtAvg).round(4)
+else:
+    averaging_times = np.arange(dTimeStart, tEndAvg+1e-4, dtAvg).round(4)
+averaging_times_plots = averaging_times - tBeginAvg
 
 # --- Get ODT computational data ---
 

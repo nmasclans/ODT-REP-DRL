@@ -131,17 +131,17 @@ tRL = tEndAvg - tBeginAvg
 
 # ---------------------- Plot Rkk (Rij trace, magnitude) vs. y (runtime & reference) ---------------------- 
 
-visualizer.build_reynolds_stress_tensor_trace(ydelta_rt, ydelta_ref, Rkk_rt, Rkk_ref, tRL)
+visualizer.build_reynolds_stress_tensor_trace(ydelta_rt[1:-1], ydelta_ref[1:-1], Rkk_rt[1:-1], Rkk_ref[1:-1], tRL)
 
 # ---------------------- Plot xmap coordinates vs. y (runtime & reference) ---------------------- 
 
-visualizer.build_anisotropy_tensor_barycentric_xmap_coord(ydelta_rt, ydelta_ref, xmap1_rt, xmap2_rt, xmap1_ref, xmap2_ref, tRL)
+visualizer.build_anisotropy_tensor_barycentric_xmap_coord(ydelta_rt[1:-1], ydelta_ref[1:-1], xmap1_rt[1:-1], xmap2_rt[1:-1], xmap1_ref[1:-1], xmap2_ref[1:-1], tRL)
 
 # ---------------------- Plot eigenvalues vs. y (runtime & reference) ---------------------- 
 
 eigenvalues_rt  = np.array([lambda1_rt,  lambda2_rt,  lambda3_rt]).transpose()
 eigenvalues_ref = np.array([lambda1_ref, lambda2_ref, lambda3_ref]).transpose()
-visualizer.build_anisotropy_tensor_eigenvalues(ydelta_rt, ydelta_ref, eigenvalues_rt, eigenvalues_ref, tRL)
+visualizer.build_anisotropy_tensor_eigenvalues(ydelta_rt[1:-1], ydelta_ref[1:-1], eigenvalues_rt[1:-1,:], eigenvalues_ref[1:-1,:], tRL)
 
 # ---------------------- Plot Barycentric Map in Barycentric Triangle ---------------------- 
 
