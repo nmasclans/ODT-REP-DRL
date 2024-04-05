@@ -42,6 +42,7 @@ class param {
         string  probType;        ///<  problem type: CHANNEL, CHANNEL_SCALAR, JETMIXL_RXN, COUETTE
         double  tBeginAvg;       ///<  time at which to begin statistics calculation
         double  utauTarget;      ///<  targeted u_tau value
+        double  controller_K_p;  ///<  controller proportional gain of the source term (body force) feedback loop, which aims utau_numerical -> utauTarget
 
         double  Z_param;         ///<  Viscous penalty parameter
         double  A_param;         ///<  Energy Distribution parameter alpha
