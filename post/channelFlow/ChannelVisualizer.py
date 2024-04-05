@@ -300,9 +300,13 @@ class ChannelVisualizer():
         NRMSE_um = np.zeros(nt)
         for it in range(nt):
             NRMSE_um[it] = np.linalg.norm(um_odt[:,it]-um_ref, 2) / np.linalg.norm(um_ref, 2)
+            
         # --- build plot odt vs. reference ---
         fig, ax = plt.subplots(figsize=(8,6))
-        ax.semilogy(averaging_times, NRMSE_um)
+        if NRMSE_um[-1] < 1e-16: # reference error, last iteration will have err = 0 -> log(0) = -inf
+            ax.semilogy(averaging_times[:-1], NRMSE_um[:-1])
+        else:
+            ax.semilogy(averaging_times, NRMSE_um)
         ax.set_xlabel(r'averaging time [s]')
         ax.set_ylabel(r'NRMSE($u^+$)')
         plt.savefig(filename, dpi=600)

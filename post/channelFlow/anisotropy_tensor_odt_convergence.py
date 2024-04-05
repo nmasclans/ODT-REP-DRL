@@ -138,10 +138,10 @@ for i in range(len(averaging_times)):
     eigenvalues_rt = np.array([lambda1_rt, lambda2_rt, lambda3_rt]).transpose()
     
     # build frames
-    frames_rkk_rt         = visualizer.build_reynolds_stress_tensor_trace_frame(frames_rkk_rt, ydelta_rt, ydelta_ref, Rkk_rt, Rkk_ref, tRL[i])
-    frames_eig_rt         = visualizer.build_anisotropy_tensor_eigenvalues_frame(frames_eig_rt, ydelta_rt, ydelta_ref, eigenvalues_rt, eigenvalues_ref, tRL[i])
-    frames_xmap_coord_rt  = visualizer.build_anisotropy_tensor_barycentric_xmap_coord_frame(frames_xmap_coord_rt, ydelta_rt, ydelta_ref, xmap1_rt, xmap2_rt, xmap1_ref, xmap2_ref, tRL[i])
-    frames_xmap_triang_rt = visualizer.build_anisotropy_tensor_barycentric_xmap_triang_frame(frames_xmap_triang_rt, ydelta_rt, xmap1_rt, xmap2_rt, tRL[i])
+    frames_rkk_rt         = visualizer.build_reynolds_stress_tensor_trace_frame(frames_rkk_rt, ydelta_rt[1:-1], ydelta_ref[1:-1], Rkk_rt[1:-1], Rkk_ref[1:-1], tRL[i])
+    frames_eig_rt         = visualizer.build_anisotropy_tensor_eigenvalues_frame(frames_eig_rt, ydelta_rt[1:-1], ydelta_ref[1:-1], eigenvalues_rt[1:-1], eigenvalues_ref[1:-1], tRL[i])
+    frames_xmap_coord_rt  = visualizer.build_anisotropy_tensor_barycentric_xmap_coord_frame(frames_xmap_coord_rt, ydelta_rt[1:-1], ydelta_ref[1:-1], xmap1_rt[1:-1], xmap2_rt[1:-1], xmap1_ref[1:-1], xmap2_ref[1:-1], tRL[i])
+    frames_xmap_triang_rt = visualizer.build_anisotropy_tensor_barycentric_xmap_triang_frame(frames_xmap_triang_rt, ydelta_rt[1:-1], xmap1_rt[1:-1], xmap2_rt[1:-1], tRL[i])
 
 # -------------------------------------------------------------------------
 # ------------------ Create the animation from the frames -----------------

@@ -298,8 +298,8 @@ visualizer.RL_u_mean_convergence(yplus[1:], rlzN_Arr, um_RL_nonConv[1:], urmsf_R
 visualizer.RL_err_convergence(rlzN_Arr, NRMSE_RL, NRMSE_nonRL, tEndAvg_nonConv_plots, "NRMSE")
 ### visualizer.RL_err_convergence(rlzN_Arr, relL2Err_RL, relL2Err_nonRL, tEndAvg_nonConv_plots, "RelL2Err")
 visualizer.RL_err_convergence_along_time(rlzN_Arr, NRMSE_RL_nonConv_tk, NRMSE_nonRL_conv_tk, averaging_times_nonConv_plots, averaging_times_conv_plots, "NRMSE")
-visualizer.RL_Rij_convergence(ydelta, rlzN_Arr, 
-                              Rkk_RL_nonConv,    lambda1_RL_nonConv,    lambda2_RL_nonConv,    lambda3_RL_nonConv,    xmap1_RL_nonConv,    xmap2_RL_nonConv,
-                              Rkk_nonRL_nonConv, lambda1_nonRL_nonConv, lambda2_nonRL_nonConv, lambda3_nonRL_nonConv, xmap1_nonRL_nonConv, xmap2_nonRL_nonConv,
-                              Rkk_baseline,      lambda1_baseline,      lambda2_baseline,      lambda3_baseline,      xmap1_baseline,      xmap2_baseline,
+visualizer.RL_Rij_convergence(ydelta[1:-1], rlzN_Arr, 
+                              Rkk_RL_nonConv[1:-1],    lambda1_RL_nonConv[1:-1],    lambda2_RL_nonConv[1:-1],    lambda3_RL_nonConv[1:-1],    xmap1_RL_nonConv[1:-1],    xmap2_RL_nonConv[1:-1],
+                              Rkk_nonRL_nonConv[1:-1], lambda1_nonRL_nonConv[1:-1], lambda2_nonRL_nonConv[1:-1], lambda3_nonRL_nonConv[1:-1], xmap1_nonRL_nonConv[1:-1], xmap2_nonRL_nonConv[1:-1],
+                              Rkk_baseline[1:-1],      lambda1_baseline[1:-1],      lambda2_baseline[1:-1],      lambda3_baseline[1:-1],      xmap1_baseline[1:-1],      xmap2_baseline[1:-1],
                               tEndAvg_nonConv_plots, tEndAvg_baseline)

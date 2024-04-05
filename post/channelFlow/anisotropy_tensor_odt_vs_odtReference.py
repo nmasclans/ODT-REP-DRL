@@ -146,6 +146,6 @@ visualizer.build_anisotropy_tensor_eigenvalues(ydelta_rt, ydelta_ref, eigenvalue
 # ---------------------- Plot Barycentric Map in Barycentric Triangle ---------------------- 
 
 # runtime calculations
-visualizer.build_anisotropy_tensor_barycentric_xmap_triang(ydelta_rt,  xmap1_rt,  xmap2_rt,  tRL,  f"anisotropy_tensor_barycentric_map_triang_odt")
+visualizer.build_anisotropy_tensor_barycentric_xmap_triang(ydelta_rt[1:-1],  xmap1_rt[1:-1],  xmap2_rt[1:-1],  tRL,  f"anisotropy_tensor_barycentric_map_triang_odt")
 # DNS data
-visualizer.build_anisotropy_tensor_barycentric_xmap_triang(ydelta_rt, xmap1_ref, xmap2_ref, 1000, f"anisotropy_tensor_barycentric_map_triang_odtReference")
+visualizer.build_anisotropy_tensor_barycentric_xmap_triang(ydelta_rt[1:-1], xmap1_ref[1:-1], xmap2_ref[1:-1], 900, f"anisotropy_tensor_barycentric_map_triang_odtReference")
