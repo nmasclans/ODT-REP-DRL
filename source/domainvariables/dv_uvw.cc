@@ -110,9 +110,6 @@ void dv_uvw::getRhsSrc(const int ipt){
         // Update controller variables
         controller_error   = domn->pram->utauTarget - utauNumerical;
         controller_output += controller_K_p * controller_error;
-        // cout << "numerical utau = " << utauNumerical << endl;
-        // cout << "controller error = " << controller_error << endl;
-        // cout << "controller output = " << controller_output << endl;
         
         // update source term with controlled feedback loop
         for(int i=0; i<domn->ngrd; i++) {
