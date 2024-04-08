@@ -6,7 +6,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 import matplotlib.colors as colors
+import seaborn as sns
 
+from sklearn.neighbors import KernelDensity
 from matplotlib.ticker import LogFormatter
 from PIL import Image
 from scipy import stats
@@ -808,7 +810,7 @@ class ChannelVisualizer():
         filename = os.path.join(self.postRlzDir, f"RL_u_mean_convergence.jpg")
         print(f"\nMAKING PLOT of um profile at tEndAvg for multiple realizations in {filename}")
 
-        fig, ax = plt.subplots(1,2,figsize=(10,5))
+        fig, ax = plt.subplots(1,3,figsize=(15,5))
 
         # > RL non-converged (at time_nonConv):
         nrlz = um_RL_nonConv.shape[1]
@@ -823,6 +825,21 @@ class ChannelVisualizer():
         if nrlz < 10:
             ax[0].legend(frameon=True, fontsize=10)
 
+        # Error variable vs. realization *per grid point*
+        num_points = len(um_baseline)
+        relErr_RL = np.zeros([num_points, nrlz])
+        for irlz in range(nrlz):
+            relErr_RL[:,irlz] = ( um_RL_nonConv[:,irlz] - um_baseline ) / um_baseline
+        relErr_nonRL = ( um_nonRL_nonConv - um_baseline ) / um_baseline
+        # > RL non-converged (at time_nonConv):
+        for irlz in range(nrlz):
+            ax[1].semilogx(yplus, relErr_RL[:,irlz], label=f"RL Rlz {rlzArr[irlz]}: t={time_nonConv}")
+        # > non-RL non-converged (at time_nonConv):
+        ax[1].semilogx(yplus, relErr_nonRL, '--k', label=f"Non-RL:  t={time_nonConv}")
+        ax[1].set_xlabel(r'$y^+$')
+        ax[1].set_ylabel(r'Relative Error $( u_{m}^+ - u_{m,ref}^+ ) / u_{m,ref}^+$')
+        ax[1].legend(loc='lower left', frameon=True, fontsize=10)
+
         # NRMSE variable vs. realization
         NRMSE_RL = np.zeros(nrlz)
         for irlz in range(nrlz):
@@ -830,11 +847,11 @@ class ChannelVisualizer():
                              / np.linalg.norm(um_baseline, 2)
         NRMSE_nonRL = np.linalg.norm(um_nonRL_nonConv - um_baseline, 2) \
                       / np.linalg.norm(um_baseline, 2)
-        ax[1].plot(rlzArr, NRMSE_RL, '-o', label="RL")
-        ax[1].plot(rlzArr, NRMSE_nonRL * np.ones(nrlz), '--k', label="non-RL")
-        ax[1].set_xlabel('Rlz')
-        ax[1].set_ylabel(r'NRMSE($u_{m}^+$)')
-        ax[1].legend()
+        ax[2].plot(rlzArr, NRMSE_RL, '-o', label="RL")
+        ax[2].plot(rlzArr, NRMSE_nonRL * np.ones(nrlz), '--k', label="non-RL")
+        ax[2].set_xlabel('Rlz')
+        ax[2].set_ylabel(r'NRMSE($u_{m}^+$)')
+        ax[2].legend()
 
         plt.tight_layout()
         plt.savefig(filename, dpi=600)
@@ -947,9 +964,8 @@ class ChannelVisualizer():
         plt.savefig(filename, dpi=600)
         plt.close()
 
-
+    
     def RL_variable_convergence_along_time_and_pdf(self, filename, ylabel, rlzArr, timeArr, var_RL):
-        import seaborn as sns
         filename = os.path.join(self.postRlzDir, filename)
         print(f"\nMAKING PLOT {filename}")
         
@@ -1032,10 +1048,12 @@ class ChannelVisualizer():
         plt.figure()
         # RL non-converged:
         nrlz = len(rlzArr)
-        for irlz in range(nrlz):
-            plt.semilogy(averaging_times_RL, err_RL[:,irlz], '-', label=f"RL Rlz {rlzArr[irlz]}")
-        # non-RL converged / Reference:
         plt.semilogy(averaging_times_ref, err_ref, '-k', label="Reference")
+        if nrlz == 1:
+            plt.semilogy(averaging_times_RL, err_RL[:,0], '-r', label="RL Rlz 0")
+        else:
+            for irlz in range(nrlz):
+                plt.semilogy(averaging_times_RL, err_RL[:,irlz], '-', label=f"RL Rlz {rlzArr[irlz]}")
 
         # configure plot
         plt.xlabel(r'averaging time [s]')
@@ -1054,7 +1072,7 @@ class ChannelVisualizer():
         self.RL_variable_convergence_along_time("RL_rewards_term_relL2Err_convergence.jpg", "um relative L2 Error", rlzArr, timeArr, rewards_err)
         self.RL_variable_convergence_along_time("RL_rewards_term_rhsfRatio_convergence.jpg", "abs(RHS-f Ratio - 1)", rlzArr, timeArr, rewards_rhsfRatio)
 
-        
+
     def build_RL_actions_convergence(self, rlzArr, timeArr, actions):
         # Plot RL actions along time, for each realization
         nActDof = actions.shape[2]
@@ -1063,3 +1081,75 @@ class ChannelVisualizer():
         dofNamesLatex = [r"$\Delta R_{kk}$", r"$\Delta \theta_{z}$", r"$\Delta \theta_{y}$", r"$\Delta \theta_{x}$", r"$\Delta xmap_{1}$", r"$\Delta xmap_{2}$"]
         for iActDof in range(nActDof):
             self.RL_variable_convergence_along_time_and_pdf(f"RL_actions_convergence_{dofNames[iActDof]}.jpg", dofNamesLatex[iActDof], rlzArr, timeArr, actions[:,:,iActDof])
+
+
+    def build_RL_rewards_convergence_nohup(self, rewards_total, RL_rewards_term_relL2Err, rewards_term_rhsfRatio):
+        # Plot RL rewards along simulation steps from nohup information
+
+        filename = os.path.join(self.postRlzDir, "RL_rewards_total_nohup.jpg")
+        print(f"\nMAKING PLOT {filename}")
+        plt.figure()
+        plt.plot(rewards_total)
+        plt.xlabel("number simulation steps")
+        plt.ylabel("Total Reward")
+        plt.grid()
+        plt.ylim([-4, 1])
+        plt.tight_layout()
+        plt.savefig(filename, dpi=600)
+        plt.close()
+
+        filename = os.path.join(self.postRlzDir, "RL_rewards_term_relL2Err_nohup.jpg")
+        print(f"\nMAKING PLOT {filename}")
+        plt.figure()
+        plt.semilogy(RL_rewards_term_relL2Err)
+        plt.xlabel("number simulation steps")
+        plt.ylabel("Relative L2 Error (NRMSE)")
+        plt.grid()
+        plt.tight_layout()
+        plt.savefig(filename, dpi=600)
+        plt.close()
+
+        filename = os.path.join(self.postRlzDir, "RL_rewards_term_rhsfRatio_nohup.jpg")
+        print(f"\nMAKING PLOT {filename}")
+        plt.figure()
+        plt.plot(rewards_term_rhsfRatio)
+        plt.xlabel("number simulation steps")
+        plt.ylabel("abs(RHS-f Ratio - 1)")
+        plt.grid()
+        plt.ylim([0,5])
+        plt.tight_layout()
+        plt.savefig(filename, dpi=600)
+        plt.close()
+
+
+    def build_RL_actions_convergence_nohup(self, actions, actions_avg_freq = 500):
+        # Plot RL actions along simulation steps from nohup information
+        nSteps  = actions.shape[0]
+        nActDof = actions.shape[1]
+        assert nActDof == 6, "visualizer.build_RL_actions_convergence method only works with actions of 6 d.o.f, specifically: DeltaRkk, DeltaTheta_z, DeltaTheta_y, DeltaTheta_x, DeltaXmap1, DeltaXmap2"
+        dofNames      = ["DeltaRkk", "DeltaThetaZ", "DeltaThetaY", "DeltaThetaX", "DeltaXmap1", "DeltaXmap2"]
+        dofNamesLatex = [r"$\Delta R_{kk}$", r"$\Delta \theta_{z}$", r"$\Delta \theta_{y}$", r"$\Delta \theta_{x}$", r"$\Delta xmap_{1}$", r"$\Delta xmap_{2}$"]
+        avgSteps  = np.arange(0, nSteps, actions_avg_freq)
+        nAvgSteps = len(avgSteps) - 1
+
+        # plot each action degree of freedom
+        for iActDof in range(nActDof):
+            filename = os.path.join(self.postRlzDir, f"RL_actions_convergence_{dofNames[iActDof]}.jpg")
+            print(f"\nMAKING PLOT {filename}")
+
+            fig, ax = plt.subplots(1,2,figsize=(10,5))
+            ax[0].plot(actions[:,iActDof])
+            ax[0].set_xlabel("Number simulation step")
+            ax[0].set_ylabel(dofNamesLatex[iActDof])
+
+            for iAvgStep in range(nAvgSteps):
+                startAvgIdx = avgSteps[iAvgStep]
+                endAvgIdx   = avgSteps[iAvgStep+1]
+                sns.kdeplot(y=actions[startAvgIdx:endAvgIdx,iActDof], label=f"Simulation steps {startAvgIdx}-{endAvgIdx}", ax=ax[1], cut=0, warn_singular=False)
+            ax[1].set_xlabel("KDE")
+            ax[1].set_ylabel(dofNamesLatex[iActDof])
+            ax[1].legend(loc='center right', frameon=False, fontsize=8)
+
+            plt.tight_layout()
+            plt.savefig(filename, dpi=600)
+            plt.close()

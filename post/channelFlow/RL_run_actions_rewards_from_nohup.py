@@ -1,0 +1,123 @@
+import sys
+import os
+import numpy as np
+import pandas as pd
+
+from utils import *
+from ChannelVisualizer import ChannelVisualizer
+
+#--------------------------------------------------------------------------------------------
+
+# --- Get CASE parameters ---
+
+try :
+    i = 1
+    caseN_RL          = sys.argv[i];        i+=1
+    nohup_filename    = sys.argv[i];        i+=1
+    actions_avg_freq  = int(sys.argv[i]);   i+=1
+    print(f"Script parameters: \n" \
+          f"- Case name RL: {caseN_RL} \n" \
+          f"- Nohup filename for RL training run: {nohup_filename} \n" \
+          f"- Actions averaging frequency, number of simulation steps for averaged actions kde: {actions_avg_freq} \n" \
+    )
+except :
+    raise ValueError("Missing call arguments, should be: <1_Re_tau> <2_case_name_RL> <3_nohup_filename> <4_actions_avg_freq>")
+
+# --- nohup source file ---
+
+nohup_filepath = os.path.join(f"../../data/{caseN_RL}/nohup", nohup_filename)
+
+# --- post-processing directories to store results
+
+# post-processing directory
+postDir = f"../../data/{caseN_RL}/post"
+if not os.path.exists(postDir):
+    os.mkdir(postDir)
+
+# post-processing sub-directory for multiples realizations comparison
+postNohupDir = os.path.join(postDir, f"post_{nohup_filename}")
+if not os.path.exists(postNohupDir):
+    os.mkdir(postNohupDir)
+
+# --------------- Get Actions and Rewards for RL training along realizations ---------------
+
+"""
+Assumption: nohup lines regarding RL training process are structured as:
+
+[parallel_env/step] *** STEP #2548 ***
+[parallel_env/action] Actions: {'ctrl_y0': array([ 0.15302497, -0.5235988 ,  0.5235988 , -0.5235988 , -0.0148077 ,
+        0.        ], dtype=float32)}
+[parallel_env/evolve_simulation] Execute C++ ODT application /workspace/ODT/run/odt.x / Case channel180_RL1 / Realization #0
+[parallel_env/evolve_simulation] MPI communication finished and disconnected
+[parallel_env/evolve_simulation] numerical utau: 0.9906122530844218
+[parallel_env/evolve_simulation] numerical bc: 7.128120421e-21
+[parallel_env/evolve_simulation] Actuation #2548
+[parallel_env/evolve_simulation] Rewards: {'ctrl_y0': 0.025562294553694742}
+[parallel_env/evolve_simulation] 1st term: Relative L2 Error = 1.0296301e-05
+[parallel_env/evolve_simulation] 2nd term: BCs Error = 7.128120421e-21
+[parallel_env/evolve_simulation] 3rd term: rhsfRatio Error = 0.96414140414852
+"""
+
+with open(nohup_filepath, "r") as file:
+    lines = file.readlines()
+
+utau = []
+bc   = []
+rewards_total = []
+rewards_relL2Err = []
+rewards_rhsfRatio = []
+actions = []
+for iline in range(len(lines)):
+    line = lines[iline]
+    if "numerical utau: " in line:
+        start_idx = line.find("numerical utau: ") + len("numerical utau: ")
+        utau.append(float(line[start_idx:]))
+    elif "numerical bc: " in line:
+        start_idx = line.find("numerical bc: ") + len("numerical bc: ")
+        bc.append(float(line[start_idx:]))
+    elif "Rewards" in line:
+        start_idx = line.find("'ctrl_y0': ") + len("'ctrl_y0': ")
+        end_idx   = line.find("}", start_idx)
+        rewards_total.append(float(line[start_idx:end_idx]))
+    elif "Relative L2 Error" in line:
+        start_idx = line.find("Relative L2 Error = ") + len("Relative L2 Error = ")
+        rewards_relL2Err.append(float(line[start_idx:]))
+    elif "rhsfRatio Error" in line:
+        start_idx = line.find("rhsfRatio Error = ") + len("rhsfRatio Error = ")
+        rewards_rhsfRatio.append(float(line[start_idx:]))
+    elif "Actions" in line:
+        start_idx = line.find("Actions: {'ctrl_y0': array(") + len("Actions: {'ctrl_y0': array([")
+        if line.find("]", start_idx) == -1: # not found, actions span for 2 lines:
+            str_1stline = line[start_idx:-len("\n")]
+            str_2ndline = lines[iline+1][:-len("], dtype=float32)}\n")]
+            str_actions = str_1stline + str_2ndline
+        else:
+            end_idx   = line.find("]", start_idx)
+            str_actions = line[start_idx:end_idx]
+        list_str_actions   = str_actions.split(",")
+        list_float_actions = [float(value.strip()) for value in list_str_actions]
+        actions.append(list_float_actions)
+    else:
+        pass
+# convert lists to np.arrays
+utau              = np.array(utau)
+bc                = np.array(bc)
+rewards_total     = np.array(rewards_total)
+rewards_relL2Err  = np.array(rewards_relL2Err)
+rewards_rhsfRatio = np.array(rewards_rhsfRatio)
+actions           = np.array(actions)
+
+# --------------- Plot rewards and actions ---------------
+
+#timeRL = np.arange(tBeginAvg + dtActions, tEndAvg + 1e-8, dtActions) - tBeginAvg
+
+visualizer = ChannelVisualizer(postNohupDir)
+
+visualizer.build_RL_rewards_convergence_nohup(rewards_total, rewards_relL2Err, rewards_rhsfRatio)
+visualizer.build_RL_actions_convergence_nohup(actions, actions_avg_freq)
+
+    
+
+plt.figure()
+plt.plot(utau)
+plt.savefig(os.path.join(postNohupDir,"utau_convergence.jpg"))
