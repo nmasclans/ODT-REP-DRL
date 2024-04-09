@@ -290,9 +290,11 @@ class ChannelVisualizer():
         ax.semilogx(yplus_ref, um_ref, 'k--', label=reference_data_name)
         ax.set_xlabel(r'$y^+$')
         ax.set_ylabel(r'$u^+$')
-        if len(averaging_times) <= 15:
+        if len(averaging_times) <= 10:
             ax.legend(loc='upper center', ncol = 3, bbox_to_anchor=(0.5,1.35), fontsize=12)
-        fig.subplots_adjust(top=0.75, bottom=0.15)  # Leave space for the legend above the first subplot
+            fig.subplots_adjust(top=0.75, bottom=0.15)  # Leave space for the legend above the first subplot
+        else:
+            plt.tight_layout()
         plt.savefig(filename, dpi=600)
 
         ########################################################################
@@ -312,6 +314,7 @@ class ChannelVisualizer():
             ax.semilogy(averaging_times, NRMSE_um)
         ax.set_xlabel(r'averaging time [s]')
         ax.set_ylabel(r'NRMSE($u^+$)')
+        plt.tight_layout()
         plt.savefig(filename, dpi=600)
 
 
@@ -337,10 +340,13 @@ class ChannelVisualizer():
             ax[axis].set_ylim([0, int(np.max([urmsf_ref, vrmsf_ref, wrmsf_ref])+1)])
         # Legend
         # Specify the legend of only for first subplot, idem for other
-        labels_averaging_times = [r"$T_{{avg}}={}$".format(t) for t in averaging_times]
-        labels_str = labels_averaging_times + [reference_data_name,]
-        ax[0].legend(labels_str, loc='upper center', ncol = 3, bbox_to_anchor=(0.5,1.6), fontsize=12)
-        fig.subplots_adjust(top=0.85)  # Leave space for the legend above the first subplot
+        if len(averaging_times) <= 10:
+            labels_averaging_times = [r"$T_{{avg}}={}$".format(t) for t in averaging_times]
+            labels_str = labels_averaging_times + [reference_data_name,]
+            ax[0].legend(labels_str, loc='upper center', ncol = 3, bbox_to_anchor=(0.5,1.6), fontsize=12)
+            fig.subplots_adjust(top=0.85)  # Leave space for the legend above the first subplot
+        else:
+            plt.tight_layout()
         plt.savefig(filename, dpi=600)
 
     
