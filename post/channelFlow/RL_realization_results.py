@@ -22,7 +22,7 @@ try :
     rlzN_min_RL       = int(sys.argv[i]);   i+=1
     rlzN_max_RL       = int(sys.argv[i]);   i+=1
     rlzN_step_RL      = int(sys.argv[i]);   i+=1
-    tBeginAvg_nonConv = float(sys.argv[i]); i+=1
+    tBeginAvg         = float(sys.argv[i]); i+=1
     tEndAvg_nonConv   = float(sys.argv[i]); i+=1
     tEndAvg_conv      = float(sys.argv[i]); i+=1
     dtAvg             = float(sys.argv[i]); i+=1
@@ -34,7 +34,7 @@ try :
           f"- Realization Number Min RL: {rlzN_min_RL} \n" \
           f"- Realization Number Max RL: {rlzN_max_RL} \n" \
           f"- Realization Number Step RL: {rlzN_step_RL} \n" \
-          f"- Time Begin Averaging non-converged (both RL and non-RL): {tBeginAvg_nonConv} \n" \
+          f"- Time Begin Averaging (both RL and non-RL): {tBeginAvg} \n" \
           f"- Time End Averaging non-converged (both RL and non-RL): {tEndAvg_nonConv} \n" \
           f"- Time End Averaging converged (non-RL, baseline): {tEndAvg_conv} \n"
           f"- dt averaging: {dtAvg} \n" \
@@ -69,6 +69,8 @@ inputParams_RL_nonConv = {"kvisc":kvisc, "rho":rho, "dxmin": dxmin, "nunif": nun
                           "dTimeStart": dTimeStart, "dTimeEnd": dTimeEnd, "dTimeStep": dTimeStep, 
                           "tEndAvg": tEndAvg_nonConv} 
 print(inputParams_RL_nonConv)
+tBeginAvg_inputData = yml["params"]["tBeginAvg"]
+assert tBeginAvg == tBeginAvg_inputData
 
 # --- post-processing directories to store results
 
@@ -137,8 +139,11 @@ for irlz in range(nrlz):
 
 # Attention: um_RL_nonConv_tk & rmsf_RL_nonConv_tk shape: [int(nunif/2), ntk_nonConv, nrlz]
 
-averaging_times_nonConv       = np.arange(tBeginAvg_nonConv, tEndAvg_nonConv+1e-4, dtAvg).round(4)
-averaging_times_nonConv_plots = averaging_times_nonConv - tBeginAvg_nonConv
+if tBeginAvg >= dTimeStart:
+    averaging_times_nonConv = np.arange(tBeginAvg, tEndAvg_nonConv+1e-4, dtAvg).round(4)
+else:
+    averaging_times_nonConv = np.arange(dTimeStart, tEndAvg_nonConv+1e-4, dtAvg).round(4)
+averaging_times_nonConv_plots = averaging_times_nonConv - tBeginAvg
 ntk_nonConv = len(averaging_times_nonConv)
 
 um_RL_nonConv_tk    = np.zeros([int(nunif/2), ntk_nonConv, nrlz])
@@ -182,6 +187,8 @@ inputParams_nonRL_nonConv = {"kvisc":kvisc, "rho":rho, "dxmin": dxmin, "nunif": 
                              "dTimeStart": dTimeStart, "dTimeEnd": dTimeEnd, "dTimeStep": dTimeStep, 
                              "tEndAvg": tEndAvg_nonConv} 
 print(inputParams_nonRL_nonConv)
+tBeginAvg_inputData = yml["params"]["tBeginAvg"]
+assert tBeginAvg == tBeginAvg_inputData
 
 # --- Get data
 print(f"\n--- Non-RL: Realization #" + inputParams_nonRL_nonConv["rlzStr"] + ", Time " + str(inputParams_nonRL_nonConv["tEndAvg"]) + " ---")
@@ -227,8 +234,11 @@ tEndAvg_baseline = tEndAvg_conv
 
 # Attention: um_nonRL_conv_tk & urmsf_nonRL_conv_tk shape: [int(nunif/2), ntk_conv]
 
-averaging_times_conv       = np.arange(tBeginAvg_nonConv, tEndAvg_conv+1e-4, dtAvg).round(4)
-averaging_times_conv_plots = averaging_times_conv - tBeginAvg_nonConv
+if tBeginAvg >= dTimeStart:
+    averaging_times_conv = np.arange(tBeginAvg, tEndAvg_conv+1e-4, dtAvg).round(4)
+else:
+    averaging_times_conv = np.arange(dTimeStart, tEndAvg_conv+1e-4, dtAvg).round(4)
+averaging_times_conv_plots = averaging_times_conv - tBeginAvg
 ntk_conv = len(averaging_times_conv)
 
 (_, _, um_nonRL_conv_tk, urmsf_nonRL_conv_tk, _, _, _, _, _, _, _, _, _, _, _, _, _) \
@@ -292,7 +302,7 @@ ydelta = ydelta_RL_nonConv
 yplus  = yplus_RL_nonConv
 
 # ---- build plots
-tEndAvg_nonConv_plots = tEndAvg_nonConv - tBeginAvg_nonConv
+tEndAvg_nonConv_plots = tEndAvg_nonConv - tBeginAvg
 visualizer = ChannelVisualizer(postMultipleRlzDir)
 visualizer.RL_u_mean_convergence(yplus[1:], rlzN_Arr, um_RL_nonConv[1:], urmsf_RL_nonConv[1:], um_nonRL_nonConv[1:], urmsf_nonRL_nonConv[1:], um_baseline[1:], urmsf_baseline[1:], tEndAvg_nonConv_plots, tEndAvg_baseline)
 visualizer.RL_err_convergence(rlzN_Arr, NRMSE_RL, NRMSE_nonRL, tEndAvg_nonConv_plots, "NRMSE")

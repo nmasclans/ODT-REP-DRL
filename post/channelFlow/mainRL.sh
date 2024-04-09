@@ -18,8 +18,8 @@
 # - 10_time_end_averaging_converged
 
 # Check if the correct number of arguments is provided
-if [ "$#" -ne 11 ]; then
-    echo "Usage: $0 <1_Re_tau> <2_case_name_nonRL> <3_realization_number_nonRL> <4_case_name_RL> <5_realization_number_min_RL> <6_realization_number_max_RL> <7_realization_number_step_RL> <8_time_begin_averaging_non_converged> <9_time_end_averaging_non_converged> <10_time_end_averaging_converged>"
+if [ "$#" -ne 13 ]; then
+    echo "Usage: $0 <1_Re_tau> <2_case_name_nonRL> <3_realization_number_nonRL> <4_case_name_RL> <5_realization_number_min_RL> <6_realization_number_max_RL> <7_realization_number_step_RL> <8_time_begin_averaging_non_converged> <9_time_end_averaging_non_converged> <10_time_end_averaging_converged> <11_dt_statistics> <12_nohup_filename> <13_actions_avg_freq>"
     exit 1
 else
     echo -e "\n\n\n****************************************************************"
@@ -36,6 +36,8 @@ else
     echo "- Time end averaging non-converged: $9"
     echo "- Time end averaging converged: ${10}"
     echo "- dt statistics: ${11}"
+    echo "- Nohup filename for RL training run: ${12}"
+    echo "- Actions averaging frequency, number of simulation steps for averaged actions kde: ${13}"
 fi
 
 ### # For each realization, if needed:
@@ -58,3 +60,7 @@ echo -e "------------------ RL_run_actions_rewards.py -------------------"
 echo -e "----------------------------------------------------------------\n\n\n"
 python3 RL_run_actions_rewards.py "$4" "$5" "$6" "$7" "$8" "$9"
 
+echo -e "\n\n\n----------------------------------------------------------------"
+echo -e "------------- RL_run_actions_rewards_from_nohup.py -------------"
+echo -e "----------------------------------------------------------------\n\n\n"
+python3 RL_run_actions_rewards_from_nohup.py "$4" "${12}" "${13}"

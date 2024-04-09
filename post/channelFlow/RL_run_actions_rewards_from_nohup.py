@@ -23,9 +23,10 @@ try :
 except :
     raise ValueError("Missing call arguments, should be: <1_Re_tau> <2_case_name_RL> <3_nohup_filename> <4_actions_avg_freq>")
 
-# --- nohup source file ---
+# --- nohup and inputRL source files ---
 
-nohup_filepath = os.path.join(f"../../data/{caseN_RL}/nohup", nohup_filename)
+nohup_filepath   = os.path.join(f"../../data/{caseN_RL}/nohup", nohup_filename)
+inputRL_filepath = os.path.join(f"../../data/{caseN_RL}/input", "inputRL.i")
 
 # --- post-processing directories to store results
 
@@ -113,7 +114,7 @@ actions           = np.array(actions)
 
 visualizer = ChannelVisualizer(postNohupDir)
 
-visualizer.build_RL_rewards_convergence_nohup(rewards_total, rewards_relL2Err, rewards_rhsfRatio)
+visualizer.build_RL_rewards_convergence_nohup(rewards_total, rewards_relL2Err, rewards_rhsfRatio, inputRL_filepath)
 visualizer.build_RL_actions_convergence_nohup(actions, actions_avg_freq)
 
     

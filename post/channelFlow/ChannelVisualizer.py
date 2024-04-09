@@ -1,6 +1,7 @@
 import copy
 import os
 import matplotlib
+import configparser
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -370,7 +371,8 @@ class ChannelVisualizer():
         # Specify the legend of only for first subplot, idem for other
         labels_averaging_times = [r"$T_{{avg}}={}$".format(t) for t in averaging_times]
         labels_str = labels_averaging_times + [reference_data_name,]
-        ax[0].legend(labels_str, loc='upper center', ncol = 3, bbox_to_anchor=(0.5,1.6), fontsize=12)
+        if Rxx_odt.shape[1] <= 15:
+            ax[0].legend(labels_str, loc='upper center', ncol = 3, bbox_to_anchor=(0.5,1.6), fontsize=12)
         fig.subplots_adjust(top=0.85)  # Leave space for the legend above the first subplot
 
         plt.savefig(filename, dpi=600)
@@ -874,7 +876,7 @@ class ChannelVisualizer():
         ax[0].semilogx(yplus, urmsf_baseline, '-k', label=f"Reference: t={time_baseline}")
         ax[0].set_xlabel(r'$y^+$')
         ax[0].set_ylabel(r'$u_{rmsf}^+$')
-        if nrlz < 10:
+        if nrlz <= 15:
             ax[0].legend(frameon=True, fontsize=10)
 
         # NRMSE variable vs. realization
@@ -1083,40 +1085,40 @@ class ChannelVisualizer():
             self.RL_variable_convergence_along_time_and_pdf(f"RL_actions_convergence_{dofNames[iActDof]}.jpg", dofNamesLatex[iActDof], rlzArr, timeArr, actions[:,:,iActDof])
 
 
-    def build_RL_rewards_convergence_nohup(self, rewards_total, RL_rewards_term_relL2Err, rewards_term_rhsfRatio):
+    def build_RL_rewards_convergence_nohup(self, rewards_total, RL_rewards_term_relL2Err, rewards_term_rhsfRatio, inputRL_filepath=None):
         # Plot RL rewards along simulation steps from nohup information
 
-        filename = os.path.join(self.postRlzDir, "RL_rewards_total_nohup.jpg")
-        print(f"\nMAKING PLOT {filename}")
-        plt.figure()
-        plt.plot(rewards_total)
-        plt.xlabel("number simulation steps")
-        plt.ylabel("Total Reward")
-        plt.grid()
-        plt.ylim([-4, 1])
-        plt.tight_layout()
-        plt.savefig(filename, dpi=600)
-        plt.close()
+        if inputRL_filepath is None:
+            nax     = 3
+        else:
+            nax     = 4
+        fig, ax = plt.subplots(1,nax,figsize=(5*nax,5))
 
-        filename = os.path.join(self.postRlzDir, "RL_rewards_term_relL2Err_nohup.jpg")
+        filename = os.path.join(self.postRlzDir, "RL_rewards.jpg")
         print(f"\nMAKING PLOT {filename}")
-        plt.figure()
-        plt.semilogy(RL_rewards_term_relL2Err)
-        plt.xlabel("number simulation steps")
-        plt.ylabel("Relative L2 Error (NRMSE)")
-        plt.grid()
-        plt.tight_layout()
-        plt.savefig(filename, dpi=600)
-        plt.close()
 
-        filename = os.path.join(self.postRlzDir, "RL_rewards_term_rhsfRatio_nohup.jpg")
-        print(f"\nMAKING PLOT {filename}")
-        plt.figure()
-        plt.plot(rewards_term_rhsfRatio)
-        plt.xlabel("number simulation steps")
-        plt.ylabel("abs(RHS-f Ratio - 1)")
-        plt.grid()
-        plt.ylim([0,5])
+        ax[0].plot(rewards_total)
+        ax[0].set_ylabel("Total Reward")
+        
+        ax[1].semilogy(RL_rewards_term_relL2Err)
+        ax[1].set_ylabel("Relative L2 Error (NRMSE)")
+
+        ax[2].semilogy(rewards_term_rhsfRatio)
+        ax[2].set_ylabel("abs(RHS-f Ratio - 1)")
+        
+        if inputRL_filepath is not None:
+            config = configparser.ConfigParser()
+            config.read(inputRL_filepath)
+            rew_relL2Err_weight  = float(config.get("runner", "rew_relL2Err_weight"))
+            rew_rhsfRatio_weight = float(config.get("runner", "rew_rhsfRatio_weight"))
+            ax[3].semilogy(rew_relL2Err_weight  * RL_rewards_term_relL2Err, color='tab:orange', label="weighted Relative L2 Penalty Term (aim: 0)")
+            ax[3].semilogy(rew_rhsfRatio_weight * rewards_term_rhsfRatio,   color='tab:green',  label="weighted RHS-F Ratio Penalty Term (aim: 0)")
+            ax[3].legend(loc='upper right', frameon=True, fontsize=10)
+
+        for i in range(nax):
+            ax[i].set_xlabel("number simulation steps")
+            ax[i].grid()
+
         plt.tight_layout()
         plt.savefig(filename, dpi=600)
         plt.close()
@@ -1138,14 +1140,14 @@ class ChannelVisualizer():
             print(f"\nMAKING PLOT {filename}")
 
             fig, ax = plt.subplots(1,2,figsize=(10,5))
-            ax[0].plot(actions[:,iActDof])
+            ax[0].plot(actions[:,iActDof],'o',markersize=1)
             ax[0].set_xlabel("Number simulation step")
             ax[0].set_ylabel(dofNamesLatex[iActDof])
 
             for iAvgStep in range(nAvgSteps):
                 startAvgIdx = avgSteps[iAvgStep]
                 endAvgIdx   = avgSteps[iAvgStep+1]
-                sns.kdeplot(y=actions[startAvgIdx:endAvgIdx,iActDof], label=f"Simulation steps {startAvgIdx}-{endAvgIdx}", ax=ax[1], cut=0, warn_singular=False)
+                sns.kdeplot(y=actions[startAvgIdx:endAvgIdx,iActDof], label=f"Simulation steps {startAvgIdx}-{endAvgIdx}", ax=ax[1], cut=0, warn_singular=False, bw_method=0.01)
             ax[1].set_xlabel("KDE")
             ax[1].set_ylabel(dofNamesLatex[iActDof])
             ax[1].legend(loc='center right', frameon=False, fontsize=8)
