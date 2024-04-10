@@ -27,6 +27,7 @@ try :
     dtAvg     = float(sys.argv[4])
     tBeginAvg = float(sys.argv[5])
     tEndAvg   = float(sys.argv[6])
+    print(f"Script parameters: \n- Case name: {caseN} \n- Realization Number: {rlzN} \n- Retau: {Retau} \n- dt statistics anisotropy gifs: {dtAvg} \n- Time begin averaging: {tBeginAvg} \n- Time End Averaging: {tEndAvg} \n")
 except :
     raise ValueError("Missing call arguments, should be: <case_name> <realization_number> <reynolds_number> <delta_time_stats_anisotropy_gifs> <time_begin_averaging> <time_end_averaging>")
 
@@ -77,7 +78,7 @@ if tBeginAvg >= dTimeStart:
     averaging_times = np.arange(tBeginAvg, tEndAvg+1e-4, dtAvg).round(4)
 else:
     averaging_times = np.arange(dTimeStart, tEndAvg+1e-4, dtAvg).round(4)
-tRL = averaging_times - tBeginAvg
+averaging_times_plots = averaging_times - tBeginAvg
 
 # remove first time, as only 1 file is used to calculate the statistics, therefore 
 # they are just instantaneous, and make the reynolds stress tensor not satisfy realizability conditions
@@ -141,10 +142,10 @@ for i in range(len(averaging_times)):
     eigenvalues_rt = np.array([lambda1_rt, lambda2_rt, lambda3_rt]).transpose()
     
     # build frames
-    frames_rkk_rt         = visualizer.build_reynolds_stress_tensor_trace_frame(frames_rkk_rt, ydelta_rt[1:-1], ydelta_ref[1:-1], Rkk_rt[1:-1], Rkk_ref[1:-1], tRL[i])
-    frames_eig_rt         = visualizer.build_anisotropy_tensor_eigenvalues_frame(frames_eig_rt, ydelta_rt[1:-1], ydelta_ref[1:-1], eigenvalues_rt[1:-1], eigenvalues_ref[1:-1], tRL[i])
-    frames_xmap_coord_rt  = visualizer.build_anisotropy_tensor_barycentric_xmap_coord_frame(frames_xmap_coord_rt, ydelta_rt[1:-1], ydelta_ref[1:-1], xmap1_rt[1:-1], xmap2_rt[1:-1], xmap1_ref[1:-1], xmap2_ref[1:-1], tRL[i])
-    frames_xmap_triang_rt = visualizer.build_anisotropy_tensor_barycentric_xmap_triang_frame(frames_xmap_triang_rt, ydelta_rt[1:-1], xmap1_rt[1:-1], xmap2_rt[1:-1], tRL[i])
+    frames_rkk_rt         = visualizer.build_reynolds_stress_tensor_trace_frame(frames_rkk_rt, ydelta_rt[1:-1], ydelta_ref[1:-1], Rkk_rt[1:-1], Rkk_ref[1:-1], averaging_times_plots[i])
+    frames_eig_rt         = visualizer.build_anisotropy_tensor_eigenvalues_frame(frames_eig_rt, ydelta_rt[1:-1], ydelta_ref[1:-1], eigenvalues_rt[1:-1], eigenvalues_ref[1:-1], averaging_times_plots[i])
+    frames_xmap_coord_rt  = visualizer.build_anisotropy_tensor_barycentric_xmap_coord_frame(frames_xmap_coord_rt, ydelta_rt[1:-1], ydelta_ref[1:-1], xmap1_rt[1:-1], xmap2_rt[1:-1], xmap1_ref[1:-1], xmap2_ref[1:-1], averaging_times_plots[i])
+    frames_xmap_triang_rt = visualizer.build_anisotropy_tensor_barycentric_xmap_triang_frame(frames_xmap_triang_rt, ydelta_rt[1:-1], xmap1_rt[1:-1], xmap2_rt[1:-1], averaging_times_plots[i])
 
 # -------------------------------------------------------------------------
 # ------------------ Create the animation from the frames -----------------

@@ -116,9 +116,3 @@ visualizer = ChannelVisualizer(postNohupDir)
 
 visualizer.build_RL_rewards_convergence_nohup(rewards_total, rewards_relL2Err, rewards_rhsfRatio, inputRL_filepath)
 visualizer.build_RL_actions_convergence_nohup(actions, actions_avg_freq)
-
-    
-
-plt.figure()
-plt.plot(utau)
-plt.savefig(os.path.join(postNohupDir,"utau_convergence.jpg"))
