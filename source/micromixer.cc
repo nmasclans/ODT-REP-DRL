@@ -192,7 +192,10 @@ void micromixer::advanceOdtSingleStep_Explicit(){
                 for(int i=0; i < domn->ngrd; i++) {
                     rhsTerm   = domn->v.at(k)->rhsMix.at(i) + domn->v.at(k)->rhsSrc.at(i);
                     fTerm     = fEps * domn->v.at(k)->rhsStatConv.at(i);
-                    domn->v.at(k)->rhsfRatio.at(i) = abs(rhsTerm) / abs(rhsTerm + fTerm + 1e-8);
+                    //domn->v.at(k)->rhsfRatio.at(i) = abs(rhsTerm) / abs(rhsTerm + fTerm + 1e-8);
+                    domn->v.at(k)->rhsfRatio.at(i) = min( 
+                        abs(rhsTerm) / abs(rhsTerm - fTerm + 1e-8), 
+                        abs(rhsTerm) / abs(rhsTerm + fTerm + 1e-8));
                     domn->v.at(k)->d.at(i) = domn->v.at(k)->d.at(i) + dt*( rhsTerm - domn->v.at(k)->rhsfRatio.at(i) * fTerm ); 
                 }
 #else
