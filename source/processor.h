@@ -5,8 +5,10 @@
 
 #pragma once
 
+#define DOMPI 1
+
 #ifdef DOMPI
-#include "mpi.h"
+#include <mpi.h>
 #endif
 
 #include <string>
@@ -26,6 +28,7 @@ class processor{
    private:
 
         static int nInst;    ///< number of these class objects (should be 1);
+        MPI_Comm sub_com;    // initialize MPI_Comm object (logical group of MPI processes)
 
     public:
 

@@ -46,11 +46,19 @@ int main(int argc, char*argv[]) {
     //// cout << "[main.cc]     Realization number: " << argv[2] << endl;
     
     // MPI environment
-    MPI_Init(&argc, &argv);           // initialize MPI execution environment
-    
+    /*
+    // initialize MPI execution environment
+    MPI_Init(&argc, &argv);           
+    // MPI process information
+    int myid, nproc;
+    MPI_Comm_rank(MPI_COMM_WORLD, &myid);
+    MPI_Comm_size(MPI_COMM_WORLD, &nproc);
+    cout << "MPI Process: rank = " << myid << ", nproc = " << nproc << endl;
+
     // MPI communicator
     MPI_Comm sub_com;                 // initialize MPI_Comm object (logical group of MPI processes)
     MPI_Comm_get_parent(&sub_com);    // define 'sub_com' as the parent communicator (handle) 
+    */
     
     //-------------------    
 
@@ -129,21 +137,6 @@ int main(int argc, char*argv[]) {
     // Ending time
     mytimeEnd = time(0);
     cout << "[main.cc] End Time   = " << ctime(&mytimeEnd);
-
-    //-------------------
-
-    // Synchronization parent (Python) & child (C++)
-    MPI_Barrier(sub_com); // C++ barrier that matches python barrier
-    cout << "[main.cc] Barrier passed" << endl;
-    
-    // Disconnect communication
-    if (sub_com != MPI_COMM_NULL)      
-        MPI_Comm_disconnect(&sub_com);
-    cout << "[main.cc] MPI Disconnected" << endl;
-
-    // Finalize MPI environment in the current cpu (where C++ is running)
-    MPI_Finalize();
-    cout << "[main.cc] MPI Finished" << endl;
 
     //-------------------
 
