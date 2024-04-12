@@ -42,7 +42,7 @@ fi
 ### python3 stats_odt_vs_dns.py "$1" "$2" "$3" "$6" "$7"
  
 echo -e "\n\n\n----------------------------------------------------------------"
-echo -e "--------------------- stats_odt_vs_odtReference.py ----------------------"
+echo -e "----------------- stats_odt_vs_odtReference.py -----------------"
 echo -e "----------------------------------------------------------------\n\n\n"
 python3 stats_odt_vs_odtReference.py "$1" "$2" "$3" "$6" "$7"
 
@@ -57,7 +57,7 @@ python3 stats_odt_convergence.py "$1" "$2" "$3" "$4" "$6" "$7"
 ### python3 anisotropy_tensor_odt_vs_dns.py "$1" "$2" "$3" "$6" "$7"
 
 echo -e "\n\n\n----------------------------------------------------------------"
-echo -e "---------------- anisotropy_tensor_odt_vs_odtReference.py ---------------"
+echo -e "----------- anisotropy_tensor_odt_vs_odtReference.py -----------"
 echo -e "----------------------------------------------------------------\n\n\n"
 python3 anisotropy_tensor_odt_vs_odtReference.py "$1" "$2" "$3" "$6" "$7"
 
