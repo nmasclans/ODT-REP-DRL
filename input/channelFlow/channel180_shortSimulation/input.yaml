@@ -24,8 +24,8 @@ params:
   cCoord: 1
   Lrestart: false
   gDens: 30
-  dxmin: 6.945e-05
-  dxmax: 0.002778
+  dxmin: 0.001
+  dxmax: 0.02
   Pmax: 0.4
   Pav: 0.02
   dtfac: 2.0
