@@ -56,6 +56,27 @@ if not os.path.exists(postMultipleRlzDir):
 # data run directory
 runDir    = os.path.join(f"../../data/{caseN}/run/")
 
+# --- Get ODT input parameters ---
+
+# for the first realization
+odtInputDataFilepath  = "../../data/" + caseN + "/input/input.yaml"
+with open(odtInputDataFilepath) as ifile :
+    yml = yaml.load(ifile, Loader=yaml.FullLoader)
+dTimeStart  = yml["dumpTimesGen"]["dTimeStart"]
+dTimeEnd    = get_effective_dTimeEnd(caseN, rlzStr_first) # dTimeEnd = yml["dumpTimesGen"]["dTimeEnd"] can lead to errors if dTimeEnd > tEnd
+dTimeStep   = yml["dumpTimesGen"]["dTimeStep"]
+assert tEndAvg <= dTimeEnd, "Averaging end time for calculations and plots must be <= dTimeEnd and/or tEnd."
+
+# --- Chosen averaging times ---
+
+print(tBeginAvg, dTimeStart)
+if tBeginAvg >= dTimeStart:
+    timeRL = np.arange(tBeginAvg + dtActions, tEndAvg + 1e-8, dtActions) - tBeginAvg
+else:
+    timeRL = np.arange(dTimeStart + dtActions, tEndAvg + 1e-8, dtActions) - tBeginAvg
+# There is no RL action for the first 10 dtimes:
+timeRL = timeRL[10:]
+
 # --------------- Get Actions and Rewards for RL training along realizations ---------------
 
 rlzArr          = np.arange(rlzN_min_RL, rlzN_max_RL+1, rlzN_step_RL)
@@ -70,7 +91,7 @@ data_0 = np.load(logFilepathList[0])
 # initialize rewards and actions arrays for all realizations
 actions           = np.zeros([nrlz, nActSteps, nActDof])    # each rlz actions have shape [nActSteps, nActDof]
 rewards_total     = np.zeros([nrlz, nActSteps,])            # each rlz rewards have shape [nActSteps,]
-rewards_bc        = np.zeros([nrlz, nActSteps,])            # each rlz rewards have shape [nActSteps,]
+## rewards_bc        = np.zeros([nrlz, nActSteps,])         # each rlz rewards have shape [nActSteps,]
 rewards_err       = np.zeros([nrlz, nActSteps,])            # each rlz rewards have shape [nActSteps,]
 rewards_rhsfRatio = np.zeros([nrlz, nActSteps,])            # each rlz rewards have shape [nActSteps,]
 
@@ -80,7 +101,7 @@ for irlz in range(nrlz):
     data = np.load(logFilepathList[irlz])
     actions[irlz,:,:]         = data['act']                 # shape [nActSteps, nActDof]
     rewards_total[irlz,:]     = data['rew']                 # shape [nActSteps,]
-    rewards_bc[irlz,:]        = data['rew_bc']              # shape [nActSteps,]
+    ## rewards_bc[irlz,:]        = data['rew_bc']           # shape [nActSteps,]
     rewards_err[irlz,:]       = data['rew_err']             # shape [nActSteps,]
     rewards_rhsfRatio[irlz,:] = data['rew_rhsfRatio']       # shape [nActSteps,]
 
@@ -89,10 +110,8 @@ for irlz in range(nrlz):
     
 # --------------- Plot rewards and actions ---------------
 
-timeRL = np.arange(tBeginAvg + dtActions, tEndAvg + 1e-8, dtActions) - tBeginAvg
-
 visualizer = ChannelVisualizer(postMultipleRlzDir)
-visualizer.build_RL_rewards_convergence(rlzArr, timeRL, rewards_total, rewards_bc, rewards_err, rewards_rhsfRatio)
+visualizer.build_RL_rewards_convergence(rlzArr, timeRL, rewards_total, rewards_err, rewards_rhsfRatio)
 visualizer.build_RL_actions_convergence(rlzArr, timeRL, actions)
 
     

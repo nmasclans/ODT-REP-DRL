@@ -530,6 +530,57 @@ class ChannelVisualizer():
         plt.tight_layout()
         plt.savefig(filename, dpi=600)
 
+# --------------------- u-velocity vs reference as gif evolution ------------------------
+
+    def build_um_fig(self, yplus_odt, yplus_ref, um_odt, um_ref, avg_time):
+        
+        fig, ax = plt.subplots()
+        plt.semilogx(yplus_odt, um_odt, '-k',  label=r"Converging $<u>^+$")
+        plt.semilogx(yplus_ref, um_ref, '--k', label=r"Reference $<u>^+$")
+        plt.xlabel(r"$y^+$")
+        plt.ylabel(r"$<u>^+$")
+        plt.grid(axis="y")
+        plt.title(f"averaging time = {avg_time:.1f}")
+        plt.legend(loc='lower right', ncol = 2, fontsize=12)
+        plt.tight_layout()
+        #fig = plt.gcf()
+        return fig
+    
+
+    def build_um_frame(self, frames, yplus_odt, yplus_ref, um_odt, um_ref, avg_time):
+        
+        fig = self.build_um_fig(yplus_odt, yplus_ref, um_odt, um_ref, avg_time)
+        fig.canvas.draw()
+        img = Image.frombytes("RGB", fig.canvas.get_width_height(), fig.canvas.tostring_rgb())
+        frames.append(img)
+        plt.close()
+        return frames
+
+
+    def build_urmsf_fig(self, yplus_odt, yplus_ref, urmsf_odt, urmsf_ref, avg_time):
+        
+        fig, ax = plt.subplots()
+        plt.semilogx(yplus_odt, urmsf_odt, '-k',  label=r"Converging $u'^+$")
+        plt.semilogx(yplus_ref, urmsf_ref, '--k', label=r"Reference $u'^+$")
+        plt.xlabel(r"$y^+$")
+        plt.ylabel(r"$u'^+$")
+        plt.grid(axis="y")
+        plt.title(f"averaging time = {avg_time:.1f}")
+        plt.legend(loc='lower right', ncol = 2, fontsize=12)
+        plt.tight_layout()
+        #fig = plt.gcf()
+        return fig
+    
+
+    def build_urmsf_frame(self, frames, yplus_odt, yplus_ref, urmsf_odt, urmsf_ref, avg_time):
+        
+        fig = self.build_urmsf_fig(yplus_odt, yplus_ref, urmsf_odt, urmsf_ref, avg_time)
+        fig.canvas.draw()
+        img = Image.frombytes("RGB", fig.canvas.get_width_height(), fig.canvas.tostring_rgb())
+        frames.append(img)
+        plt.close()
+        return frames
+
 # --------------------- anisotropy tensor barycentric map in barycentric realizable triangle ------------------------
 
     def build_anisotropy_tensor_barycentric_xmap_triang(self, y_delta, bar_map_x, bar_map_y, avg_time, title):
@@ -1073,10 +1124,9 @@ class ChannelVisualizer():
         plt.close()
 
 
-    def build_RL_rewards_convergence(self, rlzArr, timeArr, rewards_total, rewards_bc, rewards_err, rewards_rhsfRatio):
+    def build_RL_rewards_convergence(self, rlzArr, timeArr, rewards_total, rewards_err, rewards_rhsfRatio):
         # Plot RL rewards along time, for each realization
         self.RL_variable_convergence_along_time("RL_rewards_total_convergence.jpg", "Reward", rlzArr, timeArr, rewards_total)
-        self.RL_variable_convergence_along_time("RL_rewards_term_bc_convergence.jpg", "BC term", rlzArr, timeArr, rewards_bc)
         self.RL_variable_convergence_along_time("RL_rewards_term_relL2Err_convergence.jpg", "um relative L2 Error", rlzArr, timeArr, rewards_err)
         self.RL_variable_convergence_along_time("RL_rewards_term_rhsfRatio_convergence.jpg", "abs(RHS-f Ratio - 1)", rlzArr, timeArr, rewards_rhsfRatio)
 
