@@ -91,7 +91,7 @@ averaging_times_plots = averaging_times - tBeginAvg
 
 # (ODT-Reference) calculated-at-runtime statistics 
 (ydelta_ref, yplus_ref, 
- _,_,_, _,_,_, _,_,_,
+ um_ref, urmsf_ref,_, _,_,_, _,_,_,
  ufufm_ref, vfvfm_ref, wfwfm_ref, ufvfm_ref, ufwfm_ref, vfwfm_ref,
  _,_,_) \
     = get_odt_statistics_reference(inputParams)
@@ -129,10 +129,11 @@ eigenvalues_ref = np.array([lambda1_ref, lambda2_ref, lambda3_ref]).transpose()
 
 print("\n------ Calculate Rij dof from statistics calculated at runtime by ODT ------")
 
-(ydelta_rt, yplus_rt, _,_,_, _,_,_, _,_,_, Rxx_rt, Ryy_rt, Rzz_rt, Rxy_rt, Rxz_rt, Ryz_rt) = get_odt_statistics_rt_at_chosen_averaging_times(inputParams, averaging_times)
+(ydelta_rt, yplus_rt, um_rt, urmsf_rt,_, _,_,_, _,_,_, Rxx_rt, Ryy_rt, Rzz_rt, Rxy_rt, Rxz_rt, Ryz_rt) = get_odt_statistics_rt_at_chosen_averaging_times(inputParams, averaging_times)
 
 # --- Animation frames (gif) ---
 visualizer      = ChannelVisualizer(postRlzDir)
+frames_um_rt = []; frames_urmsf_rt = []
 frames_rkk_rt = []; frames_eig_rt = []; frames_xmap_coord_rt = []; frames_xmap_triang_rt = []
 
 for i in range(len(averaging_times)): 
@@ -142,6 +143,8 @@ for i in range(len(averaging_times)):
     eigenvalues_rt = np.array([lambda1_rt, lambda2_rt, lambda3_rt]).transpose()
     
     # build frames
+    frames_um_rt          = visualizer.build_um_frame(frames_um_rt, ydelta_rt[1:], ydelta_ref[1:], um_rt[1:,i], um_ref[1:], averaging_times_plots[i])
+    frames_urmsf_rt       = visualizer.build_urmsf_frame(frames_urmsf_rt, ydelta_rt[1:], ydelta_ref[1:], urmsf_rt[1:,i], urmsf_ref[1:], averaging_times_plots[i])
     frames_rkk_rt         = visualizer.build_reynolds_stress_tensor_trace_frame(frames_rkk_rt, ydelta_rt[1:-1], ydelta_ref[1:-1], Rkk_rt[1:-1], Rkk_ref[1:-1], averaging_times_plots[i])
     frames_eig_rt         = visualizer.build_anisotropy_tensor_eigenvalues_frame(frames_eig_rt, ydelta_rt[1:-1], ydelta_ref[1:-1], eigenvalues_rt[1:-1], eigenvalues_ref[1:-1], averaging_times_plots[i])
     frames_xmap_coord_rt  = visualizer.build_anisotropy_tensor_barycentric_xmap_coord_frame(frames_xmap_coord_rt, ydelta_rt[1:-1], ydelta_ref[1:-1], xmap1_rt[1:-1], xmap2_rt[1:-1], xmap1_ref[1:-1], xmap2_ref[1:-1], averaging_times_plots[i])
@@ -160,6 +163,14 @@ for i in range(len(averaging_times)):
 ### frames_bar_post[0].save(filename, save_all=True, append_images=frames_bar_post[1:], duration=100, loop=0)
 
 # runtime statistics
+filename = os.path.join(postRlzDir, "u_mean_convergence.gif")
+print(f"\nMAKING GIF U-MEAN for RUNTIME calculations along AVG. TIME in {filename}" )
+frames_um_rt[0].save(filename, save_all=True, append_images=frames_um_rt[1:], duration=100, loop=0)    
+
+filename = os.path.join(postRlzDir, "u_rmsf_convergence.gif")
+print(f"\nMAKING GIF U-RMSF for RUNTIME calculations along AVG. TIME in {filename}" )
+frames_urmsf_rt[0].save(filename, save_all=True, append_images=frames_urmsf_rt[1:], duration=100, loop=0)    
+
 filename = os.path.join(postRlzDir, "reynolds_stress_tensor_trace_convergence.gif")
 print(f"\nMAKING GIF TRACE/MAGNITUDE OF REYNOLDS STRESS TENSOR for RUNTIME calculations along AVG. TIME in {filename}" )
 frames_rkk_rt[0].save(filename, save_all=True, append_images=frames_rkk_rt[1:], duration=100, loop=0)    
