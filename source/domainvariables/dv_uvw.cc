@@ -64,10 +64,14 @@ dv_uvw::dv_uvw(domain  *line,
 
 #if _FEEDBACK_LOOP_BODY_FORCE_
     /// Estimated uniform body force to drive the flow
-    controller_output = - domn->pram->dPdx / domn->pram->rho0;  /// Initialize controller output
+    // controller_output = - domn->pram->dPdx / domn->pram->rho0;  /// Initialize controller output
+    controller_output = 0.0;
     controller_error  = 0.0;			        	            /// Initialize controller error
     controller_K_p    = domn->pram->controller_K_p;             /// Controller proportional gain (1.0e-2 by default)
     halfChannel       = 0.5 * domn->pram->domainLength;
+    getOdtPath(odtPath);
+    fname = odtPath + "/data/feedback_loop_param.out";
+    ostrm = new ofstream(fname.c_str());
 #endif
 
 }
@@ -99,17 +103,54 @@ void dv_uvw::getRhsSrc(const int ipt){
 
     if(var_name == "uvel" && domn->pram->cCoord != 3.0) {
 
-        // Calculate numerical u_tau using instantaneous u velocity 
+        // Calculate numerical u_tau using instantaneous u velocity (using uvel->d)
         double utauNumerical = sqrt(
             domn->pram->kvisc0 * 0.5 * (
                 domn->uvel->d.at(0) / ( domn->pos->d.at(0) + halfChannel )
                 + domn->uvel->d.at(domn->ngrd-1) / (halfChannel - domn->pos->d.at(domn->ngrd-1) )
             )
         );
+        // Calculate numerical u_tau using mean u velocity (using uvel->davg) 
+        ///// double utauNumerical = sqrt(
+        /////     domn->pram->kvisc0 * 0.5 * (
+        /////         domn->uvel->davg.at(0) / ( domn->pos->d.at(0) + halfChannel )
+        /////         + domn->uvel->davg.at(domn->ngrd-1) / (halfChannel - domn->pos->d.at(domn->ngrd-1) )
+        /////     )
+        ///// );
         
+        // calculate u_bulk
+        u_bulk = 0.0;
+        // using <u>
+        //// for (int i=0; i<domn->pram->nunif; i++) {
+        ////  u_bulk += domn->uvel->davg.at(i);
+        //// }
+        //// u_bulk /= domn->pram->nunif;
+        // using u_instantaneous    
+        double length = 0.0;
+        double length_sum = 0.0;
+        for(int i=0; i<domn->ngrd; i++) {
+            if (i < domn->ngrd - 1){
+                length = domn->posf->d.at(i+1) - domn->posf->d.at(i);
+            } else {
+                length = halfChannel - domn->posf->d.at(i);
+            }
+            u_bulk += domn->uvel->d.at(i) * length;
+            length_sum += length;
+        }
+        u_bulk /= length_sum;
+    
         // Update controller variables
-        controller_error   = domn->pram->utauTarget - utauNumerical;
+        // controller_error   = domn->pram->utauTarget - utauNumerical;
+        controller_error   = 15.838 - u_bulk;
         controller_output += controller_K_p * controller_error;
+        static int cout_counter = 0;
+        if (cout_counter % 100 == 0) {
+            *ostrm << "u_bulk = " << u_bulk << ", ";
+            *ostrm << "u_tau = " << utauNumerical << ", ";
+            *ostrm << "controller error = " << controller_error << ", ";
+            *ostrm << "controller output = " << controller_output << endl;
+        }
+        cout_counter += 1;
         
         // update source term with controlled feedback loop
         for(int i=0; i<domn->ngrd; i++) {
@@ -366,4 +407,14 @@ void dv_uvw::updateTimeAveragedQuantities(const double &delta_t, const double &a
         }
     }
 #endif
+}
+
+
+void dv_uvw::getOdtPath(string &odtPath) {
+    char* odtPath_ = getenv("ODT_PATH");
+    if (odtPath_ != nullptr) {
+        odtPath = odtPath_;
+    } else {
+        throw runtime_error("ODT_PATH environment variable is not set.");
+    }
 }

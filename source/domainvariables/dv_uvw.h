@@ -8,6 +8,8 @@
 #include "dv.h"
 #include <string>
 #include <vector>
+#include <ostream>
+#include <fstream>
 
 class domain;
 
@@ -40,10 +42,16 @@ class dv_uvw : public dv {
         double controller_error;
         double controller_K_p;
         double halfChannel;
+        string odtPath;
+        string fname;
+        ofstream *ostrm;
+        double u_bulk;
 
     //////////////////// CONSTRUCTOR FUNCTIONS /////////////////
 
     public:
+
+        void getOdtPath(string &odtPath);
 
         dv_uvw(){}      
         dv_uvw(domain      *line,
