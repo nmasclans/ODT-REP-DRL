@@ -38,6 +38,7 @@ param::param(inputoutput *p_io) {
     probType           = io->params["probType"]           ? io->params["probType"].as<string>()        : errMsg<string>("probType");
     tBeginAvg          = io->params["tBeginAvg"]          ? io->params["tBeginAvg"].as<double>()       : 0.0;
     utauTarget         = io->params["utauTarget"]         ? io->params["utauTarget"].as<double>()      : 1.0;
+    u_bulk             = io->params["u_bulk"]             ? io->params["u_bulk"].as<double>()          : 15.0;
     controller_K_p     = io->params["controller_K_p"]     ? io->params["controller_K_p"].as<double>()  : 1.0;
 
     Z_param            = io->params["Z_param"]            ? io->params["Z_param"].as<double>()         : 400.0;    //errMsg<double>("Z_param");

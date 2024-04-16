@@ -45,7 +45,8 @@ class dv_uvw : public dv {
         string odtPath;
         string fname;
         ofstream *ostrm;
-        double u_bulk;
+        double u_bulk_target;
+        double u_bulk_numeric;
 
     //////////////////// CONSTRUCTOR FUNCTIONS /////////////////
 

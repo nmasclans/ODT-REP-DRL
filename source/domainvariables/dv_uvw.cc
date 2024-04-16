@@ -68,6 +68,7 @@ dv_uvw::dv_uvw(domain  *line,
     controller_output = 0.0;
     controller_error  = 0.0;			        	            /// Initialize controller error
     controller_K_p    = domn->pram->controller_K_p;             /// Controller proportional gain (1.0e-2 by default)
+    u_bulk_target     = domn->pram->u_bulk;
     halfChannel       = 0.5 * domn->pram->domainLength;
     getOdtPath(odtPath);
     fname = odtPath + "/data/feedback_loop_param.out";
@@ -118,14 +119,8 @@ void dv_uvw::getRhsSrc(const int ipt){
         /////     )
         ///// );
         
-        // calculate u_bulk
-        u_bulk = 0.0;
-        // using <u>
-        //// for (int i=0; i<domn->pram->nunif; i++) {
-        ////  u_bulk += domn->uvel->davg.at(i);
-        //// }
-        //// u_bulk /= domn->pram->nunif;
-        // using u_instantaneous    
+        // calculate u_bulk using u_instantaneous  
+        u_bulk_numeric = 0.0;  
         double length = 0.0;
         double length_sum = 0.0;
         for(int i=0; i<domn->ngrd; i++) {
@@ -134,18 +129,18 @@ void dv_uvw::getRhsSrc(const int ipt){
             } else {
                 length = halfChannel - domn->posf->d.at(i);
             }
-            u_bulk += domn->uvel->d.at(i) * length;
+            u_bulk_numeric += domn->uvel->d.at(i) * length;
             length_sum += length;
         }
-        u_bulk /= length_sum;
+        u_bulk_numeric /= length_sum;
     
         // Update controller variables
         // controller_error   = domn->pram->utauTarget - utauNumerical;
-        controller_error   = 15.838 - u_bulk;
+        controller_error   = u_bulk_target - u_bulk_numeric;
         controller_output += controller_K_p * controller_error;
         static int cout_counter = 0;
         if (cout_counter % 100 == 0) {
-            *ostrm << "u_bulk = " << u_bulk << ", ";
+            *ostrm << "u_bulk_numeric = " << u_bulk_numeric << ", ";
             *ostrm << "u_tau = " << utauNumerical << ", ";
             *ostrm << "controller error = " << controller_error << ", ";
             *ostrm << "controller output = " << controller_output << endl;
