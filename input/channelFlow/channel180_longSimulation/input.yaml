@@ -7,6 +7,7 @@ params:
   kvisc0: 0.005556
   dPdx: -1.0
   pres: 101325.0
+  controller_K_p: 1.0
   chemMechFile: not_used.yaml
   probType: CHANNEL
   tBeginAvg: 100.0
