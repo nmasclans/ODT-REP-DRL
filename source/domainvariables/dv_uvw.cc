@@ -138,14 +138,14 @@ void dv_uvw::getRhsSrc(const int ipt){
         // controller_error   = domn->pram->utauTarget - utauNumerical;
         controller_error   = u_bulk_target - u_bulk_numeric;
         controller_output += controller_K_p * controller_error;
-        static int cout_counter = 0;
-        if (cout_counter % 100 == 0) {
-            *ostrm << "u_bulk_numeric = " << u_bulk_numeric << ", ";
-            *ostrm << "u_tau = " << utauNumerical << ", ";
-            *ostrm << "controller error = " << controller_error << ", ";
-            *ostrm << "controller output = " << controller_output << endl;
-        }
-        cout_counter += 1;
+        /// static int cout_counter = 0;
+        /// if (cout_counter % 100 == 0) {
+        ///     *ostrm << "u_bulk_numeric = " << u_bulk_numeric << ", ";
+        ///     *ostrm << "u_tau = " << utauNumerical << ", ";
+        ///     *ostrm << "controller error = " << controller_error << ", ";
+        ///     *ostrm << "controller output = " << controller_output << endl;
+        /// }
+        /// cout_counter += 1;
         
         // update source term with controlled feedback loop
         for(int i=0; i<domn->ngrd; i++) {
