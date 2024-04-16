@@ -64,7 +64,7 @@ class ChannelVisualizer():
         # Build plot
         fig, ax = plt.subplots()
         ax.semilogx(yplus_ref, u_ref,      'k-',  label=reference_data_name)
-        ax.semilogx(yplus_odt, u_odt_post, 'b--', label=r'ODT (post-processing calculation)')
+        ## ax.semilogx(yplus_odt, u_odt_post, 'b--', label=r'ODT (post-processing calculation)')
         ax.semilogx(yplus_odt, u_odt_rt,   'r:',  label=r'ODT (runtime calculation)')
         ax.set_xlabel(r'$y^+$')
         ax.set_ylabel(r'$u^+$')
@@ -534,7 +534,7 @@ class ChannelVisualizer():
 
     def build_um_fig(self, yplus_odt, yplus_ref, um_odt, um_ref, avg_time):
         
-        fig, ax = plt.subplots()
+        fig, ax = plt.subplots(figsize=(10,10))
         plt.semilogx(yplus_odt, um_odt, '-k',  label=r"Converging $<u>^+$")
         plt.semilogx(yplus_ref, um_ref, '--k', label=r"Reference $<u>^+$")
         plt.xlabel(r"$y^+$")
@@ -1107,12 +1107,13 @@ class ChannelVisualizer():
         plt.figure()
         # RL non-converged:
         nrlz = len(rlzArr)
-        plt.semilogy(averaging_times_ref, err_ref, '-k', label="Reference")
+        for id_ref in range(5):
+            plt.semilogy(averaging_times_ref, err_ref[id_ref,:], label=f"Reference {id_ref}")
         if nrlz == 1:
-            plt.semilogy(averaging_times_RL, err_RL[:,0], '-r', label="RL Rlz 0")
+            plt.semilogy(averaging_times_RL, err_RL[:,0], '-k', label="RL Rlz 0")
         else:
             for irlz in range(nrlz):
-                plt.semilogy(averaging_times_RL, err_RL[:,irlz], '-', label=f"RL Rlz {rlzArr[irlz]}")
+                plt.semilogy(averaging_times_RL, err_RL[:,irlz], '-k', label=f"RL Rlz {rlzArr[irlz]}")
 
         # configure plot
         plt.xlabel(r'averaging time [s]')

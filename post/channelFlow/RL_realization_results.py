@@ -243,7 +243,23 @@ ntk_conv = len(averaging_times_conv)
 
 (_, _, um_nonRL_conv_tk, urmsf_nonRL_conv_tk, _, _, _, _, _, _, _, _, _, _, _, _, _) \
     = get_odt_statistics_rt_at_chosen_averaging_times(inputParams_nonRL_conv, averaging_times_conv)
+inputParams_nonRL_conv['caseN'] = caseN_nonRL + "2"
+(_, _, um_nonRL_conv_tk_2, urmsf_nonRL_conv_tk_2, _, _, _, _, _, _, _, _, _, _, _, _, _) \
+    = get_odt_statistics_rt_at_chosen_averaging_times(inputParams_nonRL_conv, averaging_times_conv)
+inputParams_nonRL_conv['caseN'] = caseN_nonRL + "3"
+(_, _, um_nonRL_conv_tk_3, urmsf_nonRL_conv_tk_3, _, _, _, _, _, _, _, _, _, _, _, _, _) \
+    = get_odt_statistics_rt_at_chosen_averaging_times(inputParams_nonRL_conv, averaging_times_conv)
+inputParams_nonRL_conv['caseN'] = caseN_nonRL + "4"
+(_, _, um_nonRL_conv_tk_4, urmsf_nonRL_conv_tk_4, _, _, _, _, _, _, _, _, _, _, _, _, _) \
+    = get_odt_statistics_rt_at_chosen_averaging_times(inputParams_nonRL_conv, averaging_times_conv)
+inputParams_nonRL_conv['caseN'] = caseN_nonRL + "5"
+(_, _, um_nonRL_conv_tk_5, urmsf_nonRL_conv_tk_5, _, _, _, _, _, _, _, _, _, _, _, _, _) \
+    = get_odt_statistics_rt_at_chosen_averaging_times(inputParams_nonRL_conv, averaging_times_conv)
 
+um_nonRL_conv_tk_All    = np.array([um_nonRL_conv_tk, um_nonRL_conv_tk_2, um_nonRL_conv_tk_3, um_nonRL_conv_tk_4, um_nonRL_conv_tk_5])
+urmsf_nonRL_conv_tk_All = np.array([urmsf_nonRL_conv_tk, urmsf_nonRL_conv_tk_2, urmsf_nonRL_conv_tk_3, urmsf_nonRL_conv_tk_4, urmsf_nonRL_conv_tk_5])
+um_nonRL_conv_tk_Avg_Ref    = np.mean(um_nonRL_conv_tk_All[:,:,-1], axis=0)
+urmsf_nonRL_conv_tk_Avg_Ref = np.mean(urmsf_nonRL_conv_tk_All[:,:,-1], axis=0)
 
 # ------------- Calculate errors non-converged results vs converged baseline at t=tEndAvg -------------
 
@@ -277,19 +293,23 @@ NRMSE_nonRL = NRMSE_nonRL_num / NRMSE_nonRL_denum
 
 # ------------- Calculate errors non-converged results vs converged baseline at chosed averaging times -------------
 
-NRMSE_denum = np.linalg.norm(um_baseline, 2)
+NRMSE_denum = np.linalg.norm(um_nonRL_conv_tk_Avg_Ref, 2)
 
 # RL non-converged:
 ntk_nonConv = len(averaging_times_nonConv)
 NRMSE_RL_nonConv_tk = np.zeros((ntk_nonConv, nrlz))
 for irlz in range(nrlz):
     for itk in range(ntk_nonConv):
-        NRMSE_RL_nonConv_tk[itk, irlz] = np.linalg.norm(um_RL_nonConv_tk[:,itk,irlz] - um_baseline, 2) / NRMSE_denum
+        NRMSE_RL_nonConv_tk[itk, irlz] = np.linalg.norm(um_RL_nonConv_tk[:,itk,irlz] - um_nonRL_conv_tk_Avg_Ref, 2) / NRMSE_denum
 
 # non-RL converged
-NRMSE_nonRL_conv_tk = np.zeros(ntk_conv)
+NRMSE_nonRL_conv_tk = np.zeros((5, ntk_conv))
 for itk in range(ntk_conv):
-    NRMSE_nonRL_conv_tk[itk] = np.linalg.norm(um_nonRL_conv_tk[:,itk] - um_baseline, 2) / NRMSE_denum
+    NRMSE_nonRL_conv_tk[0,itk] = np.linalg.norm(um_nonRL_conv_tk[:,itk]   - um_nonRL_conv_tk_Avg_Ref, 2) / NRMSE_denum
+    NRMSE_nonRL_conv_tk[1,itk] = np.linalg.norm(um_nonRL_conv_tk_2[:,itk] - um_nonRL_conv_tk_Avg_Ref, 2) / NRMSE_denum
+    NRMSE_nonRL_conv_tk[2,itk] = np.linalg.norm(um_nonRL_conv_tk_3[:,itk] - um_nonRL_conv_tk_Avg_Ref, 2) / NRMSE_denum
+    NRMSE_nonRL_conv_tk[3,itk] = np.linalg.norm(um_nonRL_conv_tk_4[:,itk] - um_nonRL_conv_tk_Avg_Ref, 2) / NRMSE_denum
+    NRMSE_nonRL_conv_tk[4,itk] = np.linalg.norm(um_nonRL_conv_tk_5[:,itk] - um_nonRL_conv_tk_Avg_Ref, 2) / NRMSE_denum
 
 # ------------------------ Build plots ------------------------
 
@@ -307,7 +327,7 @@ visualizer = ChannelVisualizer(postMultipleRlzDir)
 visualizer.RL_u_mean_convergence(yplus[1:], rlzN_Arr, um_RL_nonConv[1:], urmsf_RL_nonConv[1:], um_nonRL_nonConv[1:], urmsf_nonRL_nonConv[1:], um_baseline[1:], urmsf_baseline[1:], tEndAvg_nonConv_plots, tEndAvg_baseline)
 visualizer.RL_err_convergence(rlzN_Arr, NRMSE_RL, NRMSE_nonRL, tEndAvg_nonConv_plots, "NRMSE")
 ### visualizer.RL_err_convergence(rlzN_Arr, relL2Err_RL, relL2Err_nonRL, tEndAvg_nonConv_plots, "RelL2Err")
-visualizer.RL_err_convergence_along_time(rlzN_Arr, NRMSE_RL_nonConv_tk, NRMSE_nonRL_conv_tk[:-1], averaging_times_nonConv_plots, averaging_times_conv_plots[:-1], "NRMSE")
+visualizer.RL_err_convergence_along_time(rlzN_Arr, NRMSE_RL_nonConv_tk, NRMSE_nonRL_conv_tk[:,:-1], averaging_times_nonConv_plots, averaging_times_conv_plots[:-1], "NRMSE")
 visualizer.RL_Rij_convergence(ydelta[1:-1], rlzN_Arr, 
                               Rkk_RL_nonConv[1:-1],    lambda1_RL_nonConv[1:-1],    lambda2_RL_nonConv[1:-1],    lambda3_RL_nonConv[1:-1],    xmap1_RL_nonConv[1:-1],    xmap2_RL_nonConv[1:-1],
                               Rkk_nonRL_nonConv[1:-1], lambda1_nonRL_nonConv[1:-1], lambda2_nonRL_nonConv[1:-1], lambda3_nonRL_nonConv[1:-1], xmap1_nonRL_nonConv[1:-1], xmap2_nonRL_nonConv[1:-1],

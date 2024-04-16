@@ -96,8 +96,9 @@ for iline in range(len(lines)):
             end_idx   = line.find("]", start_idx)
             str_actions = line[start_idx:end_idx]
         list_str_actions   = str_actions.split(",")
-        list_float_actions = [float(value.strip()) for value in list_str_actions]
-        actions.append(list_float_actions)
+        list_float_actions = [float(value.strip()) for value in list_str_actions if value != "ns: # MPI IS ON; Nprocs = 1"]
+        if len(list_float_actions) == 6:
+            actions.append(list_float_actions)
     else:
         pass
 # convert lists to np.arrays
@@ -113,6 +114,5 @@ actions           = np.array(actions)
 #timeRL = np.arange(tBeginAvg + dtActions, tEndAvg + 1e-8, dtActions) - tBeginAvg
 
 visualizer = ChannelVisualizer(postNohupDir)
-
 visualizer.build_RL_rewards_convergence_nohup(rewards_total, rewards_relL2Err, rewards_rhsfRatio, inputRL_filepath)
 visualizer.build_RL_actions_convergence_nohup(actions, actions_avg_freq)

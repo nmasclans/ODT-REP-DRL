@@ -61,6 +61,7 @@ echo -e "----------- anisotropy_tensor_odt_vs_odtReference.py -----------"
 echo -e "----------------------------------------------------------------\n\n\n"
 python3 anisotropy_tensor_odt_vs_odtReference.py "$1" "$2" "$3" "$6" "$7"
 
+### Attention: very slow script!
 echo -e "\n\n\n----------------------------------------------------------------"
 echo -e "------------- anisotropy_tensor_odt_convergence.py -------------"
 echo -e "----------------------------------------------------------------\n\n\n"
