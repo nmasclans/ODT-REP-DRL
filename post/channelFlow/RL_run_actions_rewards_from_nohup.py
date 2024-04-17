@@ -70,37 +70,40 @@ rewards_rhsfRatio = []
 actions = []
 for iline in range(len(lines)):
     line = lines[iline]
-    if "numerical utau: " in line:
-        start_idx = line.find("numerical utau: ") + len("numerical utau: ")
-        utau.append(float(line[start_idx:]))
-    elif "numerical bc: " in line:
-        start_idx = line.find("numerical bc: ") + len("numerical bc: ")
-        bc.append(float(line[start_idx:]))
-    elif "Rewards" in line:
-        start_idx = line.find("'ctrl_y0': ") + len("'ctrl_y0': ")
-        end_idx   = line.find("}", start_idx)
-        rewards_total.append(float(line[start_idx:end_idx]))
-    elif "Relative L2 Error" in line:
-        start_idx = line.find("Relative L2 Error = ") + len("Relative L2 Error = ")
-        rewards_relL2Err.append(float(line[start_idx:]))
-    elif "rhsfRatio Error" in line:
-        start_idx = line.find("rhsfRatio Error = ") + len("rhsfRatio Error = ")
-        rewards_rhsfRatio.append(float(line[start_idx:]))
-    elif "Actions" in line:
-        start_idx = line.find("Actions: {'ctrl_y0': array(") + len("Actions: {'ctrl_y0': array([")
-        if line.find("]", start_idx) == -1: # not found, actions span for 2 lines:
-            str_1stline = line[start_idx:-len("\n")]
-            str_2ndline = lines[iline+1][:-len("], dtype=float32)}\n")]
-            str_actions = str_1stline + str_2ndline
+    try:
+        if "numerical utau: " in line:
+            start_idx = line.find("numerical utau: ") + len("numerical utau: ")
+            utau.append(float(line[start_idx:]))
+        elif "numerical bc: " in line:
+            start_idx = line.find("numerical bc: ") + len("numerical bc: ")
+            bc.append(float(line[start_idx:]))
+        elif "Rewards" in line:
+            start_idx = line.find("'ctrl_y0': ") + len("'ctrl_y0': ")
+            end_idx   = line.find("}", start_idx)
+            rewards_total.append(float(line[start_idx:end_idx]))
+        elif "Relative L2 Error" in line:
+            start_idx = line.find("Relative L2 Error = ") + len("Relative L2 Error = ")
+            rewards_relL2Err.append(float(line[start_idx:]))
+        elif "rhsfRatio Error" in line:
+            start_idx = line.find("rhsfRatio Error = ") + len("rhsfRatio Error = ")
+            rewards_rhsfRatio.append(float(line[start_idx:]))
+        elif "Actions" in line:
+            start_idx = line.find("Actions: {'ctrl_y0': array(") + len("Actions: {'ctrl_y0': array([")
+            if line.find("]", start_idx) == -1: # not found, actions span for 2 lines:
+                str_1stline = line[start_idx:-len("\n")]
+                str_2ndline = lines[iline+1][:-len("], dtype=float32)}\n")]
+                str_actions = str_1stline + str_2ndline
+            else:
+                end_idx   = line.find("]", start_idx)
+                str_actions = line[start_idx:end_idx]
+            list_str_actions   = str_actions.split(",")
+            list_float_actions = [float(value.strip()) for value in list_str_actions]
+            if len(list_float_actions) == 6:
+                actions.append(list_float_actions)
         else:
-            end_idx   = line.find("]", start_idx)
-            str_actions = line[start_idx:end_idx]
-        list_str_actions   = str_actions.split(",")
-        list_float_actions = [float(value.strip()) for value in list_str_actions if value != "ns: # MPI IS ON; Nprocs = 1"]
-        if len(list_float_actions) == 6:
-            actions.append(list_float_actions)
-    else:
-        pass
+            pass
+    except ValueError:
+        continue
 # convert lists to np.arrays
 utau              = np.array(utau)
 bc                = np.array(bc)
