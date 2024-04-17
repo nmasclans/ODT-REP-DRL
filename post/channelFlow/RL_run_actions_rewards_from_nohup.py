@@ -77,7 +77,7 @@ for iline in range(len(lines)):
         elif "numerical bc: " in line:
             start_idx = line.find("numerical bc: ") + len("numerical bc: ")
             bc.append(float(line[start_idx:]))
-        elif "Rewards" in line:
+        elif "Rewards: {'ctrl_y0': " in line:
             start_idx = line.find("'ctrl_y0': ") + len("'ctrl_y0': ")
             end_idx   = line.find("}", start_idx)
             rewards_total.append(float(line[start_idx:end_idx]))
@@ -87,23 +87,29 @@ for iline in range(len(lines)):
         elif "rhsfRatio Error" in line:
             start_idx = line.find("rhsfRatio Error = ") + len("rhsfRatio Error = ")
             rewards_rhsfRatio.append(float(line[start_idx:]))
-        elif "Actions" in line:
+        elif "Actions: {'ctrl_y0': array(" in line:
+            print("Actions found!!!!!!!")
             start_idx = line.find("Actions: {'ctrl_y0': array(") + len("Actions: {'ctrl_y0': array([")
             if line.find("]", start_idx) == -1: # not found, actions span for 2 lines:
-                str_1stline = line[start_idx:-len("\n")]
-                str_2ndline = lines[iline+1][:-len("], dtype=float32)}\n")]
+                str_1stline = line[start_idx:-len("\n")]; print(str_1stline)
+                line2nd     = lines[iline+1]
+                str_2ndline = line2nd[:line2nd.find("]")]; print(str_2ndline)
                 str_actions = str_1stline + str_2ndline
             else:
                 end_idx   = line.find("]", start_idx)
                 str_actions = line[start_idx:end_idx]
+            print("str_actions =", str_actions)
+
             list_str_actions   = str_actions.split(",")
+            print("list_float_actions = ", list_str_actions)
             list_float_actions = [float(value.strip()) for value in list_str_actions]
             if len(list_float_actions) == 6:
                 actions.append(list_float_actions)
         else:
             pass
     except ValueError:
-        continue
+        pass
+
 # convert lists to np.arrays
 utau              = np.array(utau)
 bc                = np.array(bc)
@@ -118,4 +124,5 @@ actions           = np.array(actions)
 
 visualizer = ChannelVisualizer(postNohupDir)
 visualizer.build_RL_rewards_convergence_nohup(rewards_total, rewards_relL2Err, rewards_rhsfRatio, inputRL_filepath)
+print(actions)
 visualizer.build_RL_actions_convergence_nohup(actions, actions_avg_freq)
