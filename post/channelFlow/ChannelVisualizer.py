@@ -1112,8 +1112,9 @@ class ChannelVisualizer():
         if nrlz == 1:
             plt.semilogy(averaging_times_RL, err_RL[:,0], '-k', label="RL Rlz 0")
         else:
+            linestyle= ["-", ":", "--", "-."]
             for irlz in range(nrlz):
-                plt.semilogy(averaging_times_RL, err_RL[:,irlz], '-k', label=f"RL Rlz {rlzArr[irlz]}")
+                plt.semilogy(averaging_times_RL, err_RL[:,irlz], color='black', linestyle=linestyle[irlz%nrlz], label=f"RL Rlz {rlzArr[irlz]}")
 
         # configure plot
         plt.xlabel(r'averaging time [s]')
