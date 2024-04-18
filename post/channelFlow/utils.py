@@ -579,11 +579,13 @@ def get_odt_statistics_rt(input_params):
     yplus  = yu * utau / kvisc
 
     # Check: Re_tau and u_tau of ODT data
-    dumdy0     = (um_data[1]-um_data[0])/(yu[1]-yu[0])
+    dumdy0   = (um_data[1]-um_data[0])/(yu[1]-yu[0])
     utauOdt  = np.sqrt(kvisc * np.abs(dumdy0))
     RetauOdt = utauOdt * delta / kvisc
+    ubulkOdt = np.mean(um_data) 
     print(f"\n[get_odt_statistics_rt] Expected Re_tau = {Retau} vs. Effective Re_tau = {RetauOdt}")
     print(f"[get_odt_statistics_rt] Expected u_tau = {utau} vs. Effective u_tau = {utauOdt}")
+    print(f"[get_odt_statistics_reference] Effective u_bulk = {ubulkOdt} (assuming ct. unif. density & regular grid)")
 
     # ------------ Compute Stress Decomposition ------------
     
@@ -687,8 +689,10 @@ def get_odt_statistics_reference(input_params):
     dumdy0     = (um_data[1]-um_data[0])/(yu[1]-yu[0])
     utauOdt  = np.sqrt(kvisc * np.abs(dumdy0))
     RetauOdt = utauOdt * delta / kvisc
+    ubulkOdt = np.mean(um_data) # assuming ct. unif. density and regular grid)
     print(f"\n[get_odt_statistics_reference] Expected Re_tau = {Retau} vs. Effective Re_tau = {RetauOdt}")
     print(f"[get_odt_statistics_reference] Expected u_tau = {utau} vs. Effective u_tau = {utauOdt}")
+    print(f"[get_odt_statistics_reference] Effective u_bulk = {ubulkOdt} (assuming ct. unif. density & regular grid)")
 
     # ------------ Compute Stress Decomposition ------------
     
