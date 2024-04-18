@@ -1108,7 +1108,7 @@ class ChannelVisualizer():
         # RL non-converged:
         nrlz = len(rlzArr)
         for id_ref in range(5):
-            plt.semilogy(averaging_times_ref, err_ref[id_ref,:], label=f"Reference {id_ref}")
+            plt.semilogy(averaging_times_ref, err_ref[id_ref,:], alpha = 0.7, label=f"Reference {id_ref}")
         if nrlz == 1:
             plt.semilogy(averaging_times_RL, err_RL[:,0], '-k', label="RL Rlz 0")
         else:
@@ -1126,10 +1126,17 @@ class ChannelVisualizer():
         plt.close()
 
 
-    def build_RL_rewards_convergence(self, rlzArr, timeArr, rewards_total, rewards_err, rewards_rhsfRatio):
+    def build_RL_rewards_convergence(self, rlzArr, timeArr, rewards_total, rewards_err_umean, rewards_rhsfRatio):
         # Plot RL rewards along time, for each realization
         self.RL_variable_convergence_along_time("RL_rewards_total_convergence.jpg", "Reward", rlzArr, timeArr, rewards_total)
-        self.RL_variable_convergence_along_time("RL_rewards_term_relL2Err_convergence.jpg", "um relative L2 Error", rlzArr, timeArr, rewards_err)
+        self.RL_variable_convergence_along_time("RL_rewards_term_relL2Err_umean_convergence.jpg", "um relative L2 Error", rlzArr, timeArr, rewards_err_umean)
+        self.RL_variable_convergence_along_time("RL_rewards_term_rhsfRatio_convergence.jpg", "abs(RHS-f Ratio - 1)", rlzArr, timeArr, rewards_rhsfRatio)
+
+    def build_RL_rewards_convergence_v2(self, rlzArr, timeArr, rewards_total, rewards_err_umean, rewards_err_rmsf, rewards_rhsfRatio):
+        # Plot RL rewards along time, for each realization
+        self.RL_variable_convergence_along_time("RL_rewards_total_convergence.jpg", "Reward", rlzArr, timeArr, rewards_total)
+        self.RL_variable_convergence_along_time("RL_rewards_term_relL2Err_umean_convergence.jpg", "<u> relative L2 Error", rlzArr, timeArr, rewards_err_umean)
+        self.RL_variable_convergence_along_time("RL_rewards_term_relL2Err_urmsf_convergence.jpg", "u' relative L2 Error", rlzArr, timeArr, rewards_err_rmsf)
         self.RL_variable_convergence_along_time("RL_rewards_term_rhsfRatio_convergence.jpg", "abs(RHS-f Ratio - 1)", rlzArr, timeArr, rewards_rhsfRatio)
 
 
@@ -1171,7 +1178,51 @@ class ChannelVisualizer():
             rew_rhsfRatio_weight = float(config.get("runner", "rew_rhsfRatio_weight"))
             ax[3].semilogy(rew_relL2Err_weight  * RL_rewards_term_relL2Err, color='tab:orange', label="weighted Relative L2 Penalty Term (aim: 0)")
             ax[3].semilogy(rew_rhsfRatio_weight * rewards_term_rhsfRatio,   color='tab:green',  label="weighted RHS-F Ratio Penalty Term (aim: 0)")
-            ax[3].legend(loc='upper right', frameon=True, fontsize=10)
+            ax[3].legend(loc='lower right', frameon=True, fontsize=10)
+
+        for i in range(nax):
+            ax[i].set_xlabel("number simulation steps")
+            ax[i].grid()
+
+        plt.tight_layout()
+        plt.savefig(filename, dpi=600)
+        plt.close()
+
+
+    def build_RL_rewards_convergence_nohup_v2(self, rewards_total, RL_rewards_term_relL2Err_umean, RL_rewards_term_relL2Err_urmsf, rewards_term_rhsfRatio, inputRL_filepath=None):
+        # Plot RL rewards along simulation steps from nohup information
+
+        if inputRL_filepath is None:
+            nax     = 4
+        else:
+            nax     = 5
+        fig, ax = plt.subplots(1,nax,figsize=(5*nax,5))
+
+        filename = os.path.join(self.postRlzDir, "RL_rewards.jpg")
+        print(f"\nMAKING PLOT {filename}")
+
+        ax[0].plot(rewards_total)
+        ax[0].set_ylabel("Total Reward")
+        
+        ax[1].semilogy(RL_rewards_term_relL2Err_umean)
+        ax[1].set_ylabel(r"$<u>$ Relative L2 Error - NRMSE($<u>$)")
+
+        ax[2].semilogy(RL_rewards_term_relL2Err_urmsf)
+        ax[2].set_ylabel(r"$u'$ Relative L2 Error - NRMSE($u'$)")
+
+        ax[3].semilogy(rewards_term_rhsfRatio)
+        ax[3].set_ylabel("abs(RHS-f Ratio - 1)")
+        
+        if inputRL_filepath is not None:
+            config = configparser.ConfigParser()
+            config.read(inputRL_filepath)
+            rew_relL2Err_umean_weight = float(config.get("runner", "rew_relL2Err_umean_weight"))
+            rew_relL2Err_urmsf_weight = float(config.get("runner", "rew_relL2Err_urmsf_weight"))
+            rew_rhsfRatio_weight = float(config.get("runner", "rew_rhsfRatio_weight"))
+            ax[4].semilogy(rew_relL2Err_umean_weight  * RL_rewards_term_relL2Err_umean, color='tab:orange', label=r"weighted NRMSE($<u>$)")
+            ax[4].semilogy(rew_relL2Err_urmsf_weight  * RL_rewards_term_relL2Err_urmsf, color='tab:blue',   label=r"weighted NRMSE($u'$)")
+            ax[4].semilogy(rew_rhsfRatio_weight * rewards_term_rhsfRatio,   color='tab:green',  label="weighted RHS-F Ratio Penalty Term")
+            ax[4].legend(loc='lower right', frameon=True, fontsize=10)
 
         for i in range(nax):
             ax[i].set_xlabel("number simulation steps")
