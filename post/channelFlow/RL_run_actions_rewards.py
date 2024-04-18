@@ -69,7 +69,6 @@ assert tEndAvg <= dTimeEnd, "Averaging end time for calculations and plots must 
 
 # --- Chosen averaging times ---
 
-print(tBeginAvg, dTimeStart)
 if tBeginAvg >= dTimeStart:
     timeRL = np.arange(tBeginAvg + dtActions, tEndAvg + 1e-8, dtActions) - tBeginAvg
 else:
@@ -91,8 +90,9 @@ data_0 = np.load(logFilepathList[0])
 # initialize rewards and actions arrays for all realizations
 actions           = np.zeros([nrlz, nActSteps, nActDof])    # each rlz actions have shape [nActSteps, nActDof]
 rewards_total     = np.zeros([nrlz, nActSteps,])            # each rlz rewards have shape [nActSteps,]
-## rewards_bc        = np.zeros([nrlz, nActSteps,])         # each rlz rewards have shape [nActSteps,]
-rewards_err       = np.zeros([nrlz, nActSteps,])            # each rlz rewards have shape [nActSteps,]
+## rewards_bc     = np.zeros([nrlz, nActSteps,])            # each rlz rewards have shape [nActSteps,]
+rewards_err_umean = np.zeros([nrlz, nActSteps,])            # each rlz rewards have shape [nActSteps,]
+rewards_err_urmsf = np.zeros([nrlz, nActSteps,])            # each rlz rewards have shape [nActSteps,]
 rewards_rhsfRatio = np.zeros([nrlz, nActSteps,])            # each rlz rewards have shape [nActSteps,]
 
 # get rewards and actions data
@@ -101,9 +101,15 @@ for irlz in range(nrlz):
     data = np.load(logFilepathList[irlz])
     actions[irlz,:,:]         = data['act']                 # shape [nActSteps, nActDof]
     rewards_total[irlz,:]     = data['rew']                 # shape [nActSteps,]
-    ## rewards_bc[irlz,:]        = data['rew_bc']           # shape [nActSteps,]
-    rewards_err[irlz,:]       = data['rew_err']             # shape [nActSteps,]
+    ## rewards_bc[irlz,:]     = data['rew_bc']              # shape [nActSteps,]
     rewards_rhsfRatio[irlz,:] = data['rew_rhsfRatio']       # shape [nActSteps,]
+    try: # relL2Err reward penalties: only u-mean penalty term ('rew_err')
+        rewards_err_umean[irlz,:] = data['rew_err']         # shape [nActSteps,]
+        isUrmsfPenaltyTerm = False
+    except KeyError:
+        rewards_err_umean[irlz,:] = data['rew_err_umean']
+        rewards_err_urmsf[irlz,:] = data['rew_err_urmsf']
+        isUrmsfPenaltyTerm = True    
 
 # --- Get reward from non-RL realization
 # TODO
@@ -111,7 +117,10 @@ for irlz in range(nrlz):
 # --------------- Plot rewards and actions ---------------
 
 visualizer = ChannelVisualizer(postMultipleRlzDir)
-visualizer.build_RL_rewards_convergence(rlzArr, timeRL, rewards_total, rewards_err, rewards_rhsfRatio)
+if not(isUrmsfPenaltyTerm):
+    visualizer.build_RL_rewards_convergence(rlzArr, timeRL, rewards_total, rewards_err_umean, rewards_rhsfRatio)
+else:
+    visualizer.build_RL_rewards_convergence_v2(rlzArr, timeRL, rewards_total, rewards_err_umean, rewards_err_urmsf, rewards_rhsfRatio)
 visualizer.build_RL_actions_convergence(rlzArr, timeRL, actions)
 
     

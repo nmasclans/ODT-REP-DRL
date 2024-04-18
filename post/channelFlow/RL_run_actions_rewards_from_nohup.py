@@ -57,6 +57,10 @@ Assumption: nohup lines regarding RL training process are structured as:
 [parallel_env/evolve_simulation] 1st term: Relative L2 Error = 1.0296301e-05
 [parallel_env/evolve_simulation] 2nd term: BCs Error = 7.128120421e-21
 [parallel_env/evolve_simulation] 3rd term: rhsfRatio Error = 0.96414140414852
+.... or ....
+[parallel_env/evolve_simulation] 1st term: Relative L2 Error u-mean = 0.02556821003881191
+[parallel_env/evolve_simulation] 2nd term: Relative L2 Error u-rmsf = 0.4296638197039632
+[parallel_env/evolve_simulation] 3rd term: rhsfRatio Error = 0.6740214782443593
 """
 
 with open(nohup_filepath, "r") as file:
@@ -65,7 +69,8 @@ with open(nohup_filepath, "r") as file:
 utau = []
 bc   = []
 rewards_total = []
-rewards_relL2Err = []
+rewards_relL2Err_umean = []
+rewards_relL2Err_urmsf = []
 rewards_rhsfRatio = []
 actions = []
 for iline in range(len(lines)):
@@ -81,9 +86,15 @@ for iline in range(len(lines)):
             start_idx = line.find("'ctrl_y0': ") + len("'ctrl_y0': ")
             end_idx   = line.find("}", start_idx)
             rewards_total.append(float(line[start_idx:end_idx]))
-        elif "Relative L2 Error" in line:
+        elif "Relative L2 Error = " in line:
             start_idx = line.find("Relative L2 Error = ") + len("Relative L2 Error = ")
-            rewards_relL2Err.append(float(line[start_idx:]))
+            rewards_relL2Err_umean.append(float(line[start_idx:]))
+        elif "Relative L2 Error u-mean = " in line:
+            start_idx = line.find("Relative L2 Error u-mean = ") + len("Relative L2 Error u-mean = ")
+            rewards_relL2Err_umean.append(float(line[start_idx:]))
+        elif "Relative L2 Error u-rmsf = " in line:
+            start_idx = line.find("Relative L2 Error u-rmsf = ") + len("Relative L2 Error u-rmsf = ")
+            rewards_relL2Err_urmsf.append(float(line[start_idx:]))
         elif "rhsfRatio Error" in line:
             start_idx = line.find("rhsfRatio Error = ") + len("rhsfRatio Error = ")
             rewards_rhsfRatio.append(float(line[start_idx:]))
@@ -107,17 +118,21 @@ for iline in range(len(lines)):
         pass
 
 # convert lists to np.arrays
-utau              = np.array(utau)
-bc                = np.array(bc)
-rewards_total     = np.array(rewards_total)
-rewards_relL2Err  = np.array(rewards_relL2Err)
-rewards_rhsfRatio = np.array(rewards_rhsfRatio)
-actions           = np.array(actions)
+utau                    = np.array(utau)
+bc                      = np.array(bc)
+rewards_total           = np.array(rewards_total)
+rewards_relL2Err_umean  = np.array(rewards_relL2Err_umean)
+rewards_relL2Err_urmsf  = np.array(rewards_relL2Err_urmsf)
+rewards_rhsfRatio       = np.array(rewards_rhsfRatio)
+actions                 = np.array(actions)
 
 # --------------- Plot rewards and actions ---------------
 
 #timeRL = np.arange(tBeginAvg + dtActions, tEndAvg + 1e-8, dtActions) - tBeginAvg
 
 visualizer = ChannelVisualizer(postNohupDir)
-visualizer.build_RL_rewards_convergence_nohup(rewards_total, rewards_relL2Err, rewards_rhsfRatio, inputRL_filepath)
+if len(rewards_relL2Err_urmsf) == 0: # no u-rmsf penalty term in the reward
+    visualizer.build_RL_rewards_convergence_nohup(rewards_total, rewards_relL2Err_umean, rewards_rhsfRatio, inputRL_filepath)
+else: # there is a u-rmsf penalty term in the reward
+    visualizer.build_RL_rewards_convergence_nohup_v2(rewards_total, rewards_relL2Err_umean, rewards_relL2Err_urmsf, rewards_rhsfRatio, inputRL_filepath)
 visualizer.build_RL_actions_convergence_nohup(actions, actions_avg_freq)
