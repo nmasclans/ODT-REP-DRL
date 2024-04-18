@@ -64,8 +64,8 @@ dv_uvw::dv_uvw(domain  *line,
 
 #if _FEEDBACK_LOOP_BODY_FORCE_
     /// Estimated uniform body force to drive the flow
-    // controller_output = - domn->pram->dPdx / domn->pram->rho0;  /// Initialize controller output
-    controller_output = 0.0;
+    controller_output = - domn->pram->dPdx / domn->pram->rho0;  /// Initialize controller output
+    // controller_output = 0.0;
     controller_error  = 0.0;			        	            /// Initialize controller error
     controller_K_p    = domn->pram->controller_K_p;             /// Controller proportional gain (1.0e-2 by default)
     u_bulk_target     = domn->pram->u_bulk;
@@ -135,8 +135,8 @@ void dv_uvw::getRhsSrc(const int ipt){
         u_bulk_numeric /= length_sum;
     
         // Update controller variables
-        // controller_error   = domn->pram->utauTarget - utauNumerical;
-        controller_error   = u_bulk_target - u_bulk_numeric;
+        controller_error   = domn->pram->utauTarget - utauNumerical;
+        // controller_error   = u_bulk_target - u_bulk_numeric;
         controller_output += controller_K_p * controller_error;
         /// static int cout_counter = 0;
         /// if (cout_counter % 100 == 0) {
