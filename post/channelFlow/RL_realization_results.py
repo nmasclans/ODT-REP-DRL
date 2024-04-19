@@ -241,25 +241,17 @@ else:
 averaging_times_conv_plots = averaging_times_conv - tBeginAvg
 ntk_conv = len(averaging_times_conv)
 
-(_, _, um_nonRL_conv_tk_0, urmsf_nonRL_conv_tk_0, _, _, _, _, _, _, _, _, _, _, _, _, _) \
-    = get_odt_statistics_rt_at_chosen_averaging_times(inputParams_nonRL_conv, averaging_times_conv)
-inputParams_nonRL_conv['caseN'] = caseN_nonRL + "2"
-(_, _, um_nonRL_conv_tk_1, urmsf_nonRL_conv_tk_1, _, _, _, _, _, _, _, _, _, _, _, _, _) \
-    = get_odt_statistics_rt_at_chosen_averaging_times(inputParams_nonRL_conv, averaging_times_conv)
-inputParams_nonRL_conv['caseN'] = caseN_nonRL + "3"
-(_, _, um_nonRL_conv_tk_2, urmsf_nonRL_conv_tk_2, _, _, _, _, _, _, _, _, _, _, _, _, _) \
-    = get_odt_statistics_rt_at_chosen_averaging_times(inputParams_nonRL_conv, averaging_times_conv)
-inputParams_nonRL_conv['caseN'] = caseN_nonRL + "4"
-(_, _, um_nonRL_conv_tk_3, urmsf_nonRL_conv_tk_3, _, _, _, _, _, _, _, _, _, _, _, _, _) \
-    = get_odt_statistics_rt_at_chosen_averaging_times(inputParams_nonRL_conv, averaging_times_conv)
-inputParams_nonRL_conv['caseN'] = caseN_nonRL + "5"
-(_, _, um_nonRL_conv_tk_4, urmsf_nonRL_conv_tk_4, _, _, _, _, _, _, _, _, _, _, _, _, _) \
-    = get_odt_statistics_rt_at_chosen_averaging_times(inputParams_nonRL_conv, averaging_times_conv)
+nRef = 10
+um_nonRL_conv_tk_All_Ref    = np.zeros([nRef, int(nunif/2), ntk_conv])    
+urmsf_nonRL_conv_tk_All_Ref = np.zeros([nRef, int(nunif/2), ntk_conv])    
 
-um_nonRL_conv_tk_All        = np.array([um_nonRL_conv_tk_0,    um_nonRL_conv_tk_1,    um_nonRL_conv_tk_2,    um_nonRL_conv_tk_3,    um_nonRL_conv_tk_4])
-urmsf_nonRL_conv_tk_All     = np.array([urmsf_nonRL_conv_tk_0, urmsf_nonRL_conv_tk_1, urmsf_nonRL_conv_tk_2, urmsf_nonRL_conv_tk_3, urmsf_nonRL_conv_tk_4])
-um_nonRL_conv_tk_Avg_Ref    = np.mean(um_nonRL_conv_tk_All[:,:,-1], axis=0)
-urmsf_nonRL_conv_tk_Avg_Ref = np.mean(urmsf_nonRL_conv_tk_All[:,:,-1], axis=0)
+for iRef in range(nRef):
+    inputParams_nonRL_conv['caseN'] = caseN_nonRL[:-1] + str(iRef)
+    (_, _, um_nonRL_conv_tk_All_Ref[iRef,:], urmsf_nonRL_conv_tk_All_Ref[iRef,:], _, _, _, _, _, _, _, _, _, _, _, _, _) \
+        = get_odt_statistics_rt_at_chosen_averaging_times(inputParams_nonRL_conv, averaging_times_conv)
+
+um_nonRL_conv_tk_Avg_Ref    = np.mean(um_nonRL_conv_tk_All_Ref[:,:,-1], axis=0)
+urmsf_nonRL_conv_tk_Avg_Ref = np.mean(urmsf_nonRL_conv_tk_All_Ref[:,:,-1], axis=0)
 
 # ------------- Calculate errors non-converged results vs converged baseline at t=tEndAvg -------------
 
@@ -306,12 +298,12 @@ for irlz in range(nrlz):
         urmsf_NRMSE_RL_nonConv_tk[itk, irlz] = np.linalg.norm(urmsf_RL_nonConv_tk[:,itk,irlz] - urmsf_nonRL_conv_tk_Avg_Ref, 2) / urmsf_NRMSE_denum
 
 # non-RL converged
-um_NRMSE_nonRL_conv_tk    = np.zeros((5, ntk_conv))
-urmsf_NRMSE_nonRL_conv_tk = np.zeros((5, ntk_conv))
-for iref in range(5):
+um_NRMSE_nonRL_conv_tk    = np.zeros((nRef, ntk_conv))
+urmsf_NRMSE_nonRL_conv_tk = np.zeros((nRef, ntk_conv))
+for iref in range(nRef):
     for itk in range(ntk_conv):
-        um_NRMSE_nonRL_conv_tk[iref,itk]    = np.linalg.norm(um_nonRL_conv_tk_All[iref,:,itk]    - um_nonRL_conv_tk_Avg_Ref, 2)    / um_NRMSE_denum
-        urmsf_NRMSE_nonRL_conv_tk[iref,itk] = np.linalg.norm(urmsf_nonRL_conv_tk_All[iref,:,itk] - urmsf_nonRL_conv_tk_Avg_Ref, 2) / urmsf_NRMSE_denum
+        um_NRMSE_nonRL_conv_tk[iref,itk]    = np.linalg.norm(um_nonRL_conv_tk_All_Ref[iref,:,itk]    - um_nonRL_conv_tk_Avg_Ref, 2)    / um_NRMSE_denum
+        urmsf_NRMSE_nonRL_conv_tk[iref,itk] = np.linalg.norm(urmsf_nonRL_conv_tk_All_Ref[iref,:,itk] - urmsf_nonRL_conv_tk_Avg_Ref, 2) / urmsf_NRMSE_denum
 
 # ------------------------ Build plots ------------------------
 
