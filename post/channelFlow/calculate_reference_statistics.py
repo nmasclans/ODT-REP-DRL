@@ -113,6 +113,39 @@ conv_Rxy         = rlzAvg_Rxy[-1,:]
 conv_Rxz         = rlzAvg_Rxz[-1,:]
 conv_Ryz         = rlzAvg_Ryz[-1,:]
 
+# enforce symmetry to averaged converged fields
+nunif2 = int(nunif/2)
+if nunif%2 != 0: # is odd
+    nunifb = nunif2
+    nunift = nunif2+1
+else:
+    nunifb = nunif2
+    nunift = nunif2
+symm_half_channel_conv_uvel_mean = 0.5 * (conv_uvel_mean[:nunifb] + np.flipud(conv_uvel_mean[nunift:]))
+symm_half_channel_conv_uvel_rmsf = 0.5 * (conv_uvel_rmsf[:nunifb] + np.flipud(conv_uvel_rmsf[nunift:]))
+symm_half_channel_conv_vvel_mean = 0.5 * (conv_vvel_mean[:nunifb] + np.flipud(conv_vvel_mean[nunift:]))
+symm_half_channel_conv_vvel_rmsf = 0.5 * (conv_vvel_rmsf[:nunifb] + np.flipud(conv_vvel_rmsf[nunift:]))
+symm_half_channel_conv_wvel_mean = 0.5 * (conv_wvel_mean[:nunifb] + np.flipud(conv_wvel_mean[nunift:]))
+symm_half_channel_conv_wvel_rmsf = 0.5 * (conv_wvel_rmsf[:nunifb] + np.flipud(conv_wvel_rmsf[nunift:]))
+symm_half_channel_conv_Rxx       = 0.5 * (conv_Rxx[:nunifb]       + np.flipud(conv_Rxx[nunift:]))
+symm_half_channel_conv_Ryy       = 0.5 * (conv_Ryy[:nunifb]       + np.flipud(conv_Ryy[nunift:]))
+symm_half_channel_conv_Rzz       = 0.5 * (conv_Rzz[:nunifb]       + np.flipud(conv_Rzz[nunift:]))
+symm_half_channel_conv_Rxy       = 0.5 * (conv_Rxy[:nunifb]       + np.flipud(conv_Rxy[nunift:]))
+symm_half_channel_conv_Rxz       = 0.5 * (conv_Rxz[:nunifb]       + np.flipud(conv_Rxz[nunift:]))
+symm_half_channel_conv_Ryz       = 0.5 * (conv_Ryz[:nunifb]       + np.flipud(conv_Ryz[nunift:]))
+conv_uvel_mean[:nunifb] = symm_half_channel_conv_uvel_mean;  conv_uvel_mean[nunift:] = np.flipud(symm_half_channel_conv_uvel_mean)
+conv_uvel_rmsf[:nunifb] = symm_half_channel_conv_uvel_rmsf;  conv_uvel_rmsf[nunift:] = np.flipud(symm_half_channel_conv_uvel_rmsf)
+conv_vvel_mean[:nunifb] = symm_half_channel_conv_vvel_mean;  conv_vvel_mean[nunift:] = np.flipud(symm_half_channel_conv_vvel_mean)
+conv_vvel_rmsf[:nunifb] = symm_half_channel_conv_vvel_rmsf;  conv_vvel_rmsf[nunift:] = np.flipud(symm_half_channel_conv_vvel_rmsf)
+conv_wvel_mean[:nunifb] = symm_half_channel_conv_wvel_mean;  conv_wvel_mean[nunift:] = np.flipud(symm_half_channel_conv_wvel_mean)
+conv_wvel_rmsf[:nunifb] = symm_half_channel_conv_wvel_rmsf;  conv_wvel_rmsf[nunift:] = np.flipud(symm_half_channel_conv_wvel_rmsf)
+conv_Rxx[:nunifb]       = symm_half_channel_conv_Rxx;        conv_Rxx[nunift:]       = np.flipud(symm_half_channel_conv_Rxx)
+conv_Ryy[:nunifb]       = symm_half_channel_conv_Ryy;        conv_Ryy[nunift:]       = np.flipud(symm_half_channel_conv_Ryy)
+conv_Rzz[:nunifb]       = symm_half_channel_conv_Rzz;        conv_Rzz[nunift:]       = np.flipud(symm_half_channel_conv_Rzz)
+conv_Rxy[:nunifb]       = symm_half_channel_conv_Rxy;        conv_Rxy[nunift:]       = np.flipud(symm_half_channel_conv_Rxy)
+conv_Rxz[:nunifb]       = symm_half_channel_conv_Rxz;        conv_Rxz[nunift:]       = np.flipud(symm_half_channel_conv_Rxz)
+conv_Ryz[:nunifb]       = symm_half_channel_conv_Ryz;        conv_Ryz[nunift:]       = np.flipud(symm_half_channel_conv_Ryz)
+
 # Calculate NRMSE (relative L2 error) of each rlz along time, compared with rlz-averaged field at tEnd
 NRMSE_uvel_mean  = np.zeros([numRefRlz, ntk]); NRMSE_denum_uvel_mean = np.linalg.norm(conv_uvel_mean, 2)
 NRMSE_uvel_rmsf  = np.zeros([numRefRlz, ntk]); NRMSE_denum_uvel_rmsf = np.linalg.norm(conv_uvel_rmsf, 2)
@@ -153,11 +186,38 @@ rlzAvg_NRMSE_Rxy       = np.mean(NRMSE_Rxy,       axis=0)
 rlzAvg_NRMSE_Rxz       = np.mean(NRMSE_Rxz,       axis=0)
 rlzAvg_NRMSE_Ryz       = np.mean(NRMSE_Ryz,       axis=0)
 
-# save reference data for umean & urmsf
-odt_data = np.vstack([posUnif, conv_uvel_mean, conv_uvel_rmsf]).T
-fname = f"./ODT_reference/Re{Retau}/statistics_reference.dat"
-np.savetxt(fname, odt_data, header="#         1_posUnif        2_uvel_mean        3_uvel_rmsf", fmt='%12.5E')
+# ------------------------------------------------------------------------------------------------------
+#                                           Save non-RL & baseline data
+# ------------------------------------------------------------------------------------------------------
 
+# At t = tk, save realizations-averaged (non-converged) statistical quantities
+dir   = f"./ODT_reference/Re{Retau}/data_rlz_avg/"
+zeros_arr = np.zeros(nunif) # for columns  4_uvel_rhsfRatio, 7_vvel_rhsfRatio, 10_wvel_rhsfRatio
+for tk in range(ntk):
+    fname = os.path.join(dir,f"stat_dmp_{tk:05d}.dat")
+    odt_data  = np.vstack([posUnif, rlzAvg_uvel_mean[tk,:], rlzAvg_uvel_rmsf[tk,:], zeros_arr, rlzAvg_vvel_mean[tk,:], rlzAvg_vvel_rmsf[tk,:], zeros_arr, rlzAvg_wvel_mean[tk,:], rlzAvg_wvel_rmsf[tk,:], zeros_arr, rlzAvg_Rxx[tk,:], rlzAvg_Ryy[tk,:], rlzAvg_Rzz[tk,:], rlzAvg_Rxy[tk,:], rlzAvg_Rxz[tk,:], rlzAvg_Ryz[tk,:]]).T
+    np.savetxt(fname, odt_data, 
+               header="        1_posUnif        2_uvel_mean        3_uvel_rmsf   4_uvel_rhsfRatio        5_vvel_mean        6_vvel_rmsf   7_vvel_rhsfRatio        8_wvel_mean        9_wvel_rmsf  10_wvel_rhsfRatio             11_Rxx             12_Ryy             13_Rzz             14_Rxy             15_Rxz             16_Ryz", 
+               comments=f"# time = {timeUnif[tk]}\n",
+               fmt="%18.10E")
+
+# At tEnd, save converged baseline data for umean & urmsf
+fname = f"./ODT_reference/Re{Retau}/statistics_reference_udata.dat"
+odt_data = np.vstack([posUnif, conv_uvel_mean, conv_uvel_rmsf]).T
+np.savetxt(fname, odt_data, header="        1_posUnif        2_uvel_mean        3_uvel_rmsf", comments=f"# time = {timeUnif[-1]}\n", fmt='%18.10E')
+
+# At tEnd, save converged baseline data for all converged statistics quantities
+fname = f"./ODT_reference/Re{Retau}/statistics_reference.dat"
+zeros_arr = np.zeros(nunif) # for columns  4_uvel_rhsfRatio, 7_vvel_rhsfRatio, 10_wvel_rhsfRatio
+odt_data  = np.vstack([posUnif, conv_uvel_mean, conv_uvel_rmsf, zeros_arr, conv_vvel_mean, conv_vvel_rmsf, zeros_arr, conv_wvel_mean, conv_wvel_rmsf, zeros_arr, conv_Rxx, conv_Ryy, conv_Rzz, conv_Rxy, conv_Rxz, conv_Ryz]).T
+np.savetxt(fname, odt_data, 
+           header="        1_posUnif        2_uvel_mean        3_uvel_rmsf   4_uvel_rhsfRatio        5_vvel_mean        6_vvel_rmsf   7_vvel_rhsfRatio        8_wvel_mean        9_wvel_rmsf  10_wvel_rhsfRatio             11_Rxx             12_Ryy             13_Rzz             14_Rxy             15_Rxz             16_Ryz",
+           comments=f"# time = {timeUnif[-1]}\n",
+           fmt="%18.10E")
+
+# ------------------------------------------------------------------------------------------------------
+#                                           Plot non-RL errors vs. baseline
+# ------------------------------------------------------------------------------------------------------
 # Plot umean NRMSE along time for each rlz (and averaged along realizations) 
 plt.figure()
 for irlz in range(numRefRlz):
