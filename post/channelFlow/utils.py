@@ -717,9 +717,7 @@ def get_odt_statistics_reference(input_params):
     )
 
 
-def get_odt_udata_rt(input_params):
-    """
-    """
+def get_odt_udata_rt(input_params, half_channel_symmetry=True):
 
     # --- Get ODT input parameters ---
     
@@ -760,21 +758,28 @@ def get_odt_udata_rt(input_params):
     urmsf_data   = data_stat[:,2] 
 
     # --- Mirror data (symmetric in the y-direction from the channel center)
-    # mirror data indexs
-    nunif        = len(um_data)
-    nunif2       = int(nunif/2)
-    nunifb, nunift = get_nunif2_walls(nunif, nunif2)
-    # mirror data
-    um_data      = 0.5 * ( um_data[:nunifb]      + np.flipud(um_data[nunift:])      )
-    urmsf_data   = 0.5 * ( urmsf_data[:nunifb]   + np.flipud(urmsf_data[nunift:])   )
-    
-    # --- scale y to y+
-    yu     = yu[:nunifb] + delta # mirror and add delta value
-    ydelta = yu/delta
-    yplus  = yu * utau / kvisc
+    if half_channel_symmetry:
+        # mirror data indexs
+        nunif        = len(um_data)
+        nunif2       = int(nunif/2)
+        nunifb, nunift = get_nunif2_walls(nunif, nunif2)
+        # mirror data
+        um_data      = 0.5 * ( um_data[:nunifb]      + np.flipud(um_data[nunift:])    )
+        urmsf_data   = 0.5 * ( urmsf_data[:nunifb]   + np.flipud(urmsf_data[nunift:]) )
+        
+        # --- scale y to y+
+        yu     = yu[:nunifb] + delta # mirror and add delta value
+        ydelta = yu/delta
+        yplus  = yu * utau / kvisc
+        dudy     = (um_data[1]-um_data[0])/(yu[1]-yu[0])
+    else:
+        ydelta = yu
+        yplus  = None
+        dudy_bw = (um_data[1]-um_data[0])/(yu[1]-yu[0])
+        dudy_tw = (um_data[-2]-um_data[-1])/((delta - yu[-2])-(delta - yu[-1]))
+        dudy   = 0.5 * ( dudy_bw + dudy_tw )
 
     # Check: Re_tau and u_tau of ODT data
-    dudy     = (um_data[1]-um_data[0])/(yu[1]-yu[0])
     utauOdt  = np.sqrt(kvisc * np.abs(dudy))
     RetauOdt = utauOdt * delta / kvisc
     print(f"\n[get_odt_udata_rt] Expected Re_tau = {Retau} vs. Effective Re_tau = {RetauOdt}")
@@ -1276,7 +1281,7 @@ def get_odt_statistics_rt_at_chosen_averaging_times(input_params, averaging_time
         # lambda2_data[:,i] = data_stat[:,18]
         # xmap1_data[:,i]   = data_stat[:,19] 
         # xmap2_data[:,i]   = data_stat[:,20] 
-
+    
     # mirror data (symmetric in the y-direction from the channel center)
     um_data      = 0.5 * ( um_data[:nunifb,:]      + np.flipud(um_data[nunift:,:])      )
     urmsf_data   = 0.5 * ( urmsf_data[:nunifb,:]   + np.flipud(urmsf_data[nunift:,:])   )
@@ -1300,13 +1305,12 @@ def get_odt_statistics_rt_at_chosen_averaging_times(input_params, averaging_time
     # xmap2_data   = 0.5 * ( xmap2_data[:nunifb,:]   + np.flipud(xmap2_data[nunift:,:])   )
 
     # ------------ scale y to y+ ------------
-
     yu     = yu[:nunifb,-1] + delta     # only from last snapshot, it is the same along all snapshots
     ydelta = yu / delta
     yplus  = yu * utau / kvisc 
+    dudy     = (um_data[1,-1]-um_data[0,-1])/(yu[1]-yu[0])
     
     # Check: Re_tau and u_tau of ODT data
-    dudy     = (um_data[1,-1]-um_data[0,-1])/(yu[1]-yu[0])
     utauOdt  = np.sqrt(kvisc * np.abs(dudy))
     RetauOdt = utauOdt * delta / kvisc
     print(f"\n[get_odt_statistics_rt_at_chosen_averaging_times] Expected Re_tau = {Retau} vs. Effective Re_tau = {RetauOdt}")
@@ -1320,6 +1324,92 @@ def get_odt_statistics_rt_at_chosen_averaging_times(input_params, averaging_time
             #lambda0_data, lambda1_data, lambda2_data, xmap1_data, xmap2_data,
     )
 
+
+def get_odt_udata_rt_at_chosen_averaging_times(input_params, averaging_times, half_channel_symmetry=True):
+
+    # --- Get ODT input parameters ---
+    
+    utau         = input_params["utau"]
+    delta        = input_params["delta"]
+    kvisc        = input_params["kvisc"]
+    Retau        = input_params["Retau"]
+    case_name    = input_params["caseN"]
+    rlzStr       = input_params["rlzStr"]
+    dTimeStart   = input_params["dTimeStart"]
+    dTimeEnd     = input_params["dTimeEnd"]
+    dTimeStep    = input_params["dTimeStep"]
+    nunif        = input_params["nunif"]
+    
+    # uniform fine grid
+    nunif2       = int(nunif/2)
+    nunifb, nunift = get_nunif2_walls(nunif, nunif2)
+
+    # --- Averaging times and files identification ---
+    
+    dTimeVec = np.arange(dTimeStart, dTimeEnd+1e-4, dTimeStep).round(4)
+    averaging_times_num = len(averaging_times)
+    averaging_times_idx = []
+    for t_idx in range(averaging_times_num):
+        averaging_times_idx.append(np.where(dTimeVec==averaging_times[t_idx])[0][0])
+    averaging_times_str = [str(idx).zfill(5) for idx in averaging_times_idx]
+    if (len(averaging_times_str) != averaging_times_num):
+        raise ValueError("Not all averaging_times where found!")
+
+    # --- Get vel. statistics computed during runtime at chosen averaging times ---
+
+    flist = [f'../../data/{case_name}/data/data_{rlzStr}/statistics/stat_dmp_{s}.dat' for s in averaging_times_str]
+
+    # -> check the file rows correspond to the expected variables:
+    with open(flist[0],'r') as f:
+        rows_info = f.readlines()[3].split() # 4th line of the file
+    rows_info_expected = '#         1_posUnif        2_uvel_mean        3_uvel_rmsf       4_uvel_Fpert        5_vvel_mean        6_vvel_rmsf       7_vvel_Fpert        8_wvel_mean        9_wvel_rmsf      10_wvel_Fpert             11_Rxx             12_Ryy             13_Rzz             14_Rxy             15_Rxz             16_Ryz\n'.split()
+    rows_info_expected_new = '#         1_posUnif        2_uvel_mean        3_uvel_rmsf       4_uvel_rhsfRatio        5_vvel_mean        6_vvel_rmsf       7_vvel_rhsfRatio        8_wvel_mean        9_wvel_rmsf      10_wvel_rhsfRatio             11_Rxx             12_Ryy             13_Rzz             14_Rxy             15_Rxz             16_Ryz\n'.split()
+    assert rows_info == rows_info_expected or rows_info == rows_info_expected_new, f"statistic files rows do not correspond to the expected variables" \
+        f"rows variables (expected): \n{rows_info_expected} \nor rows variables (expected_new): \n{rows_info_expected_new}" \
+        f"rows variables (current): \n{rows_info}"
+
+    # --- initialize variables ---
+
+    yu           = np.zeros([nunif, averaging_times_num])
+    # velocity data & F-perturbation
+    um_data      = np.zeros([nunif, averaging_times_num])
+    urmsf_data   = np.zeros([nunif, averaging_times_num])
+
+    # --- get data of statistics calc. at runtime at chosen averaging times ---
+
+    for i in range(averaging_times_num):
+
+        data_stat         = np.loadtxt(flist[i])
+
+        yu[:,i]           = data_stat[:,0]
+        um_data[:,i]      = data_stat[:,1] 
+        urmsf_data[:,i]   = data_stat[:,2] 
+
+    if half_channel_symmetry:
+        # mirror data (symmetric in the y-direction from the channel center)
+        um_data      = 0.5 * ( um_data[:nunifb,:]      + np.flipud(um_data[nunift:,:])      )
+        urmsf_data   = 0.5 * ( urmsf_data[:nunifb,:]   + np.flipud(urmsf_data[nunift:,:])   )
+
+        # ------------ scale y to y+ ------------
+        yu     = yu[:nunifb,-1] + delta     # only from last snapshot, it is the same along all snapshots
+        ydelta = yu / delta
+        yplus  = yu * utau / kvisc 
+        dudy   = (um_data[1,-1]-um_data[0,-1])/(yu[1]-yu[0])
+
+    else:
+        ydelta = yu
+        yplus  = None
+        dudy_bw = (um_data[1]-um_data[0])/(yu[1]-yu[0])
+        dudy_tw = (um_data[-2]-um_data[-1])/((delta - yu[-2])-(delta - yu[-1]))
+        dudy   = 0.5 * ( dudy_bw + dudy_tw )
+    
+    # Check: Re_tau and u_tau of ODT data
+    utauOdt  = np.sqrt(kvisc * np.abs(dudy))
+    RetauOdt = utauOdt * delta / kvisc
+    print(f"\n[get_odt_udata_rt_at_chosen_averaging_times] Expected Re_tau = {Retau} vs. \nEffective Re_tau = {RetauOdt}")
+    print(f"[get_odt_udata_rt_at_chosen_averaging_times] Expected u_tau = {utau} vs. \nEffective u_tau = {utauOdt}")
+
+    return (ydelta, yplus, um_data, urmsf_data)
 
 def compute_convergence_indicator_odt_tEndAvg(input_params):
     
