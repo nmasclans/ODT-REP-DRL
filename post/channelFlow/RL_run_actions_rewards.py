@@ -62,19 +62,24 @@ runDir    = os.path.join(f"../../data/{caseN}/run/")
 odtInputDataFilepath  = "../../data/" + caseN + "/input/input.yaml"
 with open(odtInputDataFilepath) as ifile :
     yml = yaml.load(ifile, Loader=yaml.FullLoader)
+tBeginAvgInput = yml["params"]["tBeginAvg"]
 dTimeStart  = yml["dumpTimesGen"]["dTimeStart"]
 dTimeEnd    = get_effective_dTimeEnd(caseN, rlzStr_first) # dTimeEnd = yml["dumpTimesGen"]["dTimeEnd"] can lead to errors if dTimeEnd > tEnd
 dTimeStep   = yml["dumpTimesGen"]["dTimeStep"]
-assert tEndAvg <= dTimeEnd, "Averaging end time for calculations and plots must be <= dTimeEnd and/or tEnd."
+
+assert tBeginAvg == tBeginAvgInput, f"Input argument 'tBeginAvg' = {tBeginAvg} must be equal to the input.yaml argument 'tBeginAvg' = {tBeginAvgInput} used for runtime statistics calculation"
+if dTimeEnd < tEndAvg:
+    print(f"ATTENTION: simulation ending time = {dTimeEnd} < expected tEndAvg = {tEndAvg} -> simulation has been truncated/terminated early.\n")
+    tEndAvg = dTimeEnd
 
 # --- Chosen averaging times ---
 
 if tBeginAvg >= dTimeStart:
-    timeRL = np.arange(tBeginAvg + dtActions, tEndAvg + 1e-8, dtActions) - tBeginAvg
+    averaging_times_plots = np.arange(tBeginAvg + dtActions, tEndAvg + 1e-8, dtActions) - tBeginAvg
 else:
-    timeRL = np.arange(dTimeStart + dtActions, tEndAvg + 1e-8, dtActions) - tBeginAvg
+    averaging_times_plots = np.arange(dTimeStart + dtActions, tEndAvg + 1e-8, dtActions) - tBeginAvg
 # There is no RL action for the first 10 dtimes:
-timeRL = timeRL[10:]
+timeRL = averaging_times_plots[10:]
 
 # --------------- Get Actions and Rewards for RL training along realizations ---------------
 

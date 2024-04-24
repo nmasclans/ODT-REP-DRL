@@ -505,6 +505,7 @@ def get_odt_statistics_rt(input_params):
     # --- Get vel. statistics computed during runtime at last time increment ---
 
     fstat     = f"../../data/{case_name}/data/data_{rlzStr}/statistics/stat_dmp_{tEndAvgDmpStr}.dat"
+    print(f"\n[get_odt_statistics_rt] Get runtime staistics data from file: {fstat}")
     data_stat = np.loadtxt(fstat)
 
     # -> check the file rows correspond to the expected variables:
@@ -583,9 +584,9 @@ def get_odt_statistics_rt(input_params):
     utauOdt  = np.sqrt(kvisc * np.abs(dumdy0))
     RetauOdt = utauOdt * delta / kvisc
     ubulkOdt = np.mean(um_data) 
-    print(f"\n[get_odt_statistics_rt] Expected Re_tau = {Retau} vs. Effective Re_tau = {RetauOdt}")
+    print(f"[get_odt_statistics_rt] Expected Re_tau = {Retau} vs. Effective Re_tau = {RetauOdt}")
     print(f"[get_odt_statistics_rt] Expected u_tau = {utau} vs. Effective u_tau = {utauOdt}")
-    print(f"[get_odt_statistics_reference] Effective u_bulk = {ubulkOdt} (assuming ct. unif. density & regular grid)")
+    print(f"[get_odt_statistics_rt] Effective u_bulk = {ubulkOdt} (assuming ct. unif. density & regular grid)")
 
     # ------------ Compute Stress Decomposition ------------
     
@@ -623,6 +624,7 @@ def get_odt_statistics_reference(input_params):
     # get filename of reference statistics
     reference_dir = os.path.join(f"./ODT_reference/Re{Retau}")
     reference_stat_file = os.path.join(reference_dir, "statistics_reference.dat")    
+    print(f"\n[get_odt_statistics_reference] Get reference runtime statistics from file: {reference_stat_file}")
     data_stat = np.loadtxt(reference_stat_file)
 
     # -> check the file rows correspond to the expected variables:
@@ -690,7 +692,7 @@ def get_odt_statistics_reference(input_params):
     utauOdt  = np.sqrt(kvisc * np.abs(dumdy0))
     RetauOdt = utauOdt * delta / kvisc
     ubulkOdt = np.mean(um_data) # assuming ct. unif. density and regular grid)
-    print(f"\n[get_odt_statistics_reference] Expected Re_tau = {Retau} vs. Effective Re_tau = {RetauOdt}")
+    print(f"[get_odt_statistics_reference] Expected Re_tau = {Retau} vs. Effective Re_tau = {RetauOdt}")
     print(f"[get_odt_statistics_reference] Expected u_tau = {utau} vs. Effective u_tau = {utauOdt}")
     print(f"[get_odt_statistics_reference] Effective u_bulk = {ubulkOdt} (assuming ct. unif. density & regular grid)")
 
@@ -740,7 +742,7 @@ def get_odt_udata_rt(input_params, half_channel_symmetry=True):
     # --- Get vel. statistics computed during runtime at last time increment ---
 
     fstat     = f"../../data/{case_name}/data/data_{rlzStr}/statistics/stat_dmp_{tEndAvgDmpStr}.dat"
-    print(f"Get statistics data from file: {fstat}")
+    print(f"\nGet statistics data from file: {fstat}")
     data_stat = np.loadtxt(fstat)
 
     # -> check the file rows correspond to the expected variables:

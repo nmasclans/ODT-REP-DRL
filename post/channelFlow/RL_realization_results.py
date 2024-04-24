@@ -50,23 +50,24 @@ rlzStr_last  = f"{rlzN_last:05d}"
 odtInputDataFilepath_RL_nonConv  = f"../../data/{caseN_RL}/input/input.yaml"
 with open(odtInputDataFilepath_RL_nonConv) as ifile :
     yml = yaml.load(ifile, Loader=yaml.FullLoader)
-kvisc        = yml["params"]["kvisc0"] # kvisc = nu = mu / rho
-rho          = yml["params"]["rho0"]
-dxmin        = yml["params"]["dxmin"]
-nunif        = yml["params"]["nunif"]
-domainLength = yml["params"]["domainLength"] 
-dTimeStart   = yml["dumpTimesGen"]["dTimeStart"]
-dTimeEnd     = get_effective_dTimeEnd(caseN_RL, rlzStr_first) # dTimeEnd = yml["dumpTimesGen"]["dTimeEnd"] can lead to errors if dTimeEnd > tEnd
-dTimeStep    = yml["dumpTimesGen"]["dTimeStep"]
-delta        = domainLength * 0.5
-utau         = 1.0
+kvisc          = yml["params"]["kvisc0"] # kvisc = nu = mu / rho
+rho            = yml["params"]["rho0"]
+dxmin          = yml["params"]["dxmin"]
+nunif          = yml["params"]["nunif"]
+domainLength   = yml["params"]["domainLength"] 
+tBeginAvgInput = yml["params"]["tBeginAvg"]
+dTimeStart     = yml["dumpTimesGen"]["dTimeStart"]
+dTimeStep      = yml["dumpTimesGen"]["dTimeStep"]
+delta          = domainLength * 0.5
+utau           = 1.0
+
+assert tBeginAvg == tBeginAvgInput, f"Input argument 'tBeginAvg' = {tBeginAvg} must be equal to the input.yaml argument 'tBeginAvg' = {tBeginAvgInput} used for runtime statistics calculation"
+
 inputParams_RL_nonConv = {"kvisc":kvisc, "rho":rho, "dxmin": dxmin, "nunif": nunif, "domainLength" : domainLength, "delta": delta, "Retau": Retau, "utau": utau,
                           "caseN": caseN_RL, "rlzStr": rlzStr_first, 
-                          "dTimeStart": dTimeStart, "dTimeEnd": dTimeEnd, "dTimeStep": dTimeStep, 
-                          "tEndAvg": tEndAvg_nonConv} 
-print(inputParams_RL_nonConv)
-tBeginAvg_inputData = yml["params"]["tBeginAvg"]
-assert tBeginAvg == tBeginAvg_inputData
+                          "dTimeStart": dTimeStart, "dTimeStep": dTimeStep, 
+                          "tBeginAvg": tBeginAvg} 
+print(f"\nInput params case RL + nonConv: {inputParams_RL_nonConv}")
 
 # --- post-processing directories to store results
 
@@ -103,9 +104,19 @@ xmap2_RL_nonConv            = np.zeros([int(nunif/2), nrlz]) # half-channel
 
 for irlz in range(nrlz):
 
-    # modify rlzN information in inputParams_RL:
-    inputParams_RL_nonConv["rlzStr"] = rlzStr_Arr[irlz]
-    print("\n\n--- RL: Realization #" + inputParams_RL_nonConv["rlzStr"] + ", Time " + str(inputParams_RL_nonConv["tEndAvg"]) +  " ---")
+    print("\n--------------------------------------------------------------------------")
+    # modify rlzN, dTimeEnd & tEndAvg information in inputParams_RL:
+    dTimeEnd = get_effective_dTimeEnd(caseN_RL, rlzStr_Arr[irlz])
+    if dTimeEnd < tEndAvg_nonConv:
+        print(f"\nATTENTION: simulation ending time = {dTimeEnd} < expected tEndAvg = {tEndAvg_nonConv} -> simulation has been truncated/terminated early.")
+        tEndAvg_ = dTimeEnd
+    else:
+        tEndAvg_ = tEndAvg_nonConv
+    inputParams_RL_nonConv["tEndAvg"]   = tEndAvg_
+    inputParams_RL_nonConv["rlzStr"]   = rlzStr_Arr[irlz]
+    inputParams_RL_nonConv["dTimeEnd"] = dTimeEnd
+    print("\n--- RL: Realization #" + inputParams_RL_nonConv["rlzStr"] + ", Time: " + str(inputParams_RL_nonConv["tEndAvg"]) + " ---")
+    print(f"\nInput parameters RL + non-conv: {inputParams_RL_nonConv}")
 
     # get u-statistics data
     # whole-channel data
@@ -153,17 +164,34 @@ urmsf_RL_nonConv_allChannel_tk = np.zeros([nunif, ntk_nonConv, nrlz])   # all ch
 
 for irlz in range(nrlz):
 
-    # modify rlzN information in inputParams_RL:
-    inputParams_RL_nonConv["rlzStr"] = rlzStr_Arr[irlz]
-    print("\n\n--- Temporal convergence for RL: Realization #" + inputParams_RL_nonConv["rlzStr"] + ", Time " + str(inputParams_RL_nonConv["tEndAvg"]) +  " ---")
+    print("\n--------------------------------------------------------------------------")
+    # modify rlzN, dTimeEnd & tEndAvg information in inputParams_RL:
+    dTimeEnd = get_effective_dTimeEnd(caseN_RL, rlzStr_Arr[irlz])
+    if dTimeEnd < tEndAvg_nonConv:
+        print(f"\nATTENTION: simulation ending time = {dTimeEnd} < expected tEndAvg = {tEndAvg_nonConv} -> simulation has been truncated/terminated early.")
+        tEndAvg_ = dTimeEnd
+    else:
+        tEndAvg_ = tEndAvg_nonConv
+    inputParams_RL_nonConv["tEndAvg"]  = tEndAvg_
+    inputParams_RL_nonConv["rlzStr"]   = rlzStr_Arr[irlz]
+    inputParams_RL_nonConv["dTimeEnd"] = dTimeEnd
+    if tBeginAvg >= dTimeStart:
+        averaging_times_nonConv = np.arange(tBeginAvg, tEndAvg_+1e-4, dtAvg).round(4)
+    else:
+        averaging_times_nonConv = np.arange(dTimeStart, tEndAvg_+1e-4, dtAvg).round(4)
+    ntk_irlz = len(averaging_times_nonConv)
+    print("\n--- Temporal convergence for RL: Realization #" + inputParams_RL_nonConv["rlzStr"] + " ---")
+    print("--- Time: " + str(inputParams_RL_nonConv["tEndAvg"]) + " ---")
+    print(f"\nInput parameters RL + non-conv: {inputParams_RL_nonConv}")
 
     # ODT statistics-during-runtime data
+
     (_, _, um_RL_nonConv_allChannel_tk_irlz, urmsf_RL_nonConv_allChannel_tk_irlz) \
         = get_odt_udata_rt_at_chosen_averaging_times(inputParams_RL_nonConv, averaging_times_nonConv, half_channel_symmetry=False)
 
     # store realization results
-    um_RL_nonConv_allChannel_tk[:,:,irlz]    = um_RL_nonConv_allChannel_tk_irlz
-    urmsf_RL_nonConv_allChannel_tk[:,:,irlz] = urmsf_RL_nonConv_allChannel_tk_irlz
+    um_RL_nonConv_allChannel_tk[:,:ntk_irlz,irlz]    = um_RL_nonConv_allChannel_tk_irlz
+    urmsf_RL_nonConv_allChannel_tk[:,:ntk_irlz,irlz] = urmsf_RL_nonConv_allChannel_tk_irlz
 
 #------------ Get NON-CONVERGED runtime-calculated 'um' at t=tEndAvg for averaged non-RL reference realizations ---------------
 
@@ -171,23 +199,22 @@ for irlz in range(nrlz):
 odtInputDataFilepath_nonRL_nonConv  = f"./ODT_reference/Re{Retau}/input_reference.yaml"
 with open(odtInputDataFilepath_nonRL_nonConv) as ifile :
     yml = yaml.load(ifile, Loader=yaml.FullLoader)
-dTimeStart   = yml["dumpTimesGen"]["dTimeStart"]
-dTimeEnd     = np.min([yml["dumpTimesGen"]["dTimeEnd"], yml["params"]["tEnd"]])
-dTimeStep    = yml["dumpTimesGen"]["dTimeStep"]
-tEndAvg      = tEndAvg_nonConv
-tBeginAvg_inputData = yml["params"]["tBeginAvg"]
-assert tBeginAvg == tBeginAvg_inputData
+dTimeStart     = yml["dumpTimesGen"]["dTimeStart"]
+dTimeEnd       = np.min([yml["dumpTimesGen"]["dTimeEnd"], yml["params"]["tEnd"]])
+dTimeStep      = yml["dumpTimesGen"]["dTimeStep"]
+tBeginAvgInput = yml["params"]["tBeginAvg"]
+assert tBeginAvg == tBeginAvgInput, f"Input argument 'tBeginAvg' = {tBeginAvg} must be equal to the input.yaml argument 'tBeginAvg' = {tBeginAvgInput} used for runtime statistics calculation"
 
 # --- Get data
-print(f"\n--- Non-RL: Re{Retau}/data_rlz_avg,  Time {tEndAvg} ---")
+print(f"\n--- Non-RL: Re{Retau}/data_rlz_avg,  Time: {tEndAvg_nonConv} ---")
 
 dTimes        = np.round(np.arange(dTimeStart, dTimeEnd+1e-6, dTimeStep), 6)
-tEndAvgDmpIdx = np.sum(tEndAvg > dTimes) 
+tEndAvgDmpIdx = np.sum(tEndAvg_nonConv > dTimes) 
 tEndAvgDmpStr = f"{tEndAvgDmpIdx:05d}"
 
 ### whole-channel data
 fstat = f"./ODT_reference/Re{Retau}/data_rlz_avg/stat_dmp_{tEndAvgDmpStr}.dat"
-print(f"Get statistics data from file: {fstat}")
+print(f"\nGet statistics data from file: {fstat}")
 data_stat = np.loadtxt(fstat)
 # yu                           = data_stat[:,0]
 um_nonRL_nonConv_allChannel    = data_stat[:,1] 
@@ -216,13 +243,14 @@ vfwfm_nonRL_nonConv = 0.5 * ( vfwfm_nonRL_nonConv_allChannel[:nunifb] + np.flipu
 #------------ Get BASELINE runtime-calculated 'um' at t=dTimeEnd (>>tEndAvg used before) for single ODT non-RL-realization ---------------
 
 # --- get data
-print(f"\n--- Non-RL Baseline: Re{Retau}/statistics_reference.dat ---")
+print(f"\n--- Non-RL Baseline: Re{Retau}/statistics_reference.dat, Time: {tEndAvg_conv} ---")
 
 fstat = f"./ODT_reference/Re{Retau}/statistics_reference.dat"
-tEndAvg_conv_reference = get_time(fstat)
+tEndAvg_conv_inputData = get_time(fstat)
+assert tEndAvg_conv_inputData == tEndAvg_conv, f"tEndAvg_conv_inputData = {tEndAvg_conv_inputData} but tEndAvg_conv = {tEndAvg_conv}"
 
 ### whole-channel data
-print(f"Get statistics data from file: {fstat}")
+print(f"\nGet statistics data from file: {fstat}")
 data_stat = np.loadtxt(fstat)
 # yu                           = data_stat[:,0]
 um_nonRL_conv_allChannel    = data_stat[:,1] 
@@ -340,10 +368,16 @@ yplus  = yplus_RL_nonConv
 
 # ---- build plots
 tEndAvg_nonConv_plots = tEndAvg_nonConv - tBeginAvg
+tEndAvg_conv_plots    = tEndAvg_conv - tBeginAvg
 visualizer = ChannelVisualizer(postMultipleRlzDir)
-visualizer.RL_u_mean_convergence(yplus[1:], rlzN_Arr, um_RL_nonConv[1:], urmsf_RL_nonConv[1:], um_nonRL_nonConv[1:], urmsf_nonRL_nonConv[1:], um_baseline[1:], urmsf_baseline[1:], tEndAvg_nonConv_plots, tEndAvg_conv_reference)
+visualizer.RL_u_mean_convergence(yplus[1:], rlzN_Arr, um_RL_nonConv[1:], urmsf_RL_nonConv[1:], um_nonRL_nonConv[1:], urmsf_nonRL_nonConv[1:], um_baseline[1:], urmsf_baseline[1:], tEndAvg_nonConv_plots, tEndAvg_conv_plots)
 visualizer.RL_err_convergence(rlzN_Arr, NRMSE_RL, NRMSE_nonRL, tEndAvg_nonConv_plots, "NRMSE")
 ### visualizer.RL_err_convergence(rlzN_Arr, relL2Err_RL, relL2Err_nonRL, tEndAvg_nonConv_plots, "RelL2Err")
+print(rlzN_Arr.shape)
+print(um_NRMSE_RL_nonConv_tk.shape)
+print(um_NRMSE_nonRL_conv_tk[:,:-1].shape)
+print(averaging_times_nonConv_plots.shape)
+print(averaging_times_conv_plots[:-1].shape)
 visualizer.RL_err_convergence_along_time(rlzN_Arr, um_NRMSE_RL_nonConv_tk,    um_NRMSE_nonRL_conv_tk[:,:-1],    averaging_times_nonConv_plots, averaging_times_conv_plots[:-1], r"NRMSE ($<u>$)")
 visualizer.RL_err_convergence_along_time(rlzN_Arr, urmsf_NRMSE_RL_nonConv_tk, urmsf_NRMSE_nonRL_conv_tk[:,:-1], averaging_times_nonConv_plots, averaging_times_conv_plots[:-1], r"NRMSE ($u'$)")
 visualizer.RL_Rij_convergence(ydelta[1:-1], rlzN_Arr, 

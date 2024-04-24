@@ -74,16 +74,23 @@ nbins      = 1000
 odtInputDataFilepath  = "../../data/" + caseN + "/input/input.yaml"
 with open(odtInputDataFilepath) as ifile :
     yml = yaml.load(ifile, Loader=yaml.FullLoader)
-kvisc        = yml["params"]["kvisc0"] # kvisc = nu = mu / rho
-rho          = yml["params"]["rho0"]
-dxmin        = yml["params"]["dxmin"]
-nunif        = yml["params"]["nunif"]
-domainLength = yml["params"]["domainLength"] 
-dTimeStart   = yml["dumpTimesGen"]["dTimeStart"]
-dTimeEnd     = get_effective_dTimeEnd(caseN, rlzStr) # dTimeEnd = yml["dumpTimesGen"]["dTimeEnd"] can lead to errors if dTimeEnd > tEnd
-dTimeStep    = yml["dumpTimesGen"]["dTimeStep"]
-delta        = domainLength * 0.5
-utau         = 1.0
+kvisc          = yml["params"]["kvisc0"] # kvisc = nu = mu / rho
+rho            = yml["params"]["rho0"]
+dxmin          = yml["params"]["dxmin"]
+nunif          = yml["params"]["nunif"]
+domainLength   = yml["params"]["domainLength"] 
+tBeginAvgInput = yml["params"]["tBeginAvg"]
+dTimeStart     = yml["dumpTimesGen"]["dTimeStart"]
+dTimeEnd       = get_effective_dTimeEnd(caseN, rlzStr) # dTimeEnd = yml["dumpTimesGen"]["dTimeEnd"] can lead to errors if dTimeEnd > tEnd
+dTimeStep      = yml["dumpTimesGen"]["dTimeStep"]
+delta          = domainLength * 0.5
+utau           = 1.0
+
+assert tBeginAvg == tBeginAvgInput, f"Input argument 'tBeginAvg' = {tBeginAvg} must be equal to the input.yaml argument 'tBeginAvg' = {tBeginAvgInput} used for runtime statistics calculation"
+if dTimeEnd < tEndAvg:
+    print(f"ATTENTION: simulation ending time = {dTimeEnd} < expected tEndAvg = {tEndAvg} -> simulation has been truncated/terminated early.\n")
+    tEndAvg = dTimeEnd
+
 inputParams  = {"kvisc":kvisc, "rho":rho, "dxmin": dxmin, "nunif": nunif, "domainLength" : domainLength, "delta": delta, "Retau": Retau, "utau": utau,
                 "caseN": caseN, "rlzStr":rlzStr,
                 "dTimeStart": dTimeStart, "dTimeEnd": dTimeEnd, "dTimeStep": dTimeStep, 
@@ -127,25 +134,25 @@ inputParams  = {"kvisc":kvisc, "rho":rho, "dxmin": dxmin, "nunif": nunif, "domai
 #           Anisotropy tensor, eigen-decomposition, mapping to barycentric map 
 #-----------------------------------------------------------------------------------------
 
-tRL = tEndAvg - tBeginAvg
+averaging_time_plots = tEndAvg - tBeginAvg
 
 # ---------------------- Plot Rkk (Rij trace, magnitude) vs. y (runtime & reference) ---------------------- 
 
-visualizer.build_reynolds_stress_tensor_trace(ydelta_rt[1:-1], ydelta_ref[1:-1], Rkk_rt[1:-1], Rkk_ref[1:-1], tRL)
+visualizer.build_reynolds_stress_tensor_trace(ydelta_rt[1:-1], ydelta_ref[1:-1], Rkk_rt[1:-1], Rkk_ref[1:-1], averaging_time_plots)
 
 # ---------------------- Plot xmap coordinates vs. y (runtime & reference) ---------------------- 
 
-visualizer.build_anisotropy_tensor_barycentric_xmap_coord(ydelta_rt[1:-1], ydelta_ref[1:-1], xmap1_rt[1:-1], xmap2_rt[1:-1], xmap1_ref[1:-1], xmap2_ref[1:-1], tRL)
+visualizer.build_anisotropy_tensor_barycentric_xmap_coord(ydelta_rt[1:-1], ydelta_ref[1:-1], xmap1_rt[1:-1], xmap2_rt[1:-1], xmap1_ref[1:-1], xmap2_ref[1:-1], averaging_time_plots)
 
 # ---------------------- Plot eigenvalues vs. y (runtime & reference) ---------------------- 
 
 eigenvalues_rt  = np.array([lambda1_rt,  lambda2_rt,  lambda3_rt]).transpose()
 eigenvalues_ref = np.array([lambda1_ref, lambda2_ref, lambda3_ref]).transpose()
-visualizer.build_anisotropy_tensor_eigenvalues(ydelta_rt[1:-1], ydelta_ref[1:-1], eigenvalues_rt[1:-1,:], eigenvalues_ref[1:-1,:], tRL)
+visualizer.build_anisotropy_tensor_eigenvalues(ydelta_rt[1:-1], ydelta_ref[1:-1], eigenvalues_rt[1:-1,:], eigenvalues_ref[1:-1,:], averaging_time_plots)
 
 # ---------------------- Plot Barycentric Map in Barycentric Triangle ---------------------- 
 
 # runtime calculations
-visualizer.build_anisotropy_tensor_barycentric_xmap_triang(ydelta_rt[1:-1],  xmap1_rt[1:-1],  xmap2_rt[1:-1],  tRL,  f"anisotropy_tensor_barycentric_map_triang_odt")
+visualizer.build_anisotropy_tensor_barycentric_xmap_triang(ydelta_rt[1:-1],  xmap1_rt[1:-1],  xmap2_rt[1:-1],  averaging_time_plots,  f"anisotropy_tensor_barycentric_map_triang_odt")
 # DNS data
 visualizer.build_anisotropy_tensor_barycentric_xmap_triang(ydelta_rt[1:-1], xmap1_ref[1:-1], xmap2_ref[1:-1], 900, f"anisotropy_tensor_barycentric_map_triang_odtReference")

@@ -1,4 +1,6 @@
 # time = 1000.0
+# FINE UNIFORM Grid points = 361
+# Pressure (Pa) = 101325
 #         1_posUnif        2_uvel_mean        3_uvel_rmsf
  -1.0000000000E+00   6.6209849668E-22   7.4234121156E-18
  -9.9444444444E-01   9.9556013654E-01   2.6871172374E-01

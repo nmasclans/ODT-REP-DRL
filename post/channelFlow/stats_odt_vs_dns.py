@@ -51,20 +51,22 @@ if not os.path.exists(postRlzDir):
 odtInputDataFilepath  = f"../../data/{caseN}/input/input.yaml"
 with open(odtInputDataFilepath) as ifile :
     yml = yaml.load(ifile, Loader=yaml.FullLoader)
-kvisc        = yml["params"]["kvisc0"] # kvisc = nu = mu / rho
-rho          = yml["params"]["rho0"]
-dxmin        = yml["params"]["dxmin"]
-nunif        = yml["params"]["nunif"]
-domainLength = yml["params"]["domainLength"] 
-dTimeStart   = yml["dumpTimesGen"]["dTimeStart"]
-dTimeEnd     = get_effective_dTimeEnd(caseN, rlzStr) # dTimeEnd = yml["dumpTimesGen"]["dTimeEnd"] can lead to errors if dTimeEnd > tEnd
-dTimeStep    = yml["dumpTimesGen"]["dTimeStep"]
-tBeginAvgRt  = yml["params"]["tBeginAvg"] 
-delta        = domainLength * 0.5
-utau         = 1.0
+kvisc           = yml["params"]["kvisc0"] # kvisc = nu = mu / rho
+rho             = yml["params"]["rho0"]
+dxmin           = yml["params"]["dxmin"]
+nunif           = yml["params"]["nunif"]
+domainLength    = yml["params"]["domainLength"] 
+tBeginAvgInput  = yml["params"]["tBeginAvg"]
+dTimeStart      = yml["dumpTimesGen"]["dTimeStart"]
+dTimeEnd        = get_effective_dTimeEnd(caseN, rlzStr) # dTimeEnd = yml["dumpTimesGen"]["dTimeEnd"] can lead to errors if dTimeEnd > tEnd
+dTimeStep       = yml["dumpTimesGen"]["dTimeStep"]
+delta           = domainLength * 0.5
+utau            = 1.0
 
-# assert tBeginAvg == tBeginAvgRt, "Input argument 'tBeginAvg' = {tBeginAvg} must be equal to the input.yaml argument 'tBeginAvg' = {tBeginAvgRt} used for statistics calculation during runtime"
-assert tEndAvg <= dTimeEnd, "Input argument 'tEndAvg' must be <= effective dTimeEnd, the time of the last stat_dmp_* file"
+assert tBeginAvg == tBeginAvgInput, f"Input argument 'tBeginAvg' = {tBeginAvg} must be equal to the input.yaml argument 'tBeginAvg' = {tBeginAvgInput} used for runtime statistics calculation"
+if dTimeEnd < tEndAvg:
+    print(f"ATTENTION: simulation ending time = {dTimeEnd} < expected tEndAvg = {tEndAvg} -> simulation has been truncated/terminated early.\n")
+    tEndAvg = dTimeEnd
 
 inputParams  = {"kvisc":kvisc, "rho":rho, "dxmin": dxmin, "nunif": nunif, "domainLength" : domainLength, "delta": delta, "Retau": Retau, "utau": utau,
                 "caseN": caseN, "rlzStr": rlzStr, 

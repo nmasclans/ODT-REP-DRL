@@ -74,17 +74,19 @@ nbins      = 1000
 odtInputDataFilepath  = "../../data/" + caseN + "/input/input.yaml"
 with open(odtInputDataFilepath) as ifile :
     yml = yaml.load(ifile, Loader=yaml.FullLoader)
-kvisc        = yml["params"]["kvisc0"] # kvisc = nu = mu / rho
-rho          = yml["params"]["rho0"]
-dxmin        = yml["params"]["dxmin"]
-nunif        = yml["params"]["nunif"]
-domainLength = yml["params"]["domainLength"] 
-dTimeStart   = yml["dumpTimesGen"]["dTimeStart"]
-dTimeEnd     = get_effective_dTimeEnd(caseN, rlzStr) # dTimeEnd = yml["dumpTimesGen"]["dTimeEnd"] can lead to errors if dTimeEnd > tEnd
-dTimeStep    = yml["dumpTimesGen"]["dTimeStep"]
-delta        = domainLength * 0.5
-utau         = 1.0
-inputParams  = {"kvisc":kvisc, "rho":rho, "dxmin": dxmin, "nunif": nunif, "domainLength" : domainLength, "delta": delta, "Retau": Retau, "utau": utau,
+kvisc           = yml["params"]["kvisc0"] # kvisc = nu = mu / rho
+rho             = yml["params"]["rho0"]
+dxmin           = yml["params"]["dxmin"]
+nunif           = yml["params"]["nunif"]
+domainLength    = yml["params"]["domainLength"] 
+tBeginAvgInput  = yml["params"]["tBeginAvg"]
+dTimeStart      = yml["dumpTimesGen"]["dTimeStart"]
+dTimeEnd        = get_effective_dTimeEnd(caseN, rlzStr) # dTimeEnd = yml["dumpTimesGen"]["dTimeEnd"] can lead to errors if dTimeEnd > tEnd
+dTimeStep       = yml["dumpTimesGen"]["dTimeStep"]
+delta           = domainLength * 0.5
+utau            = 1.0
+assert tBeginAvg == tBeginAvgInput, f"Input argument 'tBeginAvg' = {tBeginAvg} must be equal to the input.yaml argument 'tBeginAvg' = {tBeginAvgRt} used for runtime statistics calculation"
+inputParams     = {"kvisc":kvisc, "rho":rho, "dxmin": dxmin, "nunif": nunif, "domainLength" : domainLength, "delta": delta, "Retau": Retau, "utau": utau,
                 "caseN": caseN, "rlzStr":rlzStr,
                 "dTimeStart": dTimeStart, "dTimeEnd": dTimeEnd, "dTimeStep": dTimeStep, 
                 "tBeginAvg": tBeginAvg, "tEndAvg": tEndAvg} 
@@ -147,4 +149,4 @@ visualizer.plot_line(yplus_dns,    xmap1_dns,    [0.0, yplus_dns.max()],    [0.0
 # runtime calculations
 visualizer.build_anisotropy_tensor_barycentric_map(xmap1_odt_rt, xmap2_odt_rt, yplus_odt_rt, tEndAvg-tBeginAvg, f"anisotropy_tensor_barycentric_map_odt")
 # DNS data
-visualizer.build_anisotropy_tensor_barycentric_map(xmap1_dns,    xmap2_dns,    yplus_dns,    1000,              f"anisotropy_tensor_barycentric_map_dns")
+visualizer.build_anisotropy_tensor_barycentric_map(xmap1_dns,    xmap2_dns,    yplus_dns,    1000-tBeginAvg,    f"anisotropy_tensor_barycentric_map_dns")

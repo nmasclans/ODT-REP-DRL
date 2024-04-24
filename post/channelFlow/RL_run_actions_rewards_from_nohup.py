@@ -128,8 +128,6 @@ actions                 = np.array(actions)
 
 # --------------- Plot rewards and actions ---------------
 
-#timeRL = np.arange(tBeginAvg + dtActions, tEndAvg + 1e-8, dtActions) - tBeginAvg
-
 visualizer = ChannelVisualizer(postNohupDir)
 if len(rewards_relL2Err_urmsf) == 0: # no u-rmsf penalty term in the reward
     visualizer.build_RL_rewards_convergence_nohup(rewards_total, rewards_relL2Err_umean, rewards_rhsfRatio, inputRL_filepath)

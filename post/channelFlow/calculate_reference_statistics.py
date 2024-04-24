@@ -198,13 +198,16 @@ for tk in range(ntk):
     odt_data  = np.vstack([posUnif, rlzAvg_uvel_mean[tk,:], rlzAvg_uvel_rmsf[tk,:], zeros_arr, rlzAvg_vvel_mean[tk,:], rlzAvg_vvel_rmsf[tk,:], zeros_arr, rlzAvg_wvel_mean[tk,:], rlzAvg_wvel_rmsf[tk,:], zeros_arr, rlzAvg_Rxx[tk,:], rlzAvg_Ryy[tk,:], rlzAvg_Rzz[tk,:], rlzAvg_Rxy[tk,:], rlzAvg_Rxz[tk,:], rlzAvg_Ryz[tk,:]]).T
     np.savetxt(fname, odt_data, 
                header="#         1_posUnif        2_uvel_mean        3_uvel_rmsf   4_uvel_rhsfRatio        5_vvel_mean        6_vvel_rmsf   7_vvel_rhsfRatio        8_wvel_mean        9_wvel_rmsf  10_wvel_rhsfRatio             11_Rxx             12_Ryy             13_Rzz             14_Rxy             15_Rxz             16_Ryz", 
-               comments=f"# time = {timeUnif[tk]}\n",
+               comments=f"# time = {timeUnif[tk]}\n# FINE UNIFORM Grid points = {nunif}\n# Pressure (Pa) = 101325\n",
                fmt="%18.10E")
 
 # At tEnd, save converged baseline data for umean & urmsf
 fname = f"./ODT_reference/Re{Retau}/statistics_reference_udata.dat"
 odt_data = np.vstack([posUnif, conv_uvel_mean, conv_uvel_rmsf]).T
-np.savetxt(fname, odt_data, header="#         1_posUnif        2_uvel_mean        3_uvel_rmsf", comments=f"# time = {timeUnif[-1]}\n", fmt='%18.10E')
+np.savetxt(fname, odt_data, 
+           header="#         1_posUnif        2_uvel_mean        3_uvel_rmsf",
+           comments=f"# time = {timeUnif[-1]}\n# FINE UNIFORM Grid points = {nunif}\n# Pressure (Pa) = 101325\n",
+           fmt='%18.10E')
 
 # At tEnd, save converged baseline data for all converged statistics quantities
 fname = f"./ODT_reference/Re{Retau}/statistics_reference.dat"
@@ -212,7 +215,7 @@ zeros_arr = np.zeros(nunif) # for columns  4_uvel_rhsfRatio, 7_vvel_rhsfRatio, 1
 odt_data  = np.vstack([posUnif, conv_uvel_mean, conv_uvel_rmsf, zeros_arr, conv_vvel_mean, conv_vvel_rmsf, zeros_arr, conv_wvel_mean, conv_wvel_rmsf, zeros_arr, conv_Rxx, conv_Ryy, conv_Rzz, conv_Rxy, conv_Rxz, conv_Ryz]).T
 np.savetxt(fname, odt_data, 
            header="#         1_posUnif        2_uvel_mean        3_uvel_rmsf   4_uvel_rhsfRatio        5_vvel_mean        6_vvel_rmsf   7_vvel_rhsfRatio        8_wvel_mean        9_wvel_rmsf  10_wvel_rhsfRatio             11_Rxx             12_Ryy             13_Rzz             14_Rxy             15_Rxz             16_Ryz",
-           comments=f"# time = {timeUnif[-1]}\n",
+           comments=f"# time = {timeUnif[-1]}\n# FINE UNIFORM Grid points = {nunif}\n# Pressure (Pa) = 101325\n",
            fmt="%18.10E")
 
 # ------------------------------------------------------------------------------------------------------
