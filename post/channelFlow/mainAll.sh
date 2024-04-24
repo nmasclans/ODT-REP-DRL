@@ -76,12 +76,12 @@ for ((rlzNum = $3; rlzNum <= $4; rlzNum+=$5)); do
 done
 
 # Run main.sh for each realization
-### for ((rlzNum = $3; rlzNum <= $4; rlzNum+=$5)); do
-###     echo -e "\n\n\n****************************************************************"
-###     echo -e "****************** main.sh for realization #$rlzNum ******************"
-###     echo -e "****************************************************************"
-###     ./main.sh "$2" "$rlzNum" "$1" "$9" "${10}" "$6" "$7"
-### done
+for ((rlzNum = $3; rlzNum <= $4; rlzNum+=$5)); do
+    echo -e "\n\n\n****************************************************************"
+    echo -e "****************** main.sh for realization #$rlzNum ******************"
+    echo -e "****************************************************************"
+    ./main.sh "$2" "$rlzNum" "$1" "$9" "${10}" "$6" "$7"
+done
 
 # Run mainRL.sh for multiple realizations
 echo -e "\n\n\n****************************************************************"

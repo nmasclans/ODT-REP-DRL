@@ -64,7 +64,7 @@ utau           = 1.0
 assert tBeginAvg == tBeginAvgInput, f"Input argument 'tBeginAvg' = {tBeginAvg} must be equal to the input.yaml argument 'tBeginAvg' = {tBeginAvgInput} used for runtime statistics calculation"
 
 inputParams_RL_nonConv = {"kvisc":kvisc, "rho":rho, "dxmin": dxmin, "nunif": nunif, "domainLength" : domainLength, "delta": delta, "Retau": Retau, "utau": utau,
-                          "caseN": caseN_RL, "rlzStr": rlzStr_first, 
+                          "caseN": caseN_RL, 
                           "dTimeStart": dTimeStart, "dTimeStep": dTimeStep, 
                           "tBeginAvg": tBeginAvg} 
 print(f"\nInput params case RL + nonConv: {inputParams_RL_nonConv}")
@@ -112,7 +112,7 @@ for irlz in range(nrlz):
         tEndAvg_ = dTimeEnd
     else:
         tEndAvg_ = tEndAvg_nonConv
-    inputParams_RL_nonConv["tEndAvg"]   = tEndAvg_
+    inputParams_RL_nonConv["tEndAvg"]  = tEndAvg_
     inputParams_RL_nonConv["rlzStr"]   = rlzStr_Arr[irlz]
     inputParams_RL_nonConv["dTimeEnd"] = dTimeEnd
     print("\n--- RL: Realization #" + inputParams_RL_nonConv["rlzStr"] + ", Time: " + str(inputParams_RL_nonConv["tEndAvg"]) + " ---")
@@ -176,10 +176,10 @@ for irlz in range(nrlz):
     inputParams_RL_nonConv["rlzStr"]   = rlzStr_Arr[irlz]
     inputParams_RL_nonConv["dTimeEnd"] = dTimeEnd
     if tBeginAvg >= dTimeStart:
-        averaging_times_nonConv = np.arange(tBeginAvg, tEndAvg_+1e-4, dtAvg).round(4)
+        averaging_times_nonConv_irlz = np.arange(tBeginAvg, tEndAvg_+1e-4, dtAvg).round(4)
     else:
-        averaging_times_nonConv = np.arange(dTimeStart, tEndAvg_+1e-4, dtAvg).round(4)
-    ntk_irlz = len(averaging_times_nonConv)
+        averaging_times_nonConv_irlz = np.arange(dTimeStart, tEndAvg_+1e-4, dtAvg).round(4)
+    ntk_irlz = len(averaging_times_nonConv_irlz)
     print("\n--- Temporal convergence for RL: Realization #" + inputParams_RL_nonConv["rlzStr"] + " ---")
     print("--- Time: " + str(inputParams_RL_nonConv["tEndAvg"]) + " ---")
     print(f"\nInput parameters RL + non-conv: {inputParams_RL_nonConv}")
@@ -187,7 +187,7 @@ for irlz in range(nrlz):
     # ODT statistics-during-runtime data
 
     (_, _, um_RL_nonConv_allChannel_tk_irlz, urmsf_RL_nonConv_allChannel_tk_irlz) \
-        = get_odt_udata_rt_at_chosen_averaging_times(inputParams_RL_nonConv, averaging_times_nonConv, half_channel_symmetry=False)
+        = get_odt_udata_rt_at_chosen_averaging_times(inputParams_RL_nonConv, averaging_times_nonConv_irlz, half_channel_symmetry=False)
 
     # store realization results
     um_RL_nonConv_allChannel_tk[:,:ntk_irlz,irlz]    = um_RL_nonConv_allChannel_tk_irlz
@@ -373,11 +373,6 @@ visualizer = ChannelVisualizer(postMultipleRlzDir)
 visualizer.RL_u_mean_convergence(yplus[1:], rlzN_Arr, um_RL_nonConv[1:], urmsf_RL_nonConv[1:], um_nonRL_nonConv[1:], urmsf_nonRL_nonConv[1:], um_baseline[1:], urmsf_baseline[1:], tEndAvg_nonConv_plots, tEndAvg_conv_plots)
 visualizer.RL_err_convergence(rlzN_Arr, NRMSE_RL, NRMSE_nonRL, tEndAvg_nonConv_plots, "NRMSE")
 ### visualizer.RL_err_convergence(rlzN_Arr, relL2Err_RL, relL2Err_nonRL, tEndAvg_nonConv_plots, "RelL2Err")
-print(rlzN_Arr.shape)
-print(um_NRMSE_RL_nonConv_tk.shape)
-print(um_NRMSE_nonRL_conv_tk[:,:-1].shape)
-print(averaging_times_nonConv_plots.shape)
-print(averaging_times_conv_plots[:-1].shape)
 visualizer.RL_err_convergence_along_time(rlzN_Arr, um_NRMSE_RL_nonConv_tk,    um_NRMSE_nonRL_conv_tk[:,:-1],    averaging_times_nonConv_plots, averaging_times_conv_plots[:-1], r"NRMSE ($<u>$)")
 visualizer.RL_err_convergence_along_time(rlzN_Arr, urmsf_NRMSE_RL_nonConv_tk, urmsf_NRMSE_nonRL_conv_tk[:,:-1], averaging_times_nonConv_plots, averaging_times_conv_plots[:-1], r"NRMSE ($u'$)")
 visualizer.RL_Rij_convergence(ydelta[1:-1], rlzN_Arr, 

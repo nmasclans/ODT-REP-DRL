@@ -1108,17 +1108,22 @@ class ChannelVisualizer():
         # nonRL references
         nRef = err_ref.shape[0]
         for id_ref in range(nRef):
+            # plot errors 
             if id_ref == 0:
                 plt.semilogy(averaging_times_ref, err_ref[id_ref,:], color="gray", alpha = 0.5, label=f"Reference Realizations")
             else:
                 plt.semilogy(averaging_times_ref, err_ref[id_ref,:], color="gray", alpha = 0.5)
         rlzAvg_err_ref = np.mean(err_ref, axis=0)
-        plt.semilogy(averaging_times_ref, rlzAvg_err_ref[:], color = "black", linewidth = 2, label=f"Reference Rlz-Average")
+        plt.semilogy(averaging_times_ref, rlzAvg_err_ref[:], color = "black", linewidth = 1, label=f"Reference Rlz-Average")
         # RL non-converged:
         nrlz = len(rlzArr)
         for irlz in range(nrlz):
-            plt.semilogy(averaging_times_RL, err_RL[:,irlz], linewidth = 2, label=f"RL Rlz {rlzArr[irlz]}")
-
+            # eliminate the err_RL[i] = 1, which corresponds to time instances with no statistics data (u-mean not updated after initialized as zeros, thus relative error = 1) (also happens for t=tBeginAvg, where u-mean=0 everywhere)
+            updatedErrorIdx_irlz     = np.where(err_RL[:,irlz]!=1.0)[0]
+            err_RL_irlz              = err_RL[updatedErrorIdx_irlz, irlz]
+            averagings_times_RL_irlz = averaging_times_RL[updatedErrorIdx_irlz]
+            # plot errors
+            plt.semilogy(averagings_times_RL_irlz, err_RL_irlz, linewidth = 1, label=f"RL Rlz {rlzArr[irlz]}")
         # configure plot
         plt.xlabel(r'averaging time [s]')
         plt.ylabel(error_name)
