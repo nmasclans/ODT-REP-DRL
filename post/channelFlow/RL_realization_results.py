@@ -373,8 +373,8 @@ visualizer = ChannelVisualizer(postMultipleRlzDir)
 visualizer.RL_u_mean_convergence(yplus[1:], rlzN_Arr, um_RL_nonConv[1:], urmsf_RL_nonConv[1:], um_nonRL_nonConv[1:], urmsf_nonRL_nonConv[1:], um_baseline[1:], urmsf_baseline[1:], tEndAvg_nonConv_plots, tEndAvg_conv_plots)
 visualizer.RL_err_convergence(rlzN_Arr, NRMSE_RL, NRMSE_nonRL, tEndAvg_nonConv_plots, "NRMSE")
 ### visualizer.RL_err_convergence(rlzN_Arr, relL2Err_RL, relL2Err_nonRL, tEndAvg_nonConv_plots, "RelL2Err")
-visualizer.RL_err_convergence_along_time(rlzN_Arr, um_NRMSE_RL_nonConv_tk,    um_NRMSE_nonRL_conv_tk[:,:-1],    averaging_times_nonConv_plots, averaging_times_conv_plots[:-1], r"NRMSE ($<u>$)")
-visualizer.RL_err_convergence_along_time(rlzN_Arr, urmsf_NRMSE_RL_nonConv_tk, urmsf_NRMSE_nonRL_conv_tk[:,:-1], averaging_times_nonConv_plots, averaging_times_conv_plots[:-1], r"NRMSE ($u'$)")
+visualizer.RL_err_convergence_along_time(rlzN_Arr, um_NRMSE_RL_nonConv_tk,    um_NRMSE_nonRL_conv_tk[:,:-1],    averaging_times_nonConv_plots, averaging_times_conv_plots[:-1], {"title": "NRMSE_umean", "ylabel": r"NRMSE $\overline{u^{+}}$"})
+visualizer.RL_err_convergence_along_time(rlzN_Arr, urmsf_NRMSE_RL_nonConv_tk, urmsf_NRMSE_nonRL_conv_tk[:,:-1], averaging_times_nonConv_plots, averaging_times_conv_plots[:-1], {"title": "NRMSE_urmsf", "ylabel": r"NRMSE $u^{+}_{rms}$"})
 visualizer.RL_Rij_convergence(ydelta[1:-1], rlzN_Arr, 
                               Rkk_RL_nonConv[1:-1],    lambda1_RL_nonConv[1:-1],    lambda2_RL_nonConv[1:-1],    lambda3_RL_nonConv[1:-1],    xmap1_RL_nonConv[1:-1],    xmap2_RL_nonConv[1:-1],
                               Rkk_nonRL_nonConv[1:-1], lambda1_nonRL_nonConv[1:-1], lambda2_nonRL_nonConv[1:-1], lambda3_nonRL_nonConv[1:-1], xmap1_nonRL_nonConv[1:-1], xmap2_nonRL_nonConv[1:-1],
