@@ -5,6 +5,8 @@ Utils functions for post/channelFlow post-processing scripts
 import os
 import yaml
 import math
+import re
+
 import glob as gb
 import numpy as np
 from scipy.interpolate import interp1d
@@ -910,15 +912,16 @@ def get_time(file):
         Time is stored as a comment in the first line of the .dat file, e.g.
         # time = 50.0
     """
-    with open(file,"r") as f:
+    with open(file, "r") as f:
         first_line = f.readline().strip()
-    if first_line.startswith("# time = "):
-        time = float(first_line.split(" = ")[1])
+    match = re.match(r'#\s*time\s*=\s*([0-9.]+)', first_line)
+    if match:
+        time = float(match.group(1))
     else:
         print(f"No valid format found in the first line of {file}.")
         time = None
+    print(f"[utils/get_time] Time = {time} for file '{file}'")
     return time
-
 
 def get_odt_statistics_post_at_chosen_averaging_times(input_params, averaging_times):
     
