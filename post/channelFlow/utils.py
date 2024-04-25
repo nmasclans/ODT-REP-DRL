@@ -502,7 +502,7 @@ def get_odt_statistics_rt(input_params):
     # --- Get dmp file with dump number ***** corresponding to tEndAvg, or the closest one from below ---
     dTimes     = np.round(np.arange(dTimeStart, dTimeEnd+1e-6, dTimeStep), 6)
     tEndAvgDmpIdx = np.sum(tEndAvg > dTimes) 
-    tEndAvgDmpStr = f"{tEndAvgDmpIdx:05d}"
+    tEndAvgDmpStr = f"{tEndAvgDmpIdx-1:05d}"    # -1 because first file is 00000
 
     # --- Get vel. statistics computed during runtime at last time increment ---
 
@@ -739,12 +739,12 @@ def get_odt_udata_rt(input_params, half_channel_symmetry=True):
     # --- Get dmp file with dump number ***** corresponding to tEndAvg, or the closest one from below ---
     dTimes     = np.round(np.arange(dTimeStart, dTimeEnd+1e-6, dTimeStep), 6)
     tEndAvgDmpIdx = np.sum(tEndAvg > dTimes) 
-    tEndAvgDmpStr = f"{tEndAvgDmpIdx:05d}"
+    tEndAvgDmpStr = f"{tEndAvgDmpIdx-1:05d}"    # -1 because first file is 00000
 
     # --- Get vel. statistics computed during runtime at last time increment ---
 
     fstat     = f"../../data/{case_name}/data/data_{rlzStr}/statistics/stat_dmp_{tEndAvgDmpStr}.dat"
-    print(f"\nGet statistics data from file: {fstat}")
+    print(f"\n[get_odt_udata_rt] Get statistics data from file: {fstat}")
     data_stat = np.loadtxt(fstat)
 
     # -> check the file rows correspond to the expected variables:
@@ -920,7 +920,7 @@ def get_time(file):
     else:
         print(f"No valid format found in the first line of {file}.")
         time = None
-    print(f"[utils/get_time] Time = {time} for file '{file}'")
+    print(f"\n[utils/get_time] Time = {time} for file '{file}'")
     return time
 
 def get_odt_statistics_post_at_chosen_averaging_times(input_params, averaging_times):
@@ -1435,7 +1435,7 @@ def compute_convergence_indicator_odt_tEndAvg(input_params):
     # --- Get dmp file with dump number ***** corresponding to tEndAvg, or the closest one from below ---
     dTimes        = np.round(np.arange(dTimeStart, dTimeEnd+1e-6, dTimeStep), 6)
     tEndAvgDmpIdx = np.sum(tEndAvg > dTimes) 
-    tEndAvgDmpStr = f"{tEndAvgDmpIdx:05d}"
+    tEndAvgDmpStr = f"{tEndAvgDmpIdx-1:05d}"    # -1 because first file is 00000
     
     # un-normalize
     dxmin *= domainLength
