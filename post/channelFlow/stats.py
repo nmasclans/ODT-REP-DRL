@@ -147,9 +147,9 @@ urms_dns = dns[:,2]**0.5
 vrms_dns = dns[:,3]**0.5
 wrms_dns = dns[:,4]**0.5
 
-ax.plot(y_odt, urms_odt, 'k-',  label=r'$u_{rms}/u_\tau$')
-ax.plot(y_odt, vrms_odt, 'b--', label=r'$v_{rms}/u_\tau$')
-ax.plot(y_odt, wrms_odt, 'r:',  label=r'$w_{rms}/u_\tau$')
+ax.plot(y_odt, urms_odt, 'k-',  label=r'$u_{\textrm{rms}}/u_\tau$')
+ax.plot(y_odt, vrms_odt, 'b--', label=r'$v_{\textrm{rms}}/u_\tau$')
+ax.plot(y_odt, wrms_odt, 'r:',  label=r'$w_{\textrm{rms}}/u_\tau$')
 
 ax.plot(-y_dns, urms_dns, 'k-',  label='')
 ax.plot(-y_dns, vrms_dns, 'b--', label='')
