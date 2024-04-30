@@ -1130,7 +1130,7 @@ class ChannelVisualizer():
         # configure plot
         plt.xlabel(r'$t^{+}$')
         plt.ylabel(info['ylabel'])
-        if nrlz < 10:
+        if nrlz < 15:
             plt.legend(frameon=True, fontsize=10)
         plt.tight_layout()
         plt.savefig(filename, dpi=600)

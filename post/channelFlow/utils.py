@@ -1358,6 +1358,7 @@ def get_odt_udata_rt_at_chosen_averaging_times(input_params, averaging_times, ha
         averaging_times_idx.append(np.where(dTimeVec==averaging_times[t_idx])[0][0])
     averaging_times_str = [str(idx).zfill(5) for idx in averaging_times_idx]
     if (len(averaging_times_str) != averaging_times_num):
+        print(averaging_times_num, averaging_times_idx)
         raise ValueError("Not all averaging_times where found!")
 
     # --- Get vel. statistics computed during runtime at chosen averaging times ---
