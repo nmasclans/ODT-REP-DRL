@@ -16,7 +16,7 @@ int processor::nInst;
 
 processor::processor() {
 
-#ifdef DOMPI
+#if DOMPI
 
     //----------- set MPI Stuff (if on)
 
@@ -26,13 +26,14 @@ processor::processor() {
         MPI_Init(&fake_argc, &fake_argv);
         MPI_Comm_rank(MPI_COMM_WORLD, &myid);
         MPI_Comm_size(MPI_COMM_WORLD, &nproc);
+        cout << "[processor.cc] MPI Initialized" << endl;
     }
     if(nInst > 1)
         cout << endl << "****** WARNING, more than one processor class object" << endl;
 
     if(myid==0)
-        cout << "# MPI IS ON" << "; Nprocs = " << nproc << endl;
-    cout << "# MPI myid = " << myid << endl;
+        cout << "[processor.cc] MPI IS ON" << "; Nprocs = " << nproc << endl;
+    cout << "[processor.cc] MPI myid = " << myid << endl;
 
     MPI_Barrier(MPI_COMM_WORLD);
 
@@ -51,7 +52,7 @@ processor::processor() {
 
 processor::~processor() {
 
-#ifdef DOMPI
+#if DOMPI
 
     if((--nInst)==0)             // Only ever finalize mpi once
 
@@ -73,23 +74,8 @@ processor::~processor() {
 
 #else
 
-    // MPI communicator
-    MPI_Comm_get_parent(&sub_com);    // define 'sub_com' as the parent communicator (handle) 
-
-    // Synchronization parent (Python) & child (C++)
-    MPI_Barrier(sub_com); // C++ barrier that matches python barrier
-    cout << "[processor.cc] Barrier passed" << endl;
-    
-    // Disconnect communication
-    if (sub_com != MPI_COMM_NULL)      
-        MPI_Comm_disconnect(&sub_com);
-    cout << "[processor.cc] MPI Disconnected" << endl;
-
-    // Finalize MPI environment in the current cpu (where C++ is running)
-    MPI_Finalize();
-    cout << "[processor.cc] MPI Finished" << endl;
-
 #endif
+
 }
 
 ///////////////////////////////////////////////////////////////////////////////

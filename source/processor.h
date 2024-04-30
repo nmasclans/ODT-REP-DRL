@@ -5,7 +5,7 @@
 
 #pragma once
 
-#define DOMPI 1
+#define DOMPI 0
 
 #ifdef DOMPI
 #include <mpi.h>
