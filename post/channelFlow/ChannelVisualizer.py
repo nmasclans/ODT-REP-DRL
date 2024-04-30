@@ -963,9 +963,10 @@ class ChannelVisualizer():
 
         # variable vs. y-coordinate, for each realization
         # > RL non-converged (at time_nonConv):
-        nrlz = len(rlzArr)
+        nrlz   = len(rlzArr)
+        colors = plt.cm.viridis_r(np.linspace(0, 1, nrlz))
         for irlz in range(nrlz):
-            ax[0].plot(ydelta, var_RL_nonConv[:,irlz], label=f"RL Rlz {rlzArr[irlz]}: t={time_nonConv}")
+            ax[0].plot(ydelta, var_RL_nonConv[:,irlz], color=colors[irlz], label=f"RL Rlz {rlzArr[irlz]}: t={time_nonConv}")
         # > non-RL non-converged (at time_nonConv):
         ax[0].plot(ydelta, var_nonRL_nonConv, '--k', label=f"Non-RL:  t={time_nonConv}")
         # > non-RL baseline (at time_baseline)
@@ -1119,14 +1120,15 @@ class ChannelVisualizer():
         rlzAvg_err_ref = np.mean(err_ref, axis=0)
         plt.semilogy(averaging_times_ref[idxRef], rlzAvg_err_ref[idxRef], color = "black", linewidth = 2, label=f"Reference Rlz-Average")
         # RL non-converged:
-        nrlz = len(rlzArr)
+        nrlz   = len(rlzArr)
+        colors = plt.cm.viridis_r(np.linspace(0, 1, nrlz))
         for irlz in range(nrlz):
             # eliminate the err_RL[i] = 1, which corresponds to time instances with no statistics data (u-mean not updated after initialized as zeros, thus relative error = 1) (also happens for t=tBeginAvg, where u-mean=0 everywhere)
             updatedErrorIdx_irlz     = np.where(err_RL[:,irlz]!=1.0)[0]
             err_RL_irlz              = err_RL[updatedErrorIdx_irlz, irlz]
             averagings_times_RL_irlz = averaging_times_RL[updatedErrorIdx_irlz]
             # plot errors
-            plt.semilogy(averagings_times_RL_irlz, err_RL_irlz, linewidth = 2, label=f"RL Rlz {rlzArr[irlz]}")
+            plt.semilogy(averagings_times_RL_irlz, err_RL_irlz, linewidth = 2, color=colors[irlz], label=f"RL Rlz {rlzArr[irlz]}")
         # configure plot
         plt.xlabel(r'$t^{+}$')
         plt.ylabel(info['ylabel'])
