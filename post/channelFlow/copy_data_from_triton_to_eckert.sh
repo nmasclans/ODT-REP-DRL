@@ -15,5 +15,5 @@ for ((RL=min_rl; RL<=max_rl; RL++)); do
     # Construct the scp command with the current RL number
     echo "\n\n--------- RL #"$RL"---------"  
     scp -r jofre@triton.eebe.upc.edu:/home/jofre/Nuria/repositories/ODT/data/channel180_RL"$RL"/ /home/eckert/Documents/Nuria_Masclans/repositories/ODT/data/
-    scp jofre@triton.eebe.upc.edu:/home/jofre/Nuria/repositories/MARL-Statistics-Convergence/src/nohup_RL"$RL".out /home/eckert/Documents/Nuria_Masclans/repositories/ODT/data/channel180_RL"$RL"/nohup/
+    scp jofre@triton.eebe.upc.edu:/home/jofre/Nuria/repositories/MARL-Statistics-Convergence/nohup/nohup_RL"$RL".out /home/eckert/Documents/Nuria_Masclans/repositories/ODT/data/channel180_RL"$RL"/nohup/
 done
