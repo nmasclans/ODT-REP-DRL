@@ -897,7 +897,8 @@ class ChannelVisualizer():
         ax[1].semilogx(yplus, relErr_nonRL, '--k', label=f"Non-RL:  t={time_nonConv}")
         ax[1].set_xlabel(r'$y^+$')
         ax[1].set_ylabel(r'Relative Error $( u_{m}^+ - u_{m,ref}^+ ) / u_{m,ref}^+$')
-        ax[1].legend(loc='lower left', frameon=True, fontsize=10)
+        if nrlz < 10:
+            ax[1].legend(loc='lower left', frameon=True, fontsize=10)
 
         # NRMSE variable vs. realization
         NRMSE_RL = np.zeros(nrlz)
@@ -1093,7 +1094,7 @@ class ChannelVisualizer():
         # configure plot
         plt.xlabel('Realization Id.')
         plt.ylabel(f'Error {error_name}')
-        if nrlz < 10:
+        if nrlz < 20:
             plt.legend(frameon=True, fontsize=10)
         plt.tight_layout()
         plt.savefig(filename, dpi=600)
@@ -1132,7 +1133,7 @@ class ChannelVisualizer():
         # configure plot
         plt.xlabel(r'$t^{+}$')
         plt.ylabel(info['ylabel'])
-        if nrlz < 15:
+        if nrlz < 20:
             plt.legend(frameon=True, fontsize=10)
         plt.tight_layout()
         plt.savefig(filename, dpi=600)

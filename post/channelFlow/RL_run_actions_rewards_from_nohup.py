@@ -25,7 +25,11 @@ except :
 
 # --- nohup and inputRL source files ---
 
-nohup_filepath   = os.path.join(f"../../data/{caseN_RL}/nohup", nohup_filename)
+### post-process on eckert:
+#nohup_filepath   = os.path.join(f"../../data/{caseN_RL}/nohup", nohup_filename)
+### post-process on triton
+rl_path          = os.environ.get("RL_PATH")
+nohup_filepath   = os.path.join(rl_path, "nohup", nohup_filename)
 inputRL_filepath = os.path.join(f"../../data/{caseN_RL}/input", "inputRL.i")
 
 # --- post-processing directories to store results
