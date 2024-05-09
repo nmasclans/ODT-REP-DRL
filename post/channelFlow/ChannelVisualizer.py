@@ -862,7 +862,10 @@ class ChannelVisualizer():
         plt.close()
 
 # ------------------------------------ RL Convergence along ODT Realizations -------------------------------------------
-    def RL_u_mean_convergence(self, yplus, rlzArr, um_RL_nonConv, urmsf_RL_nonConv, um_nonRL_nonConv, urmsf_nonRL_nonConv, um_baseline, urmsf_baseline, time_nonConv, time_baseline):
+    def RL_u_mean_convergence(self, yplus, rlzArr, 
+                              um_RL_nonConv, urmsf_RL_nonConv, um_nonRL_nonConv, urmsf_nonRL_nonConv, um_baseline, urmsf_baseline, 
+                              um_NRMSE_RL, urmsf_NRMSE_RL, um_NRMSE_nonRL, urmsf_NRMSE_nonRL,
+                              time_nonConv, time_baseline):
 
         # --------- plot um data ---------
         
@@ -880,38 +883,32 @@ class ChannelVisualizer():
         # > non-RL baseline (at time_baseline)
         ax[0].semilogx(yplus, um_baseline, '-k', label=f"Reference: t={time_baseline}")
         ax[0].set_xlabel(r'$y^+$')
-        ax[0].set_ylabel(r'$u_{m}^+$')
+        ax[0].set_ylabel(r'$\overline{u}^{+}$')
         if nrlz < 10:
             ax[0].legend(frameon=True, fontsize=10)
 
         # Error variable vs. realization *per grid point*
         num_points = len(um_baseline)
-        relErr_RL = np.zeros([num_points, nrlz])
+        absErr_RL = np.zeros([num_points, nrlz])
         for irlz in range(nrlz):
-            relErr_RL[:,irlz] = ( um_RL_nonConv[:,irlz] - um_baseline ) / um_baseline
-        relErr_nonRL = ( um_nonRL_nonConv - um_baseline ) / um_baseline
+            absErr_RL[:,irlz] = np.abs(um_RL_nonConv[:,irlz] - um_baseline)
+        absErr_nonRL = np.abs(um_nonRL_nonConv - um_baseline)
         # > RL non-converged (at time_nonConv):
         for irlz in range(nrlz):
-            ax[1].semilogx(yplus, relErr_RL[:,irlz], label=f"RL Rlz {rlzArr[irlz]}: t={time_nonConv}")
+            ax[1].loglog(yplus, absErr_RL[:,irlz], label=f"RL Rlz {rlzArr[irlz]}: t={time_nonConv}")
         # > non-RL non-converged (at time_nonConv):
-        ax[1].semilogx(yplus, relErr_nonRL, '--k', label=f"Non-RL:  t={time_nonConv}")
+        ax[1].loglog(yplus, absErr_nonRL, '--k', label=f"Non-RL:  t={time_nonConv}")
         ax[1].set_xlabel(r'$y^+$')
-        ax[1].set_ylabel(r'Relative Error $( u_{m}^+ - u_{m,ref}^+ ) / u_{m,ref}^+$')
+        ax[1].set_ylabel(r'Absolute Error $| \overline{u}^{+} - \overline{u_{ref}}^{+} |$')
         if nrlz < 10:
             ax[1].legend(loc='lower left', frameon=True, fontsize=10)
 
         # NRMSE variable vs. realization
-        NRMSE_RL = np.zeros(nrlz)
-        for irlz in range(nrlz):
-            NRMSE_RL[irlz] = np.linalg.norm(um_RL_nonConv[:,irlz] - um_baseline, 2) \
-                             / np.linalg.norm(um_baseline, 2)
-        NRMSE_nonRL = np.linalg.norm(um_nonRL_nonConv - um_baseline, 2) \
-                      / np.linalg.norm(um_baseline, 2)
-        ax[2].plot(rlzArr, NRMSE_RL, '-o', label="RL")
-        ax[2].plot(rlzArr, NRMSE_nonRL * np.ones(nrlz), '--k', label="non-RL")
+        ax[2].semilogy(rlzArr, um_NRMSE_RL, '-o', label="RL")
+        ax[2].semilogy(rlzArr, um_NRMSE_nonRL * np.ones(nrlz), '--k', label=f"non-RL ({um_NRMSE_nonRL:.3e})")
         ax[2].set_xlabel('Rlz')
-        ax[2].set_ylabel(r'NRMSE($u_{m}^+$)')
-        ax[2].legend()
+        ax[2].set_ylabel(r'NRMSE($\overline{u}^{+}$)')
+        ax[2].legend(loc='upper right')
 
         plt.tight_layout()
         plt.savefig(filename, dpi=600)
@@ -922,7 +919,7 @@ class ChannelVisualizer():
         filename = os.path.join(self.postRlzDir, f"RL_u_rmsf_convergence.jpg")
         print(f"\nMAKING PLOT of urmsf profile at tEndAvg for multiple realizations in {filename}")
 
-        fig, ax = plt.subplots(1,2,figsize=(10,5))
+        fig, ax = plt.subplots(1,3,figsize=(15,5))
 
         # > RL non-converged (at time_nonConv):
         nrlz = um_RL_nonConv.shape[1]
@@ -937,18 +934,28 @@ class ChannelVisualizer():
         if nrlz <= 15:
             ax[0].legend(frameon=True, fontsize=10)
 
-        # NRMSE variable vs. realization
-        NRMSE_RL = np.zeros(nrlz)
+        # Error variable vs. realization *per grid point*
+        num_points = len(urmsf_baseline)
+        absErr_RL = np.zeros([num_points, nrlz])
         for irlz in range(nrlz):
-            NRMSE_RL[irlz] = np.linalg.norm(urmsf_RL_nonConv[:,irlz] - urmsf_baseline, 2) \
-                             / np.linalg.norm(urmsf_baseline, 2)
-        NRMSE_nonRL = np.linalg.norm(urmsf_nonRL_nonConv - urmsf_baseline, 2) \
-                      / np.linalg.norm(urmsf_baseline, 2)
-        ax[1].plot(rlzArr, NRMSE_RL, '-o', label="RL")
-        ax[1].plot(rlzArr, NRMSE_nonRL * np.ones(nrlz), '--k', label="non-RL")
-        ax[1].set_xlabel('Rlz')
-        ax[1].set_ylabel(r'NRMSE($u_{rmsf}^+$)')
-        ax[1].legend()
+            absErr_RL[:,irlz] = np.abs(urmsf_RL_nonConv[:,irlz] - urmsf_baseline)
+        absErr_nonRL = np.abs(urmsf_nonRL_nonConv - urmsf_baseline)
+        # > RL non-converged (at time_nonConv):
+        for irlz in range(nrlz):
+            ax[1].loglog(yplus, absErr_RL[:,irlz], label=f"RL Rlz {rlzArr[irlz]}: t={time_nonConv}")
+        # > non-RL non-converged (at time_nonConv):
+        ax[1].loglog(yplus, absErr_nonRL, '--k', label=f"Non-RL:  t={time_nonConv}")
+        ax[1].set_xlabel(r'$y^+$')
+        ax[1].set_ylabel(r"Absolute Error $| u'^{+} - u_{ref}'^{+} |$")
+        if nrlz < 10:
+            ax[1].legend(loc='lower left', frameon=True, fontsize=10)
+
+        # NRMSE variable vs. realization
+        ax[2].semilogy(rlzArr, urmsf_NRMSE_RL, '-o', label="RL")
+        ax[2].semilogy(rlzArr, urmsf_NRMSE_nonRL * np.ones(nrlz), '--k', label=f"non-RL ({urmsf_NRMSE_nonRL:.3e})")
+        ax[2].set_xlabel('Rlz')
+        ax[2].set_ylabel(r"NRMSE($u'^{+}$)")
+        ax[2].legend(loc='upper right')
 
         plt.tight_layout()
         plt.savefig(filename, dpi=600)

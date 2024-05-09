@@ -920,7 +920,7 @@ def get_time(file):
     else:
         print(f"No valid format found in the first line of {file}.")
         time = None
-    print(f"\n[utils/get_time] Time = {time} for file '{file}'")
+    # print(f"\n[utils/get_time] Time = {time} for file '{file}'")
     return time
 
 def get_odt_statistics_post_at_chosen_averaging_times(input_params, averaging_times):

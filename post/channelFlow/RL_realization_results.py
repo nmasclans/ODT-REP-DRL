@@ -127,26 +127,31 @@ for irlz in range(nrlz):
      ufufm_RL_nonConv_, vfvfm_RL_nonConv_, wfwfm_RL_nonConv_, ufvfm_RL_nonConv_, ufwfm_RL_nonConv_, vfwfm_RL_nonConv_, \
      _, _, _) \
         = get_odt_statistics_rt(inputParams_RL_nonConv)
-    (Rkk_RL_nonConv_, lambda1_RL_nonConv_, lambda2_RL_nonConv_, lambda3_RL_nonConv_, xmap1_RL_nonConv_, xmap2_RL_nonConv_) \
-        = compute_reynolds_stress_dof(ufufm_RL_nonConv_, vfvfm_RL_nonConv_, wfwfm_RL_nonConv_, ufvfm_RL_nonConv_, ufwfm_RL_nonConv_, vfwfm_RL_nonConv_)
-
-    # store realization data
+    try:
+        # calculate eigen-variables
+        (Rkk_RL_nonConv_, lambda1_RL_nonConv_, lambda2_RL_nonConv_, lambda3_RL_nonConv_, xmap1_RL_nonConv_, xmap2_RL_nonConv_) \
+            = compute_reynolds_stress_dof(ufufm_RL_nonConv_, vfvfm_RL_nonConv_, wfwfm_RL_nonConv_, ufvfm_RL_nonConv_, ufwfm_RL_nonConv_, vfwfm_RL_nonConv_)
+        # store fluid variables for irlz
+        um_RL_nonConv_allChannel[:,irlz]    = um_RL_nonConv_allChannel_
+        urmsf_RL_nonConv_allChannel[:,irlz] = urmsf_RL_nonConv_allChannel_
+        um_RL_nonConv[:,irlz]               = um_RL_nonConv_
+        urmsf_RL_nonConv[:,irlz]            = urmsf_RL_nonConv_
+        Rkk_RL_nonConv[:,irlz]              = Rkk_RL_nonConv_
+        lambda1_RL_nonConv[:,irlz]          = lambda1_RL_nonConv_
+        lambda2_RL_nonConv[:,irlz]          = lambda2_RL_nonConv_
+        lambda3_RL_nonConv[:,irlz]          = lambda3_RL_nonConv_
+        xmap1_RL_nonConv[:,irlz]            = xmap1_RL_nonConv_
+        xmap2_RL_nonConv[:,irlz]            = xmap2_RL_nonConv_
+    except np.linalg.LinAlgError as err:
+        print(err)
+        print(f"Fluid diverged - decomposition not possible (NaN values) - all fluid variables set to 0 everywhere for rlz #{irlz} by initialization")
+    # store y coordinates
     if irlz == 0:
         ydelta_RL_nonConv = ydelta_RL_nonConv_
         yplus_RL_nonConv  = yplus_RL_nonConv_
     else:
         assert (ydelta_RL_nonConv == ydelta_RL_nonConv_).all()
         assert (yplus_RL_nonConv  == yplus_RL_nonConv_).all()
-    um_RL_nonConv_allChannel[:,irlz]    = um_RL_nonConv_allChannel_
-    urmsf_RL_nonConv_allChannel[:,irlz] = urmsf_RL_nonConv_allChannel_
-    um_RL_nonConv[:,irlz]               = um_RL_nonConv_
-    urmsf_RL_nonConv[:,irlz]            = urmsf_RL_nonConv_
-    Rkk_RL_nonConv[:,irlz]              = Rkk_RL_nonConv_
-    lambda1_RL_nonConv[:,irlz]          = lambda1_RL_nonConv_
-    lambda2_RL_nonConv[:,irlz]          = lambda2_RL_nonConv_
-    lambda3_RL_nonConv[:,irlz]          = lambda3_RL_nonConv_
-    xmap1_RL_nonConv[:,irlz]            = xmap1_RL_nonConv_
-    xmap2_RL_nonConv[:,irlz]            = xmap2_RL_nonConv_
 
 #------------ Get NON-CONVERGED runtime-calculated 'um' for chosen averaging times for each ODT RL-realization ---------------
 
@@ -301,7 +306,8 @@ if tBeginAvg >= dTimeStart:
 else:
     averaging_times_conv = np.arange(dTimeStart, tEndAvg_conv+1e-4, dtAvg).round(4)
 averaging_times_conv_plots = averaging_times_conv - tBeginAvg
-ntk_conv = len(averaging_times_conv)
+ntk_conv            = len(averaging_times_conv)
+idx_tEndAvg_nonConv = np.where(averaging_times_conv == tEndAvg_nonConv)[0][0]
 
 dTimeVec = np.arange(dTimeStart, dTimeEnd+1e-4, dTimeStep).round(4)
 averaging_times_idx = []
@@ -323,28 +329,34 @@ for iRef in range(nRef):
         um_nonRL_conv_allRlz_allChannel_tk[iRef, :, tk] = data_stat[:,1]
         urmsf_nonRL_conv_allRlz_allChannel_tk[iRef, :, tk] = data_stat[:,2]
 
-# ------------- Calculate errors non-converged results vs converged baseline at t=tEndAvg -------------
+### # ------------- Calculate errors (RL + non-RL) non-converged results vs converged baseline at t=tEndAvg -------------
+### 
+### # ---- Calculate NRMSE
+### 
+### num_points = len(um_nonRL_conv)
+### # Error of RL non-converged
+### NRMSE_RL = np.zeros(nrlz)
+### for irlz in range(nrlz):
+###     NRMSE_RL_num   = np.sqrt(np.sum((um_RL_nonConv_allChannel[:,irlz] - um_nonRL_conv_allChannel)**2))
+###     NRMSE_RL_denum = np.sqrt(np.sum((um_nonRL_conv_allChannel)**2))
+###     NRMSE_RL[irlz] = NRMSE_RL_num / NRMSE_RL_denum 
+### # Error of non-RL non-converged
+### NRMSE_nonRL_num   = np.sqrt(np.sum((um_nonRL_nonConv_allChannel - um_nonRL_conv_allChannel)**2))
+### NRMSE_nonRL_denum = np.sqrt(np.sum((um_nonRL_conv_allChannel)**2))
+### NRMSE_nonRL = NRMSE_nonRL_num / NRMSE_nonRL_denum
+### 
+### print("\n---------------------------------------------------------------------------------------------")
+### print(f"\nNon-RL non-conv NRMSE errors at t={tEndAvg_nonConv} from 10 averaged realizations are:", NRMSE_nonRL)
+### print(f"\nRL     non-conv NRMSE errors at t={tEndAvg_nonConv} for {nrlz} realizations are:", NRMSE_RL)
+### print("---------------------------------------------------------------------------------------------\n")
 
-# ---- Calculate NRMSE
-
-num_points = len(um_nonRL_conv)
-# Error of RL non-converged
-NRMSE_RL = np.zeros(nrlz)
-for irlz in range(nrlz):
-    NRMSE_RL_num   = np.sqrt(np.sum((um_RL_nonConv_allChannel[:,irlz] - um_nonRL_conv_allChannel)**2))
-    NRMSE_RL_denum = np.sqrt(np.sum((um_nonRL_conv_allChannel)**2))
-    NRMSE_RL[irlz] = NRMSE_RL_num / NRMSE_RL_denum 
-# Error of non-RL non-converged
-NRMSE_nonRL_num   = np.sqrt(np.sum((um_nonRL_nonConv_allChannel - um_nonRL_conv_allChannel)**2))
-NRMSE_nonRL_denum = np.sqrt(np.sum((um_nonRL_conv_allChannel)**2))
-NRMSE_nonRL = NRMSE_nonRL_num / NRMSE_nonRL_denum
-
-# ------------- Calculate errors non-converged results vs converged baseline at chosed averaging times -------------
+# ------------- Calculate errors (RL + non-RL) non-converged results vs converged baseline at chosed averaging times -------------
 
 um_NRMSE_denum    = np.linalg.norm(um_nonRL_conv_allChannel, 2)
 urmsf_NRMSE_denum = np.linalg.norm(urmsf_nonRL_conv_allChannel, 2)
 
-# RL non-converged:
+### RL non-converged:
+# at tk time instants:
 ntk_nonConv = len(averaging_times_nonConv)
 um_NRMSE_RL_nonConv_tk    = np.zeros((ntk_nonConv, nrlz))
 urmsf_NRMSE_RL_nonConv_tk = np.zeros((ntk_nonConv, nrlz))
@@ -352,14 +364,26 @@ for irlz in range(nrlz):
     for itk in range(ntk_nonConv):
         um_NRMSE_RL_nonConv_tk[itk, irlz]    = np.linalg.norm(um_RL_nonConv_allChannel_tk[:,itk,irlz]    - um_nonRL_conv_allChannel, 2)    / um_NRMSE_denum
         urmsf_NRMSE_RL_nonConv_tk[itk, irlz] = np.linalg.norm(urmsf_RL_nonConv_allChannel_tk[:,itk,irlz] - urmsf_nonRL_conv_allChannel, 2) / urmsf_NRMSE_denum
+# at tEndAvg_nonConv instant:
+um_NRMSE_RL_nonConv_tEndAvg    = um_NRMSE_RL_nonConv_tk[idx_tEndAvg_nonConv,:]
+urmsf_NRMSE_RL_nonConv_tEndAvg = urmsf_NRMSE_RL_nonConv_tk[idx_tEndAvg_nonConv,:]
 
 # non-RL converged
+# at tk time instants:
 um_NRMSE_nonRL_conv_tk    = np.zeros((nRef, ntk_conv))
 urmsf_NRMSE_nonRL_conv_tk = np.zeros((nRef, ntk_conv))
 for iref in range(nRef):
     for itk in range(ntk_conv):
         um_NRMSE_nonRL_conv_tk[iref,itk]    = np.linalg.norm(um_nonRL_conv_allRlz_allChannel_tk[iref,:,itk]    - um_nonRL_conv_allChannel, 2)    / um_NRMSE_denum
         urmsf_NRMSE_nonRL_conv_tk[iref,itk] = np.linalg.norm(urmsf_nonRL_conv_allRlz_allChannel_tk[iref,:,itk] - urmsf_nonRL_conv_allChannel, 2) / urmsf_NRMSE_denum
+# at tEndAvg_nonConv instant, and averaged along all non-RL realizations
+um_NRMSE_nonRL_nonConv_tEndAvg = np.mean(um_NRMSE_nonRL_conv_tk[:,idx_tEndAvg_nonConv])
+urmsf_NRMSE_nonRL_nonConv_tEndAvg = np.mean(urmsf_NRMSE_nonRL_conv_tk[:,idx_tEndAvg_nonConv])
+
+print("\n---------------------------------------------------------------------------------------------")
+print(f"\nNon-RL non-conv NRMSE errors at t={tEndAvg_nonConv} averaged from {nRef} realizations are:", um_NRMSE_nonRL_nonConv_tEndAvg)
+print(f"\nRL     non-conv NRMSE errors at t={tEndAvg_nonConv} for {nrlz} realizations are:", um_NRMSE_RL_nonConv_tEndAvg)
+print("\n---------------------------------------------------------------------------------------------\n")
 
 # ------------------------ Build plots ------------------------
 
@@ -370,9 +394,11 @@ yplus  = yplus_RL_nonConv
 tEndAvg_nonConv_plots = tEndAvg_nonConv - tBeginAvg
 tEndAvg_conv_plots    = tEndAvg_conv - tBeginAvg
 visualizer = ChannelVisualizer(postMultipleRlzDir)
-visualizer.RL_u_mean_convergence(yplus[1:], rlzN_Arr, um_RL_nonConv[1:], urmsf_RL_nonConv[1:], um_nonRL_nonConv[1:], urmsf_nonRL_nonConv[1:], um_baseline[1:], urmsf_baseline[1:], tEndAvg_nonConv_plots, tEndAvg_conv_plots)
-visualizer.RL_err_convergence(rlzN_Arr, NRMSE_RL, NRMSE_nonRL, tEndAvg_nonConv_plots, "NRMSE")
-### visualizer.RL_err_convergence(rlzN_Arr, relL2Err_RL, relL2Err_nonRL, tEndAvg_nonConv_plots, "RelL2Err")
+visualizer.RL_u_mean_convergence(yplus[1:], rlzN_Arr, 
+                                 um_RL_nonConv[1:], urmsf_RL_nonConv[1:], um_nonRL_nonConv[1:], urmsf_nonRL_nonConv[1:], um_baseline[1:], urmsf_baseline[1:], 
+                                 um_NRMSE_RL_nonConv_tEndAvg, urmsf_NRMSE_RL_nonConv_tEndAvg, um_NRMSE_nonRL_nonConv_tEndAvg, urmsf_NRMSE_nonRL_nonConv_tEndAvg,
+                                 tEndAvg_nonConv_plots, tEndAvg_conv_plots)
+visualizer.RL_err_convergence(rlzN_Arr, um_NRMSE_RL_nonConv_tEndAvg, um_NRMSE_nonRL_nonConv_tEndAvg, tEndAvg_nonConv_plots, "NRMSE(um+)")
 visualizer.RL_err_convergence_along_time(rlzN_Arr, um_NRMSE_RL_nonConv_tk,    um_NRMSE_nonRL_conv_tk[:,:-1],    averaging_times_nonConv_plots, averaging_times_conv_plots[:-1], {"title": "NRMSE_umean", "ylabel": r"NRMSE $\overline{u}^{+}$"})
 visualizer.RL_err_convergence_along_time(rlzN_Arr, urmsf_NRMSE_RL_nonConv_tk, urmsf_NRMSE_nonRL_conv_tk[:,:-1], averaging_times_nonConv_plots, averaging_times_conv_plots[:-1], {"title": "NRMSE_urmsf", "ylabel": r"NRMSE $u^{+}_{\textrm{rms}}$"})
 visualizer.RL_Rij_convergence(ydelta[1:-1], rlzN_Arr, 
