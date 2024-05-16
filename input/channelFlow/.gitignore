@@ -1,7 +1,11 @@
 /channel180*
+/channel395*
+/channel590*
 
 !/channel180_default
 !/channel180_longSimulation
 !/channel180_restart_from_longSimulation*
 !/channel180_shortSimulation
 !/channel590_longSimulation
+!/channel395_nonRL1
+!/channel590_nonRL1
