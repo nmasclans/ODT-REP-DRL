@@ -18,9 +18,11 @@ You may add this path in the ./bashrc file.
 
 Next, from this location, run in terminal: 
 ```
-cd $ODT_PATH/build; make clean; cmake -C user_config ../source; make -j8; cd ../run; ./runOneRlz.sh <case_name> <rlz_number>;
+cd $ODT_PATH/build; make clean; cmake -C user_config ../source; make -j8; cd ../run; 
+nohup ./runOneRlz.sh <case_name> <rlz_number> > nohup_<case_name> &;
 ```
 In case you are compiling & running the code in a docker container (built as specified in main [README](./../README.md)), use the specific ```user_config_dockerContainer``` configuration:
 ```
-cd $ODT_PATH/build; make clean; cmake -C user_config_dockerContainer ../source; make -j8; cd ../run; ./runOneRlz.sh <case_name> <rlz_number>;
+cd $ODT_PATH/build; make clean; cmake -C user_config_dockerContainer ../source; make -j8; cd ../run; 
+nohup ./runOneRlz.sh <case_name> <rlz_number> > nohup_<case_name> &;
 ```
