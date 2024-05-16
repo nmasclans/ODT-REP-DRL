@@ -14,8 +14,9 @@ try :
 except :
     raise ValueError("Missing call arguments, should be: <case_name> <realization_number>")
 
-rlzStr = f"{rlzN:05d}"
-dataDir = f"../../data/{caseN}/data/data_{rlzStr}/"
+odt_path = os.environ.get("ODT_PATH")
+rlzStr   = f"{rlzN:05d}"
+dataDir  = f"{odt_path}/data/{caseN}/data/data_{rlzStr}/"
 
 # instantaneous data
 fEnd        = os.path.join(dataDir, "odt_end.dat")
