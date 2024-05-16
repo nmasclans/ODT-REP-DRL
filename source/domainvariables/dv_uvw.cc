@@ -63,12 +63,14 @@ dv_uvw::dv_uvw(domain  *line,
     RzzDelta        = vector<double>(domn->ngrd, 0.0);
 
 #if _FEEDBACK_LOOP_BODY_FORCE_
+    /// initialize parameters and variables
+    utauTarget      = domn->pram->utauTarget;
+    utauNumerical   = 0.0;
     /// Estimated uniform body force to drive the flow
     controller_output = - domn->pram->dPdx / domn->pram->rho0;  /// Initialize controller output
     // controller_output = 0.0;
     controller_error  = 0.0;			        	            /// Initialize controller error
     controller_K_p    = domn->pram->controller_K_p;             /// Controller proportional gain (1.0e-2 by default)
-    u_bulk_target     = domn->pram->u_bulk;
     halfChannel       = 0.5 * domn->pram->domainLength;
     getOdtPath(odtPath);
     fname = odtPath + "/data/feedback_loop_param.out";
@@ -105,7 +107,7 @@ void dv_uvw::getRhsSrc(const int ipt){
     if(var_name == "uvel" && domn->pram->cCoord != 3.0) {
 
         // Calculate numerical u_tau using instantaneous u velocity (using uvel->d)
-        double utauNumerical = sqrt(
+        utauNumerical = sqrt(
             domn->pram->kvisc0 * 0.5 * (
                 domn->uvel->d.at(0) / ( domn->pos->d.at(0) + halfChannel )
                 + domn->uvel->d.at(domn->ngrd-1) / (halfChannel - domn->pos->d.at(domn->ngrd-1) )
@@ -119,23 +121,23 @@ void dv_uvw::getRhsSrc(const int ipt){
         /////     )
         ///// );
         
-        // calculate u_bulk using u_instantaneous  
-        u_bulk_numeric = 0.0;  
-        double length = 0.0;
-        double length_sum = 0.0;
-        for(int i=0; i<domn->ngrd; i++) {
-            if (i < domn->ngrd - 1){
-                length = domn->posf->d.at(i+1) - domn->posf->d.at(i);
-            } else {
-                length = halfChannel - domn->posf->d.at(i);
-            }
-            u_bulk_numeric += domn->uvel->d.at(i) * length;
-            length_sum += length;
-        }
-        u_bulk_numeric /= length_sum;
+        /// // calculate u_bulk using u_instantaneous  
+        /// u_bulk_numeric = 0.0;  
+        /// double length = 0.0;
+        /// double length_sum = 0.0;
+        /// for(int i=0; i<domn->ngrd; i++) {
+        ///     if (i < domn->ngrd - 1){
+        ///         length = domn->posf->d.at(i+1) - domn->posf->d.at(i);
+        ///     } else {
+        ///         length = halfChannel - domn->posf->d.at(i);
+        ///     }
+        ///     u_bulk_numeric += domn->uvel->d.at(i) * length;
+        ///     length_sum += length;
+        /// }
+        /// u_bulk_numeric /= length_sum;
     
         // Update controller variables
-        controller_error   = domn->pram->utauTarget - utauNumerical;
+        controller_error   = utauTarget - utauNumerical;
         // controller_error   = u_bulk_target - u_bulk_numeric;
         controller_output += controller_K_p * controller_error;
         /// static int cout_counter = 0;

@@ -42,11 +42,11 @@ class dv_uvw : public dv {
         double controller_error;
         double controller_K_p;
         double halfChannel;
+        double utauNumerical;
+        double utauTarget;
         string odtPath;
         string fname;
         ofstream *ostrm;
-        double u_bulk_target;
-        double u_bulk_numeric;
 
     //////////////////// CONSTRUCTOR FUNCTIONS /////////////////
 
