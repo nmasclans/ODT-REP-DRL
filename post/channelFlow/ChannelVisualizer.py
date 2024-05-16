@@ -1127,6 +1127,8 @@ class ChannelVisualizer():
                 plt.semilogy(averaging_times_ref[idxRef], err_ref[id_ref,idxRef], color="gray", alpha = 0.5)
         rlzAvg_err_ref = np.mean(err_ref, axis=0)
         plt.semilogy(averaging_times_ref[idxRef], rlzAvg_err_ref[idxRef], color = "black", linewidth = 2, label=f"Reference Rlz-Average")
+        print("\nList of (rlz,", info['title'], ")")
+        print(list(zip(averaging_times_ref[idxRef], rlzAvg_err_ref[idxRef])), "\n")
         # RL non-converged:
         nrlz   = len(rlzArr)
         colors = plt.cm.viridis_r(np.linspace(0, 1, nrlz))
@@ -1135,6 +1137,7 @@ class ChannelVisualizer():
             updatedErrorIdx_irlz     = np.where(err_RL[:,irlz]!=1.0)[0]
             err_RL_irlz              = err_RL[updatedErrorIdx_irlz, irlz]
             averagings_times_RL_irlz = averaging_times_RL[updatedErrorIdx_irlz]
+            print(f"\nrlz = {irlz}: \n", list(zip(averagings_times_RL_irlz, err_RL_irlz)))
             # plot errors
             plt.semilogy(averagings_times_RL_irlz, err_RL_irlz, linewidth = 2, color=colors[irlz], label=f"RL Rlz {rlzArr[irlz]}")
         # configure plot
