@@ -122,7 +122,7 @@ averaging_times_plots = averaging_times - tBeginAvg
 
 # Calculate ubulk
 u_bulk = np.mean(um_rt, axis=0)
-print("u_bulk(t) =", u_bulk)
+# print("u_bulk(t) =", u_bulk)
 
 # Build plots
 

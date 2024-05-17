@@ -29,17 +29,23 @@ else
     echo "- Time end averaging: $7"
 fi
 
+### # Generate dmp file for odt_init.dat file (idem. for statistics & state) if first dmp file id 00000 does not exist
+### echo -e "\n\n\n----------------------------------------------------------------"
+### echo -e "----------------- load_init_file_to_dmp_file.py ----------------"
+### echo -e "----------------------------------------------------------------\n\n\n"
+### python3 load_init_file_to_dmp_file.py "$1" "$2"
+
 ### # Generate dmp file for odt_end.dat file (idem. for statistics & state) if last dmp file time < end file time
 ### echo -e "\n\n\n----------------------------------------------------------------"
 ### echo -e "----------------- load_end_file_to_dmp_file.py -----------------"
 ### echo -e "----------------------------------------------------------------\n\n\n"
 ### python3 load_end_file_to_dmp_file.py "$1" "$2"
 
-### # Execute multiple post-processing python3 scripts, with corresponding call arguments
-### echo -e "\n\n\n----------------------------------------------------------------"
-### echo -e "--------------------- stats_odt_vs_dns.py ----------------------"
-### echo -e "----------------------------------------------------------------\n\n\n"
-### python3 stats_odt_vs_dns.py "$1" "$2" "$3" "$6" "$7"
+# Execute multiple post-processing python3 scripts, with corresponding call arguments
+echo -e "\n\n\n----------------------------------------------------------------"
+echo -e "--------------------- stats_odt_vs_dns.py ----------------------"
+echo -e "----------------------------------------------------------------\n\n\n"
+python3 stats_odt_vs_dns.py "$1" "$2" "$3" "$6" "$7"
  
 echo -e "\n\n\n----------------------------------------------------------------"
 echo -e "----------------- stats_odt_vs_odtReference.py -----------------"

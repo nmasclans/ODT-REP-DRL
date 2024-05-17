@@ -67,6 +67,15 @@ else
 fi
 
 # For each realization, if needed:
+# Generate dmp file for odt_init.dat file (idem. for statistics & state) if first dmp file id 00000 does not exist
+echo -e "\n\n\n----------------------------------------------------------------"
+echo -e "----------------- load_init_file_to_dmp_file.py ----------------"
+echo -e "----------------------------------------------------------------\n\n\n"
+for ((rlzNum = $3; rlzNum <= $4; rlzNum+=$5)); do
+    python3 load_init_file_to_dmp_file.py "$2" "$rlzNum"
+done
+
+# For each realization, if needed:
 # Generate dmp file for odt_end.dat file (idem. for statistics & state) if last dmp file time < end file time
 echo -e "\n\n\n----------------------------------------------------------------"
 echo -e "----------------- load_end_file_to_dmp_file.py -----------------"
@@ -76,15 +85,15 @@ for ((rlzNum = $3; rlzNum <= $4; rlzNum+=$5)); do
 done
 
 # Run main.sh for each realization
-### for ((rlzNum = $3; rlzNum <= $4; rlzNum+=$5)); do
-###     echo -e "\n\n\n****************************************************************"
-###     echo -e "****************** main.sh for realization #$rlzNum ******************"
-###     echo -e "****************************************************************"
-###     ./main.sh "$2" "$rlzNum" "$1" "$9" "${10}" "$6" "$7"
-### done
+for ((rlzNum = $3; rlzNum <= $4; rlzNum+=$5)); do
+    echo -e "\n\n\n****************************************************************"
+    echo -e "****************** main.sh for realization #$rlzNum ******************"
+    echo -e "****************************************************************"
+    ./main.sh "$2" "$rlzNum" "$1" "$9" "${10}" "$6" "$7"
+done
 
-# Run mainRL.sh for multiple realizations
-echo -e "\n\n\n****************************************************************"
-echo -e "************************** mainRL.sh ***************************"
-echo -e "****************************************************************"
-./mainRL.sh "$1" "$2" "$3" "$4" "$5" "$6" "$7" "$8" "$9" "${11}" "${12}"
+### # Run mainRL.sh for multiple realizations
+### echo -e "\n\n\n****************************************************************"
+### echo -e "************************** mainRL.sh ***************************"
+### echo -e "****************************************************************"
+### ./mainRL.sh "$1" "$2" "$3" "$4" "$5" "$6" "$7" "$8" "$9" "${11}" "${12}"

@@ -19,8 +19,9 @@ from scipy import stats
 plt.rc( 'text',       usetex = True )
 plt.rc( 'font',       size = 18 )
 plt.rc( 'axes',       labelsize = 18)
-plt.rc( 'legend',     fontsize = 18)
+plt.rc( 'legend',     fontsize = 14, frameon = False)
 plt.rc( 'text.latex', preamble = r'\usepackage{amsmath} \usepackage{amssymb} \usepackage{color}')
+plt.rc( 'savefig',    format = "svg", dpi = 600)
 
 
 class ChannelVisualizer():
@@ -41,9 +42,6 @@ class ChannelVisualizer():
     def build_u_mean_profile(self, yplus_odt, yplus_ref, u_odt_post, u_odt_rt, u_ref, reference_data_name):
         
         reference_data_name_ = reference_data_name.replace(" ","_") 
-        filename = os.path.join(self.postRlzDir, f"u_mean_vs_{reference_data_name_}.jpg")
-        print(f"\nMAKING PLOT OF MEAN U PROFILE: ODT vs {reference_data_name} in {filename}" )
-
         # yplus coordinates should be [0, 1, ....] according to ODT code
         # To build semilogx plot (logarithmic yplus-coordinates) we should:
         # -> initial checks on yplus coordinates
@@ -54,106 +52,144 @@ class ChannelVisualizer():
             yplus_odt[1] = 1.0
         if np.abs(yplus_ref[1]-1.0) < 1e-3:
             yplus_ref[1] = 1.0
-        # -> remove 1st coord point (log(0)=-inf)
-        yplus_odt  = yplus_odt[1:]
-        yplus_ref  = yplus_ref[1:]
-        u_odt_post = u_odt_post[1:]
-        u_odt_rt   = u_odt_rt[1:]
-        u_ref      = u_ref[1:]
+        
+        # Take only data with yplus >= 1
+        idxRef = np.where(yplus_ref>=0.85)[0]
+        idxOdt = np.where(yplus_odt>=1)[0]
 
-        # Build plot
+        ### Build plots
+        # plot v1:
+        filename = os.path.join(self.postRlzDir, f"u_mean_vs_{reference_data_name_}_v1")
+        print(f"\nMAKING PLOT OF MEAN U PROFILE: ODT vs {reference_data_name} in {filename}" )
         fig, ax = plt.subplots()
-        ax.semilogx(yplus_ref, u_ref,      'k-',  label=reference_data_name)
-        ## ax.semilogx(yplus_odt, u_odt_post, 'b--', label=r'ODT (post-processing calculation)')
-        ax.semilogx(yplus_odt, u_odt_rt,   'r:',  label=r'ODT (runtime calculation)')
-        ax.set_xlabel(r'$y^+$')
-        ax.set_ylabel(r'$u^+$')
-        ax.legend(loc='upper left', frameon=False, fontsize=16)
-        ax.set_ylim([0, 25])
+        ax.semilogx(yplus_ref[idxRef], u_ref[idxRef],    '-',  color='tab:blue',   lw=2, label=r"$\overline{u}^{+}$, " + reference_data_name)
+        ax.semilogx(yplus_odt[idxOdt], u_odt_rt[idxOdt], '-.', color='tab:orange', lw=2, label=r"$\overline{u}^{+}$, ODT")
+        ax.set_xlabel(r'$y^{+}$')
+        ax.set_ylabel(r'$\overline{u}^{+}$')
+        ax.legend(loc='upper left')
+        ax.set_xlim([0.8, None])
+        ax.set_ylim([0,   None])
         #ax.set_xlim([1, 1000])
         plt.tight_layout()
-        plt.savefig(filename, dpi=600)
+        plt.savefig(filename)
+        # plot v2:
+        filename = os.path.join(self.postRlzDir, f"u_mean_vs_{reference_data_name_}_v2")
+        print(f"\nMAKING PLOT OF MEAN U PROFILE: ODT vs {reference_data_name} in {filename}" )
+        fig, ax = plt.subplots()
+        ax.semilogx(yplus_ref[idxRef], u_ref[idxRef],    '<-',  color='tab:blue',   lw=2, label=r"$\overline{u}^{+}$, " + reference_data_name)
+        ax.semilogx(yplus_odt[idxOdt], u_odt_rt[idxOdt], 's-.', color='tab:orange', lw=2, label=r"$\overline{u}^{+}$, ODT")
+        ax.set_xlabel(r'$y^{+}$')
+        ax.set_ylabel(r'$\overline{u}^{+}$')
+        ax.legend(loc='upper left')
+        ax.set_xlim([0.8, None])
+        ax.set_ylim([0,   None])
+        #ax.set_xlim([1, 1000])
+        plt.tight_layout()
+        plt.savefig(filename)
 
 
-    def build_u_rmsf_profile(self, y_odt, y_ref, urmsf_odt, vrmsf_odt, wrmsf_odt, urmsf_ref, vrmsf_ref, wrmsf_ref, reference_data_name):
+    def build_u_rmsf_profile(self, yplus_odt, yplus_ref, urmsf_odt, vrmsf_odt, wrmsf_odt, urmsf_ref, vrmsf_ref, wrmsf_ref, reference_data_name):
+
+        ### non-logarithmic plot
 
         reference_data_name_ = reference_data_name.replace(" ","_") 
-        filename = os.path.join(self.postRlzDir, f"u_rmsf_vs_{reference_data_name_}.jpg")
+        filename = os.path.join(self.postRlzDir, f"u_rmsf_vs_{reference_data_name_}_v1")
         print(f"\nMAKING PLOT OF RMS VEL PROFILES: ODT vs {reference_data_name} in {filename}" )
 
         fig, ax = plt.subplots()
+        ax.plot(yplus_odt,  urmsf_odt, '-',  color='tab:blue',  lw=2, label=r"$u^{+}_{\textrm{rms}}$")
+        ax.plot(yplus_odt,  vrmsf_odt, '--', color='tab:red',   lw=2, label=r"$v^{+}_{\textrm{rms}}$")
+        ax.plot(yplus_odt,  wrmsf_odt, ':',  color='tab:green', lw=2, label=r"$w^{+}_{\textrm{rms}}$")
+        ax.plot(-yplus_ref, urmsf_ref, '-',  color='tab:blue',  lw=2, label='')
+        ax.plot(-yplus_ref, vrmsf_ref, '--', color='tab:red',   lw=2, label='')
+        ax.plot(-yplus_ref, wrmsf_ref, ':',  color='tab:green', lw=2, label='')
 
-        ax.plot(y_odt,  urmsf_odt, 'k-',  label=r'$u_{rmsf}/u_\tau$')
-        ax.plot(y_odt,  vrmsf_odt, 'b--', label=r'$v_{rmsf}/u_\tau$')
-        ax.plot(y_odt,  wrmsf_odt, 'r:',  label=r'$w_{rmsf}/u_\tau$')
+        ax.plot([0,-0.1], [0,3.1], '-', linewidth=1, color='gray')
+        ax.arrow( 30, 0.1,  50, 0, head_width=0.05, head_length=10, color='gray')
+        ax.arrow(-30, 0.1, -50, 0, head_width=0.05, head_length=10, color='gray')
+        ax.text(  30, 0.2, "ODT",               fontsize=14, color='gray')
+        ax.text( -90, 0.2, reference_data_name, fontsize=14, color='gray')
 
-        ax.plot(-y_ref, urmsf_ref, 'k-',  label='')
-        ax.plot(-y_ref, vrmsf_ref, 'b--', label='')
-        ax.plot(-y_ref, wrmsf_ref, 'r:',  label='')
-
-        ax.plot([0,0], [0,3], '-', linewidth=1, color='gray')
-        ax.arrow( 30, 0.2,  50, 0, head_width=0.05, head_length=10, color='gray')
-        ax.arrow(-30, 0.2, -50, 0, head_width=0.05, head_length=10, color='gray')
-        ax.text(  30, 0.3, "ODT",               fontsize=14, color='gray')
-        ax.text( -80, 0.3, reference_data_name, fontsize=14, color='gray')
-
-        ax.set_xlabel(r'$y^+$')
-        ax.set_ylabel(r'$u_{i,rmsf}/u_\tau$')
-        ax.legend(loc='upper right', frameon=False, fontsize=16)
+        ax.set_xlabel(r'$y^{+}$')
+        ax.set_ylabel(r"$u^{+}_{i, \textrm{rms}}$")
+        ax.legend(loc='upper right')
         #ax.set_xlim([-300, 300])
-        #ax.set_ylim([0, 3])
-
+        ax.set_ylim([-0.1, 3.1])
         plt.tight_layout()
-        plt.savefig(filename, dpi=600)
+        plt.savefig(filename)
+
+        ### logarithmic plot
+
+        reference_data_name_ = reference_data_name.replace(" ","_") 
+        filename = os.path.join(self.postRlzDir, f"u_rmsf_vs_{reference_data_name_}_v2")
+        print(f"\nMAKING PLOT OF RMS VEL PROFILES: ODT vs {reference_data_name} in {filename}" )
+        
+        # Take only data with yplus >= 1
+        idxRef = np.where(yplus_ref>=0.85)[0]
+        idxOdt = np.where(yplus_odt>=1)[0]
+        
+        fig, ax = plt.subplots()
+        ax.semilogx(yplus_ref[idxRef], urmsf_ref[idxRef], '>--', color='tab:blue',  label=r"$u^{+}_{\textrm{rms}}$, " + reference_data_name)
+        ax.semilogx(yplus_ref[idxRef], vrmsf_ref[idxRef], '^--', color='tab:red',   label=r"$v^{+}_{\textrm{rms}}$, " + reference_data_name)
+        ax.semilogx(yplus_ref[idxRef], wrmsf_ref[idxRef], 'v--', color='tab:green', label=r"$w^{+}_{\textrm{rms}}$, " + reference_data_name)
+        ax.semilogx(yplus_odt[idxOdt], urmsf_odt[idxOdt], 's:',  color='tab:blue',  label=r"$u^{+}_{\textrm{rms}}$, ODT")
+        ax.semilogx(yplus_odt[idxOdt], vrmsf_odt[idxOdt], 'D:',  color='tab:red',   label=r"$v^{+}_{\textrm{rms}}$, ODT")
+        ax.semilogx(yplus_odt[idxOdt], wrmsf_odt[idxOdt], 'o:',  ms=4, color='tab:green', label=r"$w^{+}_{\textrm{rms}}$, ODT")
+        ax.set_xlim([0.8, None])
+        ax.set_xlabel(r'$y^{+}$')
+        ax.set_ylabel(r"$u^{+}_{i, \textrm{rms}}$")
+        ax.legend(loc='upper left', fontsize=12)
+        plt.tight_layout()
+        plt.savefig(filename)
 
 
     def build_runtime_vs_post_statistics(self, yplus_odt, um_odt_post, vm_odt_post, wm_odt_post, urmsf_odt_post, vrmsf_odt_post, wrmsf_odt_post, um_odt_rt, vm_odt_rt, wm_odt_rt, urmsf_odt_rt, vrmsf_odt_rt, wrmsf_odt_rt):
 
-        filename = os.path.join(self.postRlzDir, "runtime_vs_postprocessed_velocity_stats.jpg")
+        filename = os.path.join(self.postRlzDir, "runtime_vs_postprocessed_velocity_stats")
         print(f"\nMAKING PLOT OF AVERAGED AND RMSF VEL PROFILES calculated at RUNTIME vs. POST-PROCESSED (ODT) in {filename}")
 
         fig, ax = plt.subplots(3, figsize=(8,10))
 
         # post-processed calculations as lines, runtime calculations as markers
         ms = 5; s = 10
-        ax[0].plot(yplus_odt,      um_odt_post,    'k-',  label=r'$<u>^{+}$ (post)')
-        ax[0].plot(yplus_odt[::s], um_odt_rt[::s], 'ko',  label=r'$<u>^{+}$ (runtime)', markersize=ms)
-        ax[0].set_xlabel(r'$y^+$')
-        ax[0].set_ylabel(r'$u^+$')
+        ax[0].plot(yplus_odt,      um_odt_post,    'k-',  label=r'$\overline{u}^{+}$ (post)')
+        ax[0].plot(yplus_odt[::s], um_odt_rt[::s], 'ko',  label=r'$\overline{u}^{+}$ (runtime)', markersize=ms)
+        ax[0].set_xlabel(r'$y^{+}$')
+        ax[0].set_ylabel(r'$\overline{u}^{+}$')
 
-        ax[1].plot(yplus_odt,      vm_odt_post,    'b--', label=r'$<v>^{+}$ (post)')
-        ax[1].plot(yplus_odt,      wm_odt_post,    'r:',  label=r'$<w>^{+}$ (post)')
-        ax[1].plot(yplus_odt[::s], vm_odt_rt[::s], 'b^',  label=r'$<v>^{+}$ (runtime)', markersize=ms*2)
-        ax[1].plot(yplus_odt[::s], wm_odt_rt[::s], 'ro',  label=r'$<w>^{+}$ (runtime)', markersize=ms)
-        ax[1].set_xlabel(r'$y^+$')
-        ax[1].set_ylabel(r'$v^+$, $w^+$')
+        ax[1].plot(yplus_odt,      vm_odt_post,    'b--', label=r'$\overline{v}^{+}$ (post)')
+        ax[1].plot(yplus_odt,      wm_odt_post,    'r:',  label=r'$\overline{w}^{+}$ (post)')
+        ax[1].plot(yplus_odt[::s], vm_odt_rt[::s], 'b^',  label=r'$\overline{v}^{+}$ (runtime)', markersize=ms*2)
+        ax[1].plot(yplus_odt[::s], wm_odt_rt[::s], 'ro',  label=r'$\overline{w}^{+}$ (runtime)', markersize=ms)
+        ax[1].set_xlabel(r'$y^{+}$')
+        ax[1].set_ylabel(r'$\overline{v}^{+}$, $\overline{w}^{+}$')
 
-        ax[2].plot(yplus_odt,      urmsf_odt_post,    'k-',  label=r'$u_{rmsf}^{+}$ (post)')
-        ax[2].plot(yplus_odt,      vrmsf_odt_post,    'b--', label=r'$v_{rmsf}^{+}$ (post)')
-        ax[2].plot(yplus_odt,      wrmsf_odt_post,    'r:',  label=r'$w_{rmsf}^{+}$ (post)')
-        ax[2].plot(yplus_odt[::s], urmsf_odt_rt[::s], 'kv',  label=r'$u_{rmsf}^{+}$ (runtime)', markersize=ms)
-        ax[2].plot(yplus_odt[::s], vrmsf_odt_rt[::s], 'b^',  label=r'$v_{rmsf}^{+}$ (runtime)', markersize=ms*2)
-        ax[2].plot(yplus_odt[::s], wrmsf_odt_rt[::s], 'ro',  label=r'$w_{rmsf}^{+}$ (runtime)', markersize=ms)
-        ax[2].set_ylabel(r'$u_{rmsf}^{+},v_{rmsf}^{+},w_{rmsf}^{+}$')
+        ax[2].plot(yplus_odt,      urmsf_odt_post,    'k-',  label=r'$u^{+}_{\textrm{rms}}$ (post)')
+        ax[2].plot(yplus_odt,      vrmsf_odt_post,    'b--', label=r'$v^{+}_{\textrm{rms}}$ (post)')
+        ax[2].plot(yplus_odt,      wrmsf_odt_post,    'r:',  label=r'$w^{+}_{\textrm{rms}}$ (post)')
+        ax[2].plot(yplus_odt[::s], urmsf_odt_rt[::s], 'kv',  label=r'$u^{+}_{\textrm{rms}}$ (runtime)', markersize=ms)
+        ax[2].plot(yplus_odt[::s], vrmsf_odt_rt[::s], 'b^',  label=r'$v^{+}_{\textrm{rms}}$ (runtime)', markersize=ms*2)
+        ax[2].plot(yplus_odt[::s], wrmsf_odt_rt[::s], 'ro',  label=r'$w^{+}_{\textrm{rms}}$ (runtime)', markersize=ms)
+        ax[2].set_ylabel(r'$u^{+}_{\textrm{rms}}$, $v^{+}_{\textrm{rms}}$, $w^{+}_{\textrm{rms}}$')
 
         for axis in range(3):
             ax[axis].legend(loc="upper right", fontsize="small")
 
         plt.tight_layout()
-        plt.savefig(filename, dpi=600)
+        plt.savefig(filename)
 
 
     def build_reynolds_stress_diagonal_profile(self, y_odt, y_ref, Rxx_odt, Ryy_odt, Rzz_odt, Rxx_ref, Ryy_ref, Rzz_ref, reference_data_name):
         
         reference_data_name_ = reference_data_name.replace(" ","_") 
-        filename = os.path.join(self.postRlzDir, f"reynolds_stress_diagonal_vs_{reference_data_name_}.jpg")
+        filename = os.path.join(self.postRlzDir, f"reynolds_stress_diagonal_vs_{reference_data_name_}")
         print(f"\nMAKING PLOT OF REYNOLDS STRESSES PROFILES (DIAGONAL): ODT vs {reference_data_name} in {filename}" )
 
         fig, ax = plt.subplots()
 
-        ax.plot(y_odt,  Rxx_odt, 'k-',  label=r"$<u'u'>/u_\tau^2$")
-        ax.plot(y_odt,  Ryy_odt, 'b--', label=r"$<v'v'>/u_\tau^2$")
-        ax.plot(y_odt,  Rzz_odt, 'r:',  label=r"$<w'w'>/u_\tau^2$")
+        ax.plot(y_odt,  Rxx_odt, 'k-',  label=r"$\overline{u^{+}_{\textrm{rms}}\,u^{+}_{\textrm{rms}}}$")
+        ax.plot(y_odt,  Ryy_odt, 'b--', label=r"$\overline{v^{+}_{\textrm{rms}}\,v^{+}_{\textrm{rms}}}$")
+        ax.plot(y_odt,  Rzz_odt, 'r:',  label=r"$\overline{w^{+}_{\textrm{rms}}\,w^{+}_{\textrm{rms}}}$")
 
         ax.plot(-y_ref, Rxx_ref, 'k-',  label='')
         ax.plot(-y_ref, Ryy_ref, 'b--', label='')
@@ -165,27 +201,27 @@ class ChannelVisualizer():
         ax.text(  30, -0.4, "ODT",               fontsize=14, color='gray')
         ax.text( -80, -0.4, reference_data_name, fontsize=14, color='gray')
 
-        ax.set_xlabel(r'$y^+$')
-        ax.set_ylabel(r"$<u_i'u_i'>/u_\tau^2$")
-        ax.legend(loc='upper right', frameon=False, fontsize=16)
+        ax.set_xlabel(r'$y^{+}$')
+        ax.set_ylabel(r"$\overline{u^{+}_{i, \textrm{rms}}\,u^{+}_{i, \textrm{rms}}}$")
+        ax.legend(loc='upper right', frameon=False)
         #ax.set_xlim([-300, 300])
         #ax.set_ylim([-1, 8])
 
         plt.tight_layout()
-        plt.savefig(filename, dpi=600)
+        plt.savefig(filename)
 
 
     def build_reynolds_stress_not_diagonal_profile(self, y_odt, y_ref, Rxy_odt, Rxz_odt, Ryz_odt, Rxy_ref, Rxz_ref, Ryz_ref, reference_data_name):
 
         reference_data_name_ = reference_data_name.replace(" ","_") 
-        filename = os.path.join(self.postRlzDir, f"reynolds_stress_not_diagonal_vs_{reference_data_name_}.jpg")
+        filename = os.path.join(self.postRlzDir, f"reynolds_stress_not_diagonal_vs_{reference_data_name_}")
         print(f"\nMAKING PLOT OF REYNOLDS STRESSES PROFILES (NOT-DIAGONAL): ODT vs DNS in {filename}" )
 
         fig, ax = plt.subplots()
 
-        ax.plot(y_odt,  Rxy_odt, 'k-',  label=r"$<u'v'>/u_\tau^2$")
-        ax.plot(y_odt,  Rxz_odt, 'b--', label=r"$<u'w'>/u_\tau^2$")
-        ax.plot(y_odt,  Ryz_odt, 'r:',  label=r"$<v'w'>/u_\tau^2$")
+        ax.plot(y_odt,  Rxy_odt, 'k-',  label=r"$\overline{u^{+}_{\textrm{rms}}\,v^{+}_{\textrm{rms}}}$")
+        ax.plot(y_odt,  Rxz_odt, 'b--', label=r"$\overline{u^{+}_{\textrm{rms}}\,w^{+}_{\textrm{rms}}}$")
+        ax.plot(y_odt,  Ryz_odt, 'r:',  label=r"$\overline{v^{+}_{\textrm{rms}}\,w^{+}_{\textrm{rms}}}$")
 
         ax.plot(-y_ref, Rxy_ref, 'k-',  label='')
         ax.plot(-y_ref, Rxz_ref, 'b--', label='')
@@ -197,19 +233,19 @@ class ChannelVisualizer():
         ax.text(  30, 0.3, "ODT",               fontsize=14, color='gray')
         ax.text( -80, 0.3, reference_data_name, fontsize=14, color='gray')
 
-        ax.set_xlabel(r'$y^+$')
+        ax.set_xlabel(r'$y^{+}$')
         ax.set_ylabel(r"$<u_i'u_j'>/u_\tau^2$")
-        ax.legend(loc='upper right', frameon=False, fontsize=16)
+        ax.legend(loc='upper right')
         #ax.set_xlim([-300, 300])
         #ax.set_ylim([-1, 3])
 
         plt.tight_layout()
-        plt.savefig(filename, dpi=600)
+        plt.savefig(filename)
 
     
     def build_runtime_vs_post_reynolds_stress(self, yplus_odt, ufufm_odt_post, vfvfm_odt_post, wfwfm_odt_post, ufvfm_odt_post, ufwfm_odt_post, vfwfm_odt_post, ufufm_odt_rt, vfvfm_odt_rt, wfwfm_odt_rt, ufvfm_odt_rt, ufwfm_odt_rt, vfwfm_odt_rt):
 
-        filename = os.path.join(self.postRlzDir, "runtime_vs_postprocessed_reynolds_stress.jpg")
+        filename = os.path.join(self.postRlzDir, "runtime_vs_postprocessed_reynolds_stress")
         print(f"\nMAKING PLOT OF REYNOLDS STRESSES PROFILES calculated at RUNTIME vs. POST-PROCESSED (ODT) in {filename}" )
 
         fig, ax = plt.subplots(3,2,figsize=(10,10))
@@ -217,27 +253,27 @@ class ChannelVisualizer():
         ms = 3; s = 10
         ax[0,0].plot(yplus_odt,      ufufm_odt_post,    'k-',  label="post")
         ax[0,0].plot(yplus_odt[::s], ufufm_odt_rt[::s], 'b--', label="runtime")
-        ax[0,0].set_ylabel("$<u'u'>^{+}$")
+        ax[0,0].set_ylabel(r"$\overline{u^{+}_{\textrm{rms}}\,u^{+}_{\textrm{rms}}}$")
 
         ax[1,0].plot(yplus_odt,      vfvfm_odt_post,    'k-', label="post")
         ax[1,0].plot(yplus_odt[::s], vfvfm_odt_rt[::s], 'b--', label="runtime")
-        ax[1,0].set_ylabel("$<v'v'>^{+}$")
+        ax[1,0].set_ylabel(r"$\overline{v^{+}_{\textrm{rms}}\,v^{+}_{\textrm{rms}}}$")
 
         ax[2,0].plot(yplus_odt,      wfwfm_odt_post,    'k-', label="post")
         ax[2,0].plot(yplus_odt[::s], wfwfm_odt_rt[::s], 'b--', label="runtime")
-        ax[2,0].set_ylabel("$<w'w'>^{+}$")
+        ax[2,0].set_ylabel(r"$\overline{w^{+}_{\textrm{rms}}\,w^{+}_{\textrm{rms}}}$")
 
         ax[0,1].plot(yplus_odt,      ufvfm_odt_post,    'k-', label="post")
         ax[0,1].plot(yplus_odt[::s], ufvfm_odt_rt[::s], 'b--', label="runtime")
-        ax[0,1].set_ylabel("$<u'v'>^{+}$")
+        ax[0,1].set_ylabel(r"$\overline{u^{+}_{\textrm{rms}}\,v^{+}_{\textrm{rms}}}$")
 
         ax[1,1].plot(yplus_odt,      ufwfm_odt_post,    'k-', label="post")
         ax[1,1].plot(yplus_odt[::s], ufwfm_odt_rt[::s], 'b--', label="runtime")
-        ax[1,1].set_ylabel("$<u'w'>^{+}$")
+        ax[1,1].set_ylabel(r"$\overline{u^{+}_{\textrm{rms}}\,w^{+}_{\textrm{rms}}}$")
 
         ax[2,1].plot(yplus_odt,      vfwfm_odt_post,    'k-', label="post")
         ax[2,1].plot(yplus_odt[::s], vfwfm_odt_rt[::s], 'b--', label="runtime")
-        ax[2,1].set_ylabel("$<v'w'>^{+}$")
+        ax[2,1].set_ylabel(r"$\overline{v^{+}_{\textrm{rms}}\,w^{+}_{\textrm{rms}}}$")
 
         for axis1 in range(3):
             for axis2 in range(2):
@@ -245,7 +281,7 @@ class ChannelVisualizer():
                 ax[axis1,axis2].legend(loc="upper right", fontsize="small")
 
         plt.tight_layout()
-        plt.savefig(filename, dpi=600)
+        plt.savefig(filename)
 
 
     #--------------------------------------------------------------------------------------------
@@ -262,7 +298,7 @@ class ChannelVisualizer():
             averaging_times (np.array): averaging times at which u_mean is obtained
                                         Shape: (num_averaging_times), column vector
         """
-        filename = os.path.join(self.postRlzDir, "u_mean_convergence.jpg")
+        filename = os.path.join(self.postRlzDir, "u_mean_convergence")
         print(f"\nMAKING PLOT OF MEAN U PROFILE CONVERGENCE of ODT vs {reference_data_name} in {filename}" )
         
         assert um_odt.shape[1]   == len(averaging_times)
@@ -288,18 +324,18 @@ class ChannelVisualizer():
         fig, ax = plt.subplots(figsize=(8,6))
         ax.semilogx(yplus_odt, um_odt, label = [r"$T_{{avg}}={}$".format(t) for t in averaging_times])
         ax.semilogx(yplus_ref, um_ref, 'k--', label=reference_data_name)
-        ax.set_xlabel(r'$y^+$')
-        ax.set_ylabel(r'$u^+$')
+        ax.set_xlabel(r'$y^{+}$')
+        ax.set_ylabel(r'$\overline{u}^{+}$')
         if len(averaging_times) <= 10:
             ax.legend(loc='upper center', ncol = 3, bbox_to_anchor=(0.5,1.35), fontsize=12)
             fig.subplots_adjust(top=0.75, bottom=0.15)  # Leave space for the legend above the first subplot
         else:
             plt.tight_layout()
-        plt.savefig(filename, dpi=600)
+        plt.savefig(filename)
 
         ########################################################################
 
-        filename = os.path.join(self.postRlzDir, "u_mean_error_convergence.jpg")
+        filename = os.path.join(self.postRlzDir, "u_mean_error_convergence")
         print(f"\nMAKING PLOT OF MEAN U NRMSE CONVERGENCE of ODT vs {reference_data_name} in {filename}" )
         nt = len(averaging_times)
         NRMSE_um = np.zeros(nt)
@@ -312,17 +348,17 @@ class ChannelVisualizer():
             ax.semilogy(averaging_times[:-1], NRMSE_um[:-1])
         else:
             ax.semilogy(averaging_times, NRMSE_um)
-        ax.set_xlabel(r'averaging time [s]')
-        ax.set_ylabel(r'NRMSE($u^+$)')
+        ax.set_xlabel(r'$t^{+}$')
+        ax.set_ylabel(r'NRMSE $\overline{u}^{+}$)')
         plt.tight_layout()
-        plt.savefig(filename, dpi=600)
+        plt.savefig(filename)
 
 
     def build_u_rmsf_profile_odt_convergence(self, yplus_odt, yplus_ref, urmsf_odt, vrmsf_odt, wrmsf_odt, urmsf_ref, vrmsf_ref, wrmsf_ref, averaging_times, reference_data_name):
         
         # --- odt vs. reference ---
 
-        filename = os.path.join(self.postRlzDir, "u_rmsf_convergence.jpg")
+        filename = os.path.join(self.postRlzDir, "u_rmsf_convergence")
         print(f"\nMAKING PLOT OF RMS VEL PROFILES: ODT vs {reference_data_name} in {filename}" )
         fig, ax = plt.subplots(3, figsize=(9,9))
         ax[0].plot(yplus_odt,  urmsf_odt)
@@ -332,27 +368,27 @@ class ChannelVisualizer():
         ax[1].plot(yplus_ref, vrmsf_ref, 'k--')
         ax[2].plot(yplus_ref, wrmsf_ref, 'k--')
         # Axis: labels and limits
-        ylabel_str = [r'$u_{rmsf}/u_\tau$', r'$v_{rmsf}/u_\tau$', r'$w_{rmsf}/u_\tau$']
+        ylabel_str = [r'$u^{+}_{\textrm{rms}}$', r'$v^{+}_{\textrm{rms}}$', r'$w^{+}_{\textrm{rms}}$']
         for axis in range(3):
-            ax[axis].set_xlabel(r'$y^+$')
+            ax[axis].set_xlabel(r'$y^{+}$')
             ax[axis].set_ylabel(ylabel_str[axis])
             ax[axis].set_xlim([0, np.max(np.concatenate([yplus_odt, yplus_ref]))])
             ax[axis].set_ylim([0, int(np.max([urmsf_ref, vrmsf_ref, wrmsf_ref])+1)])
         # Legend
         # Specify the legend of only for first subplot, idem for other
         if len(averaging_times) <= 10:
-            labels_averaging_times = [r"$T_{{avg}}={}$".format(t) for t in averaging_times]
+            labels_averaging_times = [r"$t^{+} = $" + f"{t}" for t in averaging_times]
             labels_str = labels_averaging_times + [reference_data_name,]
             ax[0].legend(labels_str, loc='upper center', ncol = 3, bbox_to_anchor=(0.5,1.6), fontsize=12)
             fig.subplots_adjust(top=0.85)  # Leave space for the legend above the first subplot
         else:
             plt.tight_layout()
-        plt.savefig(filename, dpi=600)
+        plt.savefig(filename)
 
     
     def build_reynolds_stress_diagonal_profile_odt_convergence(self, y_odt, y_ref, Rxx_odt, Ryy_odt, Rzz_odt, Rxx_ref, Ryy_ref, Rzz_ref, averaging_times, reference_data_name):
 
-        filename = os.path.join(self.postRlzDir, "reynolds_stress_diagonal_odt_convergence.jpg")
+        filename = os.path.join(self.postRlzDir, "reynolds_stress_diagonal_odt_convergence")
         print(f"\nMAKING PLOT OF REYNOLDS STRESSES PROFILES (DIAGONAL): ODT vs {reference_data_name} in {filename}" )
 
         fig, ax = plt.subplots(3, figsize=(9,9))
@@ -366,27 +402,27 @@ class ChannelVisualizer():
         ax[2].plot(y_ref, Rzz_ref, 'k--')
 
         # Axis: labels and limits
-        ylabel_str = [r"$<u'u'>/u_\tau^2$", r"$<v'v'>/u_\tau^2$", r"$<w'w'>/u_\tau^2$"]
+        ylabel_str = [r"$\overline{u^{+}_{\textrm{rms}}\,u^{+}_{\textrm{rms}}}$", r"$\overline{v^{+}_{\textrm{rms}}\,v^{+}_{\textrm{rms}}}$", r"$\overline{w^{+}_{\textrm{rms}}\,w^{+}_{\textrm{rms}}}$"]
         for axis in range(3):
-            ax[axis].set_xlabel(r'$y^+$')
+            ax[axis].set_xlabel(r'$y^{+}$')
             ax[axis].set_ylabel(ylabel_str[axis])
             ax[axis].set_xlim([0, np.max(np.concatenate([y_odt,y_ref]))])
             ax[axis].set_ylim([int(np.min([Rxx_ref, Ryy_ref, Rzz_ref]))-1, int(np.max([Rxx_ref, Ryy_ref, Rzz_ref]))+1])
 
         # Legend
         # Specify the legend of only for first subplot, idem for other
-        labels_averaging_times = [r"$T_{{avg}}={}$".format(t) for t in averaging_times]
+        labels_averaging_times = [r"$t^{+} = $" + f"{t}" for t in averaging_times]
         labels_str = labels_averaging_times + [reference_data_name,]
         if Rxx_odt.shape[1] <= 15:
             ax[0].legend(labels_str, loc='upper center', ncol = 3, bbox_to_anchor=(0.5,1.6), fontsize=12)
         fig.subplots_adjust(top=0.85)  # Leave space for the legend above the first subplot
 
-        plt.savefig(filename, dpi=600)
+        plt.savefig(filename)
 
 
     def build_reynolds_stress_not_diagonal_profile_odt_convergence(self, y_odt, y_ref, Rxy_odt, Rxz_odt, Ryz_odt, Rxy_ref, Rxz_ref, Ryz_ref, averaging_times, reference_data_name):
 
-        filename = os.path.join(self.postRlzDir, "reynolds_stress_not_diagonal_odt_convergence.jpg")
+        filename = os.path.join(self.postRlzDir, "reynolds_stress_not_diagonal_odt_convergence")
         print(f"\nMAKING PLOT OF REYNOLDS STRESSES PROFILES (NOT-DIAGONAL): ODT vs {reference_data_name} in {filename}" )
 
         fig, ax = plt.subplots(3, figsize=(9,9))
@@ -400,21 +436,21 @@ class ChannelVisualizer():
         ax[2].plot(y_ref, Ryz_ref, 'k--')
 
         # Axis: labels and limits
-        ylabel_str = [r"$<u'v'>/u_\tau^2$", r"$<u'w'>/u_\tau^2$", r"$<v'w'>/u_\tau^2$"]
+        ylabel_str = [r"$\overline{u^{+}_{\textrm{rms}}\,v^{+}_{\textrm{rms}}}$", r"$\overline{u^{+}_{\textrm{rms}}\,w^{+}_{\textrm{rms}}}$", r"$\overline{v^{+}_{\textrm{rms}}\,w^{+}_{\textrm{rms}}}$"]
         for axis in range(3):
-            ax[axis].set_xlabel(r'$y^+$')
+            ax[axis].set_xlabel(r'$y^{+}$')
             ax[axis].set_ylabel(ylabel_str[axis])
             ax[axis].set_xlim([0, np.max(np.concatenate([y_odt, y_ref]))])
             ax[axis].set_ylim([int(np.min([Rxy_ref, Rxz_ref, Ryz_ref]))-1, int(np.max([Rxy_ref, Rxz_ref, Ryz_ref]))+1])
 
         # Legend
         # Specify the legend of only for first subplot, idem for other
-        labels_averaging_times = [r"$T_{{avg}}={}$".format(t) for t in averaging_times]
+        labels_averaging_times = [r"$t^{+} = $" + f"{t}" for t in averaging_times]
         labels_str = labels_averaging_times + [reference_data_name,]
         ax[0].legend(labels_str, loc='upper center', ncol = 3, bbox_to_anchor=(0.5,1.6), fontsize=12)
         fig.subplots_adjust(top=0.85)  # Leave space for the legend above the first subplot
 
-        plt.savefig(filename, dpi=600)
+        plt.savefig(filename)
 
 
     def build_stress_decomposition(self, ydelta_odt, ydelta_ref, \
@@ -423,7 +459,7 @@ class ChannelVisualizer():
                                    reference_data_name):
         
         reference_data_name_ = reference_data_name.replace(" ","_") 
-        filename = os.path.join(self.postRlzDir, f"stress_decomposition_vs_{reference_data_name_}.jpg")
+        filename = os.path.join(self.postRlzDir, f"stress_decomposition_vs_{reference_data_name_}")
         print(f"\nMAKING PLOT OF STRESS DECOMPOSITION ODT vs {reference_data_name} in {filename}")
 
         fig, ax = plt.subplots(2,figsize=(9,9))
@@ -440,13 +476,13 @@ class ChannelVisualizer():
             ax[i].set_ylabel(r"$\tau(y)$")
             ax[i].legend(loc='upper right', ncol = 1)
         fig.tight_layout()
-        plt.savefig(filename, dpi=600)
+        plt.savefig(filename)
 
 
     def build_TKE_budgets(self, yplus_odt, yplus_ref, vt_u_plus_odt, d_u_plus_odt, vt_u_plus_ref, p_u_plus_ref, reference_data_name):
 
         reference_data_name_ = reference_data_name.replace(" ","_") 
-        filename = os.path.join(self.postRlzDir, f"TKE_budgets_vs_{reference_data_name_}.jpg")
+        filename = os.path.join(self.postRlzDir, f"TKE_budgets_vs_{reference_data_name_}")
         print(f"\nMAKING PLOT OF TKE BUDGETS ODT vs {reference_data_name} in {filename}")
        
         fig, ax = plt.subplots()
@@ -465,37 +501,34 @@ class ChannelVisualizer():
         ax.arrow(-30, arrOffset, -20, 0, head_width=50, head_length=5, color='gray')
         ax.text(  30, arrOffset + textOffset, "ODT",               fontsize=14, color='gray')
         ax.text( -45, arrOffset + textOffset, reference_data_name, fontsize=14, color='gray')
-        ax.set_xlabel(r'$y^+$')
+        ax.set_xlabel(r'$y^{+}$')
         ax.set_ylabel("TKE budgets")
-        ax.legend(loc='upper right', frameon=False, fontsize=16)
+        ax.legend(loc='upper right')
         ax.set_xlim([-100, 100])
 
         plt.tight_layout()
-        plt.savefig(filename, dpi=600)
+        plt.savefig(filename)
 
     
     def build_um_profile_symmetric_vs_nonsymmetric(self, CI, yudelta, um_nonsym, um_sym):
 
-        filename = os.path.join(self.postRlzDir, "u_mean_symmetric_vs_nonsymmetric.jpg")
+        filename = os.path.join(self.postRlzDir, "u_mean_symmetric_vs_nonsymmetric")
         print(f"\nMAKING PLOT OF UM+ ORIGINAL NON-SYMMETRIC PROFILE vs SYMMETRIC PROFILE in {filename}")
 
         fig, ax = plt.subplots()
-        ax.plot(yudelta, um_nonsym,  'k-',  label=r"um+ non-sym (original)")
-        ax.plot(yudelta, um_sym,     'b--', label=r"um+ symmetric")
-
+        ax.plot(yudelta, um_nonsym,  'k-',  label=r"$\overline{u}^{+}$ non-sym (original)")
+        ax.plot(yudelta, um_sym,     'b--', label=r"$\overline{u}^{+}$ symmetric")
         ax.set_xlabel(r'$y/\delta$')
-        ax.set_ylabel(r"$um^+$")
+        ax.set_ylabel(r"$\overline{u}^{+}$")
         ax.set_title(f"um+ original (non-sym) vs. symmetric \nCI = {CI:.3f}")
-
-        ax.legend(loc='best', frameon=False, fontsize=16)
-
+        ax.legend()
         plt.tight_layout()
-        plt.savefig(filename, dpi=600)
+        plt.savefig(filename)
 
 
     def build_um_profile_symmetric_vs_nonsymmetric_odt_convergence(self, CI, yudelta, um_nonsym, um_sym, averaging_times):
 
-        filename = os.path.join(self.postRlzDir, "u_mean_symmetric_vs_nonsymmetric_odt_convergence.jpg")
+        filename = os.path.join(self.postRlzDir, "u_mean_symmetric_vs_nonsymmetric_odt_convergence")
         print(f"\nMAKING PLOT OF UM+ ORIGINAL NON-SYMMETRIC PROFILE vs SYMMETRIC PROFILE for ODT CONVERGENCE in {filename}")
 
         num_profiles = um_nonsym.shape[1]
@@ -506,18 +539,17 @@ class ChannelVisualizer():
         ax.plot(yudelta, um_sym[:,-1], '-k',  label=f"um+ symmetric: t = {averaging_times[-1]:.0f}")
 
         ax.set_xlabel(r'$y/\delta$')
-        ax.set_ylabel(r"$um^+$")
+        ax.set_ylabel(r"$\overline{u}^{+}$")
         if num_profiles < 10:
-            ax.legend(loc='best', frameon=False, fontsize=6)
             ax.legend(loc='lower center', ncol = 2, fontsize=8)
         plt.tight_layout()
-        plt.savefig(filename, dpi=600)
+        plt.savefig(filename)
 
 
     def build_CI_evolution(self, time, CI):
         # todo: include time data in the x axis, by now it is just index position in the CI list
 
-        filename = os.path.join(self.postRlzDir, "CI_vs_time.jpg")
+        filename = os.path.join(self.postRlzDir, "CI_vs_time")
         print(f"\nMAKING PLOT OF CI EVOLUTION ALONG TIME in {filename}")
 
         fig, ax = plt.subplots()
@@ -528,28 +560,29 @@ class ChannelVisualizer():
 
         plt.grid()
         plt.tight_layout()
-        plt.savefig(filename, dpi=600)
+        plt.savefig(filename)
 
 # --------------------- u-velocity vs reference as gif evolution ------------------------
 
-    def build_um_fig(self, yplus_odt, yplus_ref, um_odt, um_ref, avg_time):
+    def build_um_fig(self, yplus_odt, yplus_ref, um_odt, um_ref, avg_time, ylim=None):
         
-        fig, ax = plt.subplots(figsize=(10,10))
-        plt.semilogx(yplus_odt, um_odt, '-k',  label=r"Converging $<u>^+$")
-        plt.semilogx(yplus_ref, um_ref, '--k', label=r"Reference $<u>^+$")
-        plt.xlabel(r"$y^+$")
-        plt.ylabel(r"$<u>^+$")
-        plt.grid(axis="y")
-        plt.title(f"averaging time = {avg_time:.1f}")
+        fig, ax = plt.subplots()
+        plt.semilogx(yplus_odt, um_odt, '-k',  label=r"Converging $\overline{u}^{+}$")
+        plt.semilogx(yplus_ref, um_ref, '--k', label=r"Reference  $\overline{u}^{+}$")
+        if ylim is not None:
+            plt.ylim(ylim)
+        plt.xlabel(r"$y^{+}$")
+        plt.ylabel(r"$\overline{u}^{+}$")
+        plt.title(r"$t^{+} = $" + f"{avg_time:.1f}")
         plt.legend(loc='lower right', ncol = 2, fontsize=12)
         plt.tight_layout()
         #fig = plt.gcf()
         return fig
     
 
-    def build_um_frame(self, frames, yplus_odt, yplus_ref, um_odt, um_ref, avg_time):
+    def build_um_frame(self, frames, yplus_odt, yplus_ref, um_odt, um_ref, avg_time, ylim=None):
         
-        fig = self.build_um_fig(yplus_odt, yplus_ref, um_odt, um_ref, avg_time)
+        fig = self.build_um_fig(yplus_odt, yplus_ref, um_odt, um_ref, avg_time, ylim)
         fig.canvas.draw()
         img = Image.frombytes("RGB", fig.canvas.get_width_height(), fig.canvas.tostring_rgb())
         frames.append(img)
@@ -557,24 +590,26 @@ class ChannelVisualizer():
         return frames
 
 
-    def build_urmsf_fig(self, yplus_odt, yplus_ref, urmsf_odt, urmsf_ref, avg_time):
+    def build_urmsf_fig(self, yplus_odt, yplus_ref, urmsf_odt, urmsf_ref, avg_time, ylim=None):
         
         fig, ax = plt.subplots()
-        plt.semilogx(yplus_odt, urmsf_odt, '-k',  label=r"Converging $u'^+$")
-        plt.semilogx(yplus_ref, urmsf_ref, '--k', label=r"Reference $u'^+$")
-        plt.xlabel(r"$y^+$")
-        plt.ylabel(r"$u'^+$")
+        plt.semilogx(yplus_odt, urmsf_odt, '-k',  label=r"Converging $u^{+}_{\textrm{rmsf}}$")
+        plt.semilogx(yplus_ref, urmsf_ref, '--k', label=r"Reference  $u^{+}_{\textrm{rmsf}}$")
+        if ylim is not None:
+            plt.ylim(ylim)
+        plt.xlabel(r"$y^{+}$")
+        plt.ylabel(r"$u^{+}_{\textrm{rmsf}}$")
         plt.grid(axis="y")
-        plt.title(f"averaging time = {avg_time:.1f}")
+        plt.title(r"$t^{+} = $" + f"{avg_time:.1f}")
         plt.legend(loc='lower right', ncol = 2, fontsize=12)
         plt.tight_layout()
         #fig = plt.gcf()
         return fig
     
 
-    def build_urmsf_frame(self, frames, yplus_odt, yplus_ref, urmsf_odt, urmsf_ref, avg_time):
+    def build_urmsf_frame(self, frames, yplus_odt, yplus_ref, urmsf_odt, urmsf_ref, avg_time, ylim=None):
         
-        fig = self.build_urmsf_fig(yplus_odt, yplus_ref, urmsf_odt, urmsf_ref, avg_time)
+        fig = self.build_urmsf_fig(yplus_odt, yplus_ref, urmsf_odt, urmsf_ref, avg_time, ylim)
         fig.canvas.draw()
         img = Image.frombytes("RGB", fig.canvas.get_width_height(), fig.canvas.tostring_rgb())
         frames.append(img)
@@ -611,12 +646,12 @@ class ChannelVisualizer():
         plt.text( 0.4850, 0.9000, r'$\textbf{x}_{3_{c}}$' )
         cbar = plt.colorbar()
         cbar.set_label( r'$y/\delta$' )
-        plt.title(f"averaging time = {avg_time:.1f}")
+        plt.title(r"$t^{+}$" + f" = {avg_time:.1f}")
         
         # save figure
-        filename = os.path.join(self.postRlzDir, f"{title}.jpg")
+        filename = os.path.join(self.postRlzDir, f"{title}")
         print(f"\nMAKING PLOT OF BARYCENTRIC MAP OF ANISOTROPY TENSOR in {filename}" )
-        plt.savefig(filename, dpi=600)
+        plt.savefig(filename)
 
 
     def build_anisotropy_tensor_barycentric_xmap_triang_frame(self, frames, y_delta, bar_map_x, bar_map_y, avg_time):
@@ -647,13 +682,13 @@ class ChannelVisualizer():
         plt.text( 0.4850, 0.9000, r'$\textbf{x}_{3_{c}}$' )
         cbar = plt.colorbar()
         cbar.set_label( r'$y/\delta$' )
-        plt.title(f"averaging time = {avg_time:.1f}")
+        plt.title(r"$t^{+}$" + f" = {avg_time:.1f}")
         ###plt.clim( 0.0, 20.0 )
 
         # ------ save figure ------
-        #filename = os.path.join(self.postRlzDir, f"anisotropy_tensor_barycentric_map_odt_avgTime_{avg_time:.0f}.jpg")
+        #filename = os.path.join(self.postRlzDir, f"anisotropy_tensor_barycentric_map_odt_avgTime_{avg_time:.0f}")
         #print(f"\nMAKING PLOT OF BARYCENTRIC MAP OF ANISOTROPY TENSOR from ODT data at Averaging Time = {avg_time:.2f}, in filename: {filename}" )
-        #plt.savefig(filename, dpi=600)
+        #plt.savefig(filename)
 
         # ------ gif frame by pillow ---------
         # Save the current figure as an image frame
@@ -675,9 +710,9 @@ class ChannelVisualizer():
         plt.plot(ydelta_ref, Rkk_ref, '--k', label=r"Reference $R_{kk}$")
         plt.xlim([0.0, 1.0])
         plt.xlabel(r"$y/\delta$")
-        plt.ylabel(r"Reynolds Stress Trace R_{kk}")
+        plt.ylabel(r"Reynolds Stress Trace $R_{kk}$")
         plt.grid(axis="y")
-        plt.title(f"averaging time = {avg_time:.1f}")
+        plt.title(r"$t^{+}$" + f" = {avg_time:.1f}")
         plt.legend(loc='upper right', ncol = 2, fontsize=12)
         plt.tight_layout()
         #fig = plt.gcf()
@@ -686,7 +721,7 @@ class ChannelVisualizer():
 
     def build_reynolds_stress_tensor_trace(self, ydelta_odt, ydelta_ref, Rkk_odt, Rkk_ref, avg_time):
         
-        filename = os.path.join(self.postRlzDir, "reynolds_stress_tensor_trace.jpg")
+        filename = os.path.join(self.postRlzDir, "reynolds_stress_tensor_trace")
         print(f"\nMAKING PLOT OF Reynolds Stress tensor Trace at tavg = {avg_time} in {filename}")
         fig = self.build_reynolds_stress_tensor_trace_fig(ydelta_odt, ydelta_ref, Rkk_odt, Rkk_ref, avg_time)
         fig.savefig(filename)
@@ -716,14 +751,14 @@ class ChannelVisualizer():
         plt.xlabel(r"$y/\delta$")
         plt.ylabel(r"barycentric coordinates $x_i$")
         plt.grid(axis="y")
-        plt.title(f"averaging time = {avg_time:.1f}")
+        plt.title(r"$t^{+}$" + f" = {avg_time:.1f}")
         plt.legend(loc='upper right', ncol = 2, fontsize=12)
         plt.tight_layout()
         #fig = plt.gcf()
         return fig
 
     def build_anisotropy_tensor_barycentric_xmap_coord(self, ydelta_odt, ydelta_ref, xmap1_odt, xmap2_odt, xmap1_ref, xmap2_ref, avg_time):
-        filename = os.path.join(self.postRlzDir, "anisotropy_tensor_barycentric_map_coord.jpg")
+        filename = os.path.join(self.postRlzDir, "anisotropy_tensor_barycentric_map_coord")
         print(f"\nMAKING PLOT OF Anisotropy Tensor Barycentric Coordinates at tavg = {avg_time} in {filename}")
         fig = self.build_anisotropy_tensor_barycentric_xmap_coord_fig(ydelta_odt, ydelta_ref, xmap1_odt, xmap2_odt, xmap1_ref, xmap2_ref, avg_time)
         fig.savefig(filename)
@@ -757,7 +792,7 @@ class ChannelVisualizer():
         plt.xlabel(r"$y/\delta$")
         plt.ylabel(r"anisotropy tensor eigenvalues $\lambda_i$")
         plt.grid(axis="y")
-        plt.title(f"averaging time = {avg_time:.1f}")
+        plt.title(r"$t^{+}$" + f" = {avg_time:.1f}")
         plt.legend(loc='upper right', ncol = 2, fontsize=12)
         plt.tight_layout()
         #fig = plt.gcf()
@@ -766,7 +801,7 @@ class ChannelVisualizer():
 
     def build_anisotropy_tensor_eigenvalues(self, ydelta_odt, ydelta_ref, eigenvalues_odt, eigenvalues_ref, avg_time):
 
-        filename = os.path.join(self.postRlzDir, "anisotropy_tensor_eigenvalues.jpg")
+        filename = os.path.join(self.postRlzDir, "anisotropy_tensor_eigenvalues")
         print(f"\nMAKING PLOT OF Anisotropy Tensor Eigenvalues at tavg = {avg_time} in {filename}")
         fig = self.build_anisotropy_tensor_eigenvalues_fig(ydelta_odt, ydelta_ref, eigenvalues_odt, eigenvalues_ref, avg_time)
         fig.savefig(filename)
@@ -784,7 +819,7 @@ class ChannelVisualizer():
 # ------------------------------------------------------------------------
     def plot_line(self, xdata, ydata, xlim, ylim, xlabel, ylabel, title):
 
-        filename = os.path.join(self.postRlzDir, f"{title}.jpg")
+        filename = os.path.join(self.postRlzDir, f"{title}")
         print(f"\nMAKING PLOT of {xlabel} vs. {ylabel} in {filename}" )
 
         fig, ax = plt.subplots()
@@ -795,13 +830,13 @@ class ChannelVisualizer():
         plt.ylim(ylim); #plt.yticks(yticks); 
         plt.ylabel(ylabel)
 
-        plt.savefig(filename, dpi=600)
+        plt.savefig(filename)
         plt.close()
 
 
     def plot_pdf(self, xdata, xlim, xlabel, nbins, title):
 
-        filename = os.path.join(self.postRlzDir, f"{title}.jpg")
+        filename = os.path.join(self.postRlzDir, f"{title}")
         print(f"\nMAKING PLOT of PDF of {xlabel} in {filename}" )
 
         # Compute a histogram of the sample
@@ -819,13 +854,13 @@ class ChannelVisualizer():
         plt.ylim([0,1])
 
         plt.tight_layout()
-        plt.savefig(filename, dpi=600)
+        plt.savefig(filename)
         plt.close()
 
 
     def plot_join_pdf(self, x_data, y_data, xlim, ylim, xlabel, ylabel, nbins, title):
 
-        filename = os.path.join(self.postRlzDir, f"{title}.jpg")
+        filename = os.path.join(self.postRlzDir, f"{title}")
         print(f"\nMAKING PLOT of JOIN-PDF of {xlabel} vs. {ylabel} in {filename}" )
 
         fig, ax = plt.subplots()
@@ -858,7 +893,7 @@ class ChannelVisualizer():
         ax.tick_params(axis = 'both', pad = 5) 	# add padding to both x and y axes, dist between axis ticks and label
 
         plt.tight_layout()
-        plt.savefig(filename, dpi=600)
+        plt.savefig(filename)
         plt.close()
 
 # ------------------------------------ RL Convergence along ODT Realizations -------------------------------------------
@@ -869,7 +904,7 @@ class ChannelVisualizer():
 
         # --------- plot um data ---------
         
-        filename = os.path.join(self.postRlzDir, f"RL_u_mean_convergence.jpg")
+        filename = os.path.join(self.postRlzDir, f"RL_u_mean_convergence")
         print(f"\nMAKING PLOT of um profile at tEndAvg for multiple realizations in {filename}")
 
         fig, ax = plt.subplots(1,3,figsize=(15,5))
@@ -882,7 +917,7 @@ class ChannelVisualizer():
         ax[0].semilogx(yplus, um_nonRL_nonConv, '--k', label=f"Non-RL:  t={time_nonConv}")
         # > non-RL baseline (at time_baseline)
         ax[0].semilogx(yplus, um_baseline, '-k', label=f"Reference: t={time_baseline}")
-        ax[0].set_xlabel(r'$y^+$')
+        ax[0].set_xlabel(r'$y^{+}$')
         ax[0].set_ylabel(r'$\overline{u}^{+}$')
         if nrlz < 10:
             ax[0].legend(frameon=True, fontsize=10)
@@ -898,7 +933,7 @@ class ChannelVisualizer():
             ax[1].loglog(yplus, absErr_RL[:,irlz], label=f"RL Rlz {rlzArr[irlz]}: t={time_nonConv}")
         # > non-RL non-converged (at time_nonConv):
         ax[1].loglog(yplus, absErr_nonRL, '--k', label=f"Non-RL:  t={time_nonConv}")
-        ax[1].set_xlabel(r'$y^+$')
+        ax[1].set_xlabel(r'$y^{+}$')
         ax[1].set_ylabel(r'Absolute Error $| \overline{u}^{+} - \overline{u_{ref}}^{+} |$')
         if nrlz < 10:
             ax[1].legend(loc='lower left', frameon=True, fontsize=10)
@@ -911,12 +946,12 @@ class ChannelVisualizer():
         ax[2].legend(loc='upper right')
 
         plt.tight_layout()
-        plt.savefig(filename, dpi=600)
+        plt.savefig(filename)
         plt.close()
 
         # --------- plot urmsf data ---------
         
-        filename = os.path.join(self.postRlzDir, f"RL_u_rmsf_convergence.jpg")
+        filename = os.path.join(self.postRlzDir, f"RL_u_rmsf_convergence")
         print(f"\nMAKING PLOT of urmsf profile at tEndAvg for multiple realizations in {filename}")
 
         fig, ax = plt.subplots(1,3,figsize=(15,5))
@@ -929,8 +964,8 @@ class ChannelVisualizer():
         ax[0].semilogx(yplus, urmsf_nonRL_nonConv, '--k', label=f"Non-RL:  t={time_nonConv}")
         # > non-RL baseline (at time_baseline)
         ax[0].semilogx(yplus, urmsf_baseline, '-k', label=f"Reference: t={time_baseline}")
-        ax[0].set_xlabel(r'$y^+$')
-        ax[0].set_ylabel(r'$u_{rmsf}^+$')
+        ax[0].set_xlabel(r'$y^{+}$')
+        ax[0].set_ylabel(r'$u^{+}_{\textrm{rms}}$')
         if nrlz <= 15:
             ax[0].legend(frameon=True, fontsize=10)
 
@@ -945,8 +980,8 @@ class ChannelVisualizer():
             ax[1].loglog(yplus, absErr_RL[:,irlz], label=f"RL Rlz {rlzArr[irlz]}: t={time_nonConv}")
         # > non-RL non-converged (at time_nonConv):
         ax[1].loglog(yplus, absErr_nonRL, '--k', label=f"Non-RL:  t={time_nonConv}")
-        ax[1].set_xlabel(r'$y^+$')
-        ax[1].set_ylabel(r"Absolute Error $| u'^{+} - u_{ref}'^{+} |$")
+        ax[1].set_xlabel(r'$y^{+}$')
+        ax[1].set_ylabel(r"Absolute Error $| u^{+}_{\textrm{rms}} - u^{+}_{\textrm{rms, ref}} |$")
         if nrlz < 10:
             ax[1].legend(loc='lower left', frameon=True, fontsize=10)
 
@@ -954,11 +989,11 @@ class ChannelVisualizer():
         ax[2].semilogy(rlzArr, urmsf_NRMSE_RL, '-o', label="RL")
         ax[2].semilogy(rlzArr, urmsf_NRMSE_nonRL * np.ones(nrlz), '--k', label=f"non-RL ({urmsf_NRMSE_nonRL:.3e})")
         ax[2].set_xlabel('Rlz')
-        ax[2].set_ylabel(r"NRMSE($u'^{+}$)")
+        ax[2].set_ylabel(r"NRMSE $u^{+}_{\textrm{rms}}$")
         ax[2].legend(loc='upper right')
 
         plt.tight_layout()
-        plt.savefig(filename, dpi=600)
+        plt.savefig(filename)
         plt.close()
 
 
@@ -994,11 +1029,11 @@ class ChannelVisualizer():
         ax[1].plot(rlzArr, NRMSE_RL, '-o', label="RL")
         ax[1].plot(rlzArr, NRMSE_nonRL * np.ones(nrlz), '--k', label="non-RL")
         ax[1].set_xlabel("Rlz")
-        ax[1].set_ylabel(f"NRMSE({ylabel})")
+        ax[1].set_ylabel(f"NRMSE {ylabel}")
         ax[1].legend()
 
         plt.tight_layout()
-        plt.savefig(filename, dpi=600)
+        plt.savefig(filename)
         plt.close()
 
     def RL_variable_convergence_along_time(self, filename, ylabel, rlzArr, timeArr, var_RL):
@@ -1029,7 +1064,7 @@ class ChannelVisualizer():
         ax[2].set_ylabel(f"Terminal value {ylabel}")
         
         plt.tight_layout()
-        plt.savefig(filename, dpi=600)
+        plt.savefig(filename)
         plt.close()
 
     
@@ -1061,7 +1096,7 @@ class ChannelVisualizer():
         ax[2].set_ylabel(f'{ylabel} mean')
 
         plt.tight_layout()
-        plt.savefig(filename, dpi=600)
+        plt.savefig(filename)
         plt.close()
 
 
@@ -1072,14 +1107,14 @@ class ChannelVisualizer():
                            time_nonConv, time_baseline):
         
         # --------- plot trace Rkk ---------
-        self.RL_variable_convergence_along_ydelta("RL_Rkk_convergence.jpg",     r"$R_{kk}$",      rlzArr, ydelta, Rkk_RL_nonConv, Rkk_nonRL_nonConv, Rkk_baseline, time_nonConv, time_baseline)
+        self.RL_variable_convergence_along_ydelta("RL_Rkk_convergence",     r"$R_{kk}$",      rlzArr, ydelta, Rkk_RL_nonConv, Rkk_nonRL_nonConv, Rkk_baseline, time_nonConv, time_baseline)
         # --------- plot eigenvalues lambda_i ---------
-        self.RL_variable_convergence_along_ydelta("RL_lambda1_convergence.jpg", r"$\lambda_{1}$", rlzArr, ydelta, lambda1_RL_nonConv, lambda1_nonRL_nonConv, lambda1_baseline, time_nonConv, time_baseline)
-        self.RL_variable_convergence_along_ydelta("RL_lambda2_convergence.jpg", r"$\lambda_{2}$", rlzArr, ydelta, lambda2_RL_nonConv, lambda2_nonRL_nonConv, lambda2_baseline, time_nonConv, time_baseline)
-        self.RL_variable_convergence_along_ydelta("RL_lambda3_convergence.jpg", r"$\lambda_{3}$", rlzArr, ydelta, lambda3_RL_nonConv, lambda3_nonRL_nonConv, lambda3_baseline, time_nonConv, time_baseline)
+        self.RL_variable_convergence_along_ydelta("RL_lambda1_convergence", r"$\lambda_{1}$", rlzArr, ydelta, lambda1_RL_nonConv, lambda1_nonRL_nonConv, lambda1_baseline, time_nonConv, time_baseline)
+        self.RL_variable_convergence_along_ydelta("RL_lambda2_convergence", r"$\lambda_{2}$", rlzArr, ydelta, lambda2_RL_nonConv, lambda2_nonRL_nonConv, lambda2_baseline, time_nonConv, time_baseline)
+        self.RL_variable_convergence_along_ydelta("RL_lambda3_convergence", r"$\lambda_{3}$", rlzArr, ydelta, lambda3_RL_nonConv, lambda3_nonRL_nonConv, lambda3_baseline, time_nonConv, time_baseline)
         # --------- plot barycentric map coordinates xmap_i ---------
-        self.RL_variable_convergence_along_ydelta("RL_xmap1_convergence.jpg",   r"$xmap_{1}$",    rlzArr, ydelta, xmap1_RL_nonConv, xmap1_nonRL_nonConv, xmap1_baseline, time_nonConv, time_baseline)
-        self.RL_variable_convergence_along_ydelta("RL_xmap2_convergence.jpg",   r"$xmap_{2}$",    rlzArr, ydelta, xmap2_RL_nonConv, xmap2_nonRL_nonConv, xmap2_baseline, time_nonConv, time_baseline)
+        self.RL_variable_convergence_along_ydelta("RL_xmap1_convergence",   r"$x_{1}$",    rlzArr, ydelta, xmap1_RL_nonConv, xmap1_nonRL_nonConv, xmap1_baseline, time_nonConv, time_baseline)
+        self.RL_variable_convergence_along_ydelta("RL_xmap2_convergence",   r"$x_{2}$",    rlzArr, ydelta, xmap2_RL_nonConv, xmap2_nonRL_nonConv, xmap2_baseline, time_nonConv, time_baseline)
 
 
     def RL_err_convergence(self, rlzArr, err_RL, err_nonRL, time_nonConv, error_name):
@@ -1088,7 +1123,7 @@ class ChannelVisualizer():
         - err_RL:    np.array, shape [n_realizations]
         - err_nonRL: np.array, shape [] (scalar)
         """
-        filename = os.path.join(self.postRlzDir, f"RL_error_{error_name}_convergence.jpg")
+        filename = os.path.join(self.postRlzDir, f"RL_error_{error_name}_convergence")
         print(f"\nMAKING PLOT of error {error_name} profile at tEndAvg for multiple realizations in {filename}")
 
         nrlz = len(rlzArr)
@@ -1104,13 +1139,13 @@ class ChannelVisualizer():
         if nrlz < 20:
             plt.legend(frameon=True, fontsize=10)
         plt.tight_layout()
-        plt.savefig(filename, dpi=600)
+        plt.savefig(filename)
         plt.close()
 
 
     def RL_err_convergence_along_time(self, rlzArr, err_RL, err_ref, averaging_times_RL, averaging_times_ref, info, tEndAvgRef=200):
         
-        filename = os.path.join(self.postRlzDir, f"RL_error_{info['title']}_temporal_convergence.jpg")
+        filename = os.path.join(self.postRlzDir, f"RL_error_{info['title']}_temporal_convergence")
         print(f"\nMAKING PLOT of error {info['title']} profile for chosen times for multiple realizations in {filename}")
 
         plt.figure()
@@ -1146,22 +1181,22 @@ class ChannelVisualizer():
         if nrlz < 20:
             plt.legend(frameon=True, fontsize=10)
         plt.tight_layout()
-        plt.savefig(filename, dpi=600)
+        plt.savefig(filename)
         plt.close()
 
 
     def build_RL_rewards_convergence(self, rlzArr, timeArr, rewards_total, rewards_err_umean, rewards_rhsfRatio):
         # Plot RL rewards along time, for each realization
-        self.RL_variable_convergence_along_time("RL_rewards_total_convergence.jpg", "Reward", rlzArr, timeArr, rewards_total)
-        self.RL_variable_convergence_along_time("RL_rewards_term_relL2Err_umean_convergence.jpg", "um relative L2 Error", rlzArr, timeArr, rewards_err_umean)
-        self.RL_variable_convergence_along_time("RL_rewards_term_rhsfRatio_convergence.jpg", "abs(RHS-f Ratio - 1)", rlzArr, timeArr, rewards_rhsfRatio)
+        self.RL_variable_convergence_along_time("RL_rewards_total_convergence", "Reward", rlzArr, timeArr, rewards_total)
+        self.RL_variable_convergence_along_time("RL_rewards_term_relL2Err_umean_convergence", r"\overline{u}^{+} relative L2 Error", rlzArr, timeArr, rewards_err_umean)
+        self.RL_variable_convergence_along_time("RL_rewards_term_rhsfRatio_convergence", "abs(RHS-f Ratio - 1)", rlzArr, timeArr, rewards_rhsfRatio)
 
     def build_RL_rewards_convergence_v2(self, rlzArr, timeArr, rewards_total, rewards_err_umean, rewards_err_rmsf, rewards_rhsfRatio):
         # Plot RL rewards along time, for each realization
-        self.RL_variable_convergence_along_time("RL_rewards_total_convergence.jpg", "Reward", rlzArr, timeArr, rewards_total)
-        self.RL_variable_convergence_along_time("RL_rewards_term_relL2Err_umean_convergence.jpg", "<u> relative L2 Error", rlzArr, timeArr, rewards_err_umean)
-        self.RL_variable_convergence_along_time("RL_rewards_term_relL2Err_urmsf_convergence.jpg", "u' relative L2 Error", rlzArr, timeArr, rewards_err_rmsf)
-        self.RL_variable_convergence_along_time("RL_rewards_term_rhsfRatio_convergence.jpg", "abs(RHS-f Ratio - 1)", rlzArr, timeArr, rewards_rhsfRatio)
+        self.RL_variable_convergence_along_time("RL_rewards_total_convergence", "Reward", rlzArr, timeArr, rewards_total)
+        self.RL_variable_convergence_along_time("RL_rewards_term_relL2Err_umean_convergence", r"\overline{u}^{+}  relative L2 Error", rlzArr, timeArr, rewards_err_umean)
+        self.RL_variable_convergence_along_time("RL_rewards_term_relL2Err_urmsf_convergence", "u' relative L2 Error", rlzArr, timeArr, rewards_err_rmsf)
+        self.RL_variable_convergence_along_time("RL_rewards_term_rhsfRatio_convergence", "abs(RHS-f Ratio - 1)", rlzArr, timeArr, rewards_rhsfRatio)
 
 
     def build_RL_actions_convergence(self, rlzArr, timeArr, actions):
@@ -1169,9 +1204,9 @@ class ChannelVisualizer():
         nActDof = actions.shape[2]
         assert nActDof == 6, "visualizer.build_RL_actions_convergence method only works with actions of 6 d.o.f, specifically: DeltaRkk, DeltaTheta_z, DeltaTheta_y, DeltaTheta_x, DeltaXmap1, DeltaXmap2"
         dofNames      = ["DeltaRkk", "DeltaThetaZ", "DeltaThetaY", "DeltaThetaX", "DeltaXmap1", "DeltaXmap2"]
-        dofNamesLatex = [r"$\Delta R_{kk}$", r"$\Delta \theta_{z}$", r"$\Delta \theta_{y}$", r"$\Delta \theta_{x}$", r"$\Delta xmap_{1}$", r"$\Delta xmap_{2}$"]
+        dofNamesLatex = [r"$\Delta R_{kk}$", r"$\Delta \theta_{z}$", r"$\Delta \theta_{y}$", r"$\Delta \theta_{x}$", r"$\Delta x_{1}$", r"$\Delta x_{2}$"]
         for iActDof in range(nActDof):
-            self.RL_variable_convergence_along_time_and_pdf(f"RL_actions_convergence_{dofNames[iActDof]}.jpg", dofNamesLatex[iActDof], rlzArr, timeArr, actions[:,:,iActDof])
+            self.RL_variable_convergence_along_time_and_pdf(f"RL_actions_convergence_{dofNames[iActDof]}", dofNamesLatex[iActDof], rlzArr, timeArr, actions[:,:,iActDof])
 
 
     def build_RL_rewards_convergence_nohup(self, rewards_total, RL_rewards_term_relL2Err, rewards_term_rhsfRatio, inputRL_filepath=None):
@@ -1183,7 +1218,7 @@ class ChannelVisualizer():
             nax     = 4
         fig, ax = plt.subplots(1,nax,figsize=(5*nax,5))
 
-        filename = os.path.join(self.postRlzDir, "RL_rewards.jpg")
+        filename = os.path.join(self.postRlzDir, "RL_rewards")
         print(f"\nMAKING PLOT {filename}")
 
         ax[0].plot(rewards_total)
@@ -1209,7 +1244,7 @@ class ChannelVisualizer():
             ax[i].grid()
 
         plt.tight_layout()
-        plt.savefig(filename, dpi=600)
+        plt.savefig(filename)
         plt.close()
 
 
@@ -1222,17 +1257,17 @@ class ChannelVisualizer():
             nax     = 5
         fig, ax = plt.subplots(1,nax,figsize=(5*nax,5))
 
-        filename = os.path.join(self.postRlzDir, "RL_rewards.jpg")
+        filename = os.path.join(self.postRlzDir, "RL_rewards")
         print(f"\nMAKING PLOT {filename}")
 
         ax[0].plot(rewards_total)
         ax[0].set_ylabel("Total Reward")
         
         ax[1].semilogy(RL_rewards_term_relL2Err_umean)
-        ax[1].set_ylabel(r"$<u>$ Relative L2 Error - NRMSE($<u>$)")
+        ax[1].set_ylabel(r"NRMSE $\overline{u}^{+}$")
 
         ax[2].semilogy(RL_rewards_term_relL2Err_urmsf)
-        ax[2].set_ylabel(r"$u'$ Relative L2 Error - NRMSE($u'$)")
+        ax[2].set_ylabel(r"NRMSE $u^{+}_{\textrm{rms}}$")
 
         ax[3].semilogy(rewards_term_rhsfRatio)
         ax[3].set_ylabel("abs(RHS-f Ratio - 1)")
@@ -1243,8 +1278,8 @@ class ChannelVisualizer():
             rew_relL2Err_umean_weight = float(config.get("runner", "rew_relL2Err_umean_weight"))
             rew_relL2Err_urmsf_weight = float(config.get("runner", "rew_relL2Err_urmsf_weight"))
             rew_rhsfRatio_weight = float(config.get("runner", "rew_rhsfRatio_weight"))
-            ax[4].semilogy(rew_relL2Err_umean_weight  * RL_rewards_term_relL2Err_umean, color='tab:orange', label=r"weighted NRMSE($<u>$)")
-            ax[4].semilogy(rew_relL2Err_urmsf_weight  * RL_rewards_term_relL2Err_urmsf, color='tab:blue',   label=r"weighted NRMSE($u'$)")
+            ax[4].semilogy(rew_relL2Err_umean_weight  * RL_rewards_term_relL2Err_umean, color='tab:orange', label=r"weighted NRMSE $\overline{u}^{+}$")
+            ax[4].semilogy(rew_relL2Err_urmsf_weight  * RL_rewards_term_relL2Err_urmsf, color='tab:blue',   label=r"weighted NRMSE $u^{+}_{\textrm{rms}}$")
             ax[4].semilogy(rew_rhsfRatio_weight * rewards_term_rhsfRatio,   color='tab:green',  label="weighted RHS-F Ratio Penalty Term")
             ax[4].legend(loc='lower right', frameon=True, fontsize=10)
 
@@ -1253,7 +1288,7 @@ class ChannelVisualizer():
             ax[i].grid()
 
         plt.tight_layout()
-        plt.savefig(filename, dpi=600)
+        plt.savefig(filename)
         plt.close()
 
 
@@ -1263,13 +1298,13 @@ class ChannelVisualizer():
         nActDof = actions.shape[1]
         assert nActDof == 6, "visualizer.build_RL_actions_convergence method only works with actions of 6 d.o.f, specifically: DeltaRkk, DeltaTheta_z, DeltaTheta_y, DeltaTheta_x, DeltaXmap1, DeltaXmap2"
         dofNames      = ["DeltaRkk", "DeltaThetaZ", "DeltaThetaY", "DeltaThetaX", "DeltaXmap1", "DeltaXmap2"]
-        dofNamesLatex = [r"$\Delta R_{kk}$", r"$\Delta \theta_{z}$", r"$\Delta \theta_{y}$", r"$\Delta \theta_{x}$", r"$\Delta xmap_{1}$", r"$\Delta xmap_{2}$"]
+        dofNamesLatex = [r"$\Delta R_{kk}$", r"$\Delta \theta_{z}$", r"$\Delta \theta_{y}$", r"$\Delta \theta_{x}$", r"$\Delta x_{1}$", r"$\Delta x_{2}$"]
         avgSteps  = np.arange(0, nSteps, actions_avg_freq)
         nAvgSteps = len(avgSteps) - 1
 
         # plot each action degree of freedom
         for iActDof in range(nActDof):
-            filename = os.path.join(self.postRlzDir, f"RL_actions_convergence_{dofNames[iActDof]}.jpg")
+            filename = os.path.join(self.postRlzDir, f"RL_actions_convergence_{dofNames[iActDof]}")
             print(f"\nMAKING PLOT {filename}")
 
             fig, ax = plt.subplots(1,2,figsize=(10,5))
@@ -1283,8 +1318,8 @@ class ChannelVisualizer():
                 sns.kdeplot(y=actions[startAvgIdx:endAvgIdx,iActDof], label=f"Simulation steps {startAvgIdx}-{endAvgIdx}", ax=ax[1], cut=0, warn_singular=False, bw_method=0.01)
             ax[1].set_xlabel("KDE")
             ax[1].set_ylabel(dofNamesLatex[iActDof])
-            ax[1].legend(loc='center right', frameon=False, fontsize=8)
+            ax[1].legend(loc='center right', fontsize=8)
 
             plt.tight_layout()
-            plt.savefig(filename, dpi=600)
+            plt.savefig(filename)
             plt.close()

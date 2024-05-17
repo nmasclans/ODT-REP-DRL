@@ -102,6 +102,6 @@ ax[1].set_xlabel(r"time $[s]$")
 ax[1].set_ylabel(r"Total Kinetic Energy $[J/m^2]$")
 
 plt.tight_layout()
-plt.savefig(os.path.join(postRlzDir, "total_kinetic_energy.jpg"))
+plt.savefig(os.path.join(postRlzDir, "total_kinetic_energy.jpg"), dpi=600)
 plt.close()
 

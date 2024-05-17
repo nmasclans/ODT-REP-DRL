@@ -3,9 +3,11 @@
 # Usage
 # python3 anisotropy_tensor_odt_convergence.py [case_name] [reynolds_number] [delta_time_stats]
 
-import yaml
-import sys
 import os
+import sys
+import tqdm
+import yaml
+
 import numpy as np
 import pandas as pd
 
@@ -139,18 +141,26 @@ print("\n------ Calculate Rij dof from statistics calculated at runtime by ODT -
 
 # --- Animation frames (gif) ---
 visualizer      = ChannelVisualizer(postRlzDir)
-frames_um_rt = []; frames_urmsf_rt = []
+frames_um_rt  = []; frames_urmsf_rt = []
 frames_rkk_rt = []; frames_eig_rt = []; frames_xmap_coord_rt = []; frames_xmap_triang_rt = []
+um_rt_max     = int(np.max(um_rt)+1)
+urmsf_rt_max  = int(np.max(urmsf_rt)+1)
 
-for i in range(len(averaging_times)): 
+print("\nBuilding gif frames...")
+ntk = len(averaging_times)
+for i in range(ntk):
+    
+    # print for-loop progress
+    if i % int(ntk/100) == 0:
+        print(f"{i/ntk*100:.0f}%")
 
     # get runtime-calculated dof of Rij
     (Rkk_rt, lambda1_rt, lambda2_rt, lambda3_rt, xmap1_rt, xmap2_rt) = compute_reynolds_stress_dof(Rxx_rt[:,i], Ryy_rt[:,i], Rzz_rt[:,i], Rxy_rt[:,i], Rxz_rt[:,i], Ryz_rt[:,i])
     eigenvalues_rt = np.array([lambda1_rt, lambda2_rt, lambda3_rt]).transpose()
     
     # build frames
-    frames_um_rt          = visualizer.build_um_frame(frames_um_rt, ydelta_rt[1:], ydelta_ref[1:], um_rt[1:,i], um_ref[1:], averaging_times_plots[i])
-    frames_urmsf_rt       = visualizer.build_urmsf_frame(frames_urmsf_rt, ydelta_rt[1:], ydelta_ref[1:], urmsf_rt[1:,i], urmsf_ref[1:], averaging_times_plots[i])
+    frames_um_rt          = visualizer.build_um_frame(frames_um_rt, ydelta_rt[1:], ydelta_ref[1:], um_rt[1:,i], um_ref[1:], averaging_times_plots[i], ylim=[0.0, um_rt_max])
+    frames_urmsf_rt       = visualizer.build_urmsf_frame(frames_urmsf_rt, ydelta_rt[1:], ydelta_ref[1:], urmsf_rt[1:,i], urmsf_ref[1:], averaging_times_plots[i], ylim=[0.0, urmsf_rt_max])
     frames_rkk_rt         = visualizer.build_reynolds_stress_tensor_trace_frame(frames_rkk_rt, ydelta_rt[1:-1], ydelta_ref[1:-1], Rkk_rt[1:-1], Rkk_ref[1:-1], averaging_times_plots[i])
     frames_eig_rt         = visualizer.build_anisotropy_tensor_eigenvalues_frame(frames_eig_rt, ydelta_rt[1:-1], ydelta_ref[1:-1], eigenvalues_rt[1:-1], eigenvalues_ref[1:-1], averaging_times_plots[i])
     frames_xmap_coord_rt  = visualizer.build_anisotropy_tensor_barycentric_xmap_coord_frame(frames_xmap_coord_rt, ydelta_rt[1:-1], ydelta_ref[1:-1], xmap1_rt[1:-1], xmap2_rt[1:-1], xmap1_ref[1:-1], xmap2_ref[1:-1], averaging_times_plots[i])

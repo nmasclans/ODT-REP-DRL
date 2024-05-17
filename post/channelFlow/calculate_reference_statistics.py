@@ -28,6 +28,8 @@ plt.rc( 'font',       size = 16)
 plt.rc( 'axes',       labelsize = 16)
 plt.rc( 'legend',     fontsize = 10)
 plt.rc( 'text.latex', preamble = r'\usepackage{amsmath} \usepackage{amssymb} \usepackage{color}')
+plt.rc( 'savefig',    format = "svg")
+plt.rc( 'savefig',    dpi = 600)
 
 # --- Get CASE parameters ---
 
@@ -264,7 +266,7 @@ plt.ylabel(r"NRMSE $\overline{u}^{+}$")
 plt.ylim([0.001, 0.1])
 plt.legend()
 plt.tight_layout()
-plt.savefig(f"{odt_path}/post/channelFlow/ODT_reference/Re{Retau}/NRMSE_u_mean.jpg", dpi=600)
+plt.savefig(f"{odt_path}/post/channelFlow/ODT_reference/Re{Retau}/NRMSE_u_mean")
 
 # Plot urmsf NRMSE along time for each rlz (and averaged along realizations) 
 plt.figure()
@@ -276,7 +278,7 @@ plt.ylabel(r"NRMSE $u^{+}_{\textrm{rms}}$")
 plt.ylim([0.005, 0.5])
 plt.legend()
 plt.tight_layout()
-plt.savefig(f"{odt_path}/post/channelFlow/ODT_reference/Re{Retau}/NRMSE_u_rmsf.jpg", dpi=600)
+plt.savefig(f"{odt_path}/post/channelFlow/ODT_reference/Re{Retau}/NRMSE_u_rmsf")
 
 
 
