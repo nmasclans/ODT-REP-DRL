@@ -1,12 +1,15 @@
 """
+Run as:
+python3 calculate_reference_statistics.py 180 10 361 901 100
+python3 calculate_reference_statistics.py 590 10 1181 901 100
+
 Assumption: 
 Statistics stat_dmp_xxxxx.dat files have data columns as:
 #         1_posUnif        2_uvel_mean        3_uvel_rmsf   4_uvel_rhsfRatio        5_vvel_mean        6_vvel_rmsf   7_vvel_rhsfRatio        8_wvel_mean        9_wvel_rmsf  10_wvel_rhsfRatio             11_Rxx             12_Ryy             13_Rzz             14_Rxy             15_Rxz             16_Ryz
 """
 
-
 import os
-import tqdm
+import sys
 
 import glob as gb
 import numpy as np
@@ -14,11 +17,30 @@ import matplotlib.pyplot as plt
 
 from utils import get_time
 
-Retau     = 180
-numRefRlz = 10
-nunif     = 361
-ntk       = 901     # num stat_dmp_xxxxx.dat files per realization, 
-                    # i.e. number of time instances at which statistics data is stored
+# ---
+
+# ODT repository path
+odt_path = os.environ.get("ODT_PATH")
+
+# Latex figures
+plt.rc( 'text',       usetex = True )
+plt.rc( 'font',       size = 16)
+plt.rc( 'axes',       labelsize = 16)
+plt.rc( 'legend',     fontsize = 10)
+plt.rc( 'text.latex', preamble = r'\usepackage{amsmath} \usepackage{amssymb} \usepackage{color}')
+
+# --- Get CASE parameters ---
+
+try :
+    Retau     = int(sys.argv[1])    # Re_tau = 180, 395, 590
+    numRefRlz = int(sys.argv[2])    # number of reference realizations, stored in ./ODT_Reference/Re{Re_tau}/data_xxxxx
+    nunif     = int(sys.argv[3])    # number of uniform grid points, common to all realizations
+    ntk       = int(sys.argv[4])    # num stat_dmp_xxxxx.dat files per realization, 
+                                    # i.e. number of time instances at which statistics data is stored
+                                    # e.g. if last dmp file is dmp_00900, set ntk=901 to account for dmp_00000. 
+    tBeginAvg = float(sys.argv[5])
+except :
+    raise ValueError("Missing call arguments")
 
 # initialize data arrays
 timeUnif  = np.zeros([numRefRlz, ntk])
@@ -39,21 +61,21 @@ Rxy       = np.zeros([numRefRlz, ntk, nunif])
 Rxz       = np.zeros([numRefRlz, ntk, nunif])
 Ryz       = np.zeros([numRefRlz, ntk, nunif])
 
-#for irlz in tqdm(range(numRefRlz), desc="Getting statistics data from dmp files"):
 for irlz in range(numRefRlz):
     print(f"irlz = {irlz}")
     
     # get all stat_dmp_*.dat files of data_xxxxx directory of rlz xxxxx 
-    dir    = f"./ODT_reference/Re{Retau}/data_{irlz:05d}/"
-    flist  = sorted(gb.glob(os.path.join(dir,"stat_dmp_*.dat")))
-    nfiles = len(flist)
-    assert ntk == nfiles
+    dir_path = f"{odt_path}/post/channelFlow/ODT_reference/Re{Retau}/data_{irlz:05d}/"
+    flist    = sorted(gb.glob(os.path.join(dir_path,"stat_dmp_*.dat")))
+    nfiles   = len(flist)
+    assert ntk == nfiles, f"ntk = != nfiles, with ntk = {ntk} and nfiles = {nfiles}"
 
     # get data:
     for itk in range(ntk):
         ifile = flist[itk]
         data      = np.loadtxt(ifile)
         timeUnif[irlz, itk]     = get_time(ifile)
+        assert nunif == data[:,0].size, f"nunif != num points uniform grid of file {ifile} from rlz {irlz} at time index {itk}"
         posUnif[irlz, itk, :]   = data[:,0]
         uvel_mean[irlz, itk, :] = data[:,1]
         uvel_rmsf[irlz, itk, :] = data[:,2]
@@ -190,11 +212,18 @@ rlzAvg_NRMSE_Ryz       = np.mean(NRMSE_Ryz,       axis=0)
 #                                           Save non-RL & baseline data
 # ------------------------------------------------------------------------------------------------------
 
+# averaged data directory
+dir_path   = f"{odt_path}/post/channelFlow/ODT_reference/Re{Retau}/data_rlz_avg/"
+if not os.path.exists(dir_path):
+    os.makedirs(dir_path)
+    print(f"Directory '{dir_path}' created.")
+else:
+    print(f"Directory '{dir_path}' already exists.")
+
 # At t = tk, save realizations-averaged (non-converged) statistical quantities
-dir   = f"./ODT_reference/Re{Retau}/data_rlz_avg/"
 zeros_arr = np.zeros(nunif) # for columns  4_uvel_rhsfRatio, 7_vvel_rhsfRatio, 10_wvel_rhsfRatio
 for tk in range(ntk):
-    fname = os.path.join(dir,f"stat_dmp_{tk:05d}.dat")
+    fname = os.path.join(dir_path, f"stat_dmp_{tk:05d}.dat")
     odt_data  = np.vstack([posUnif, rlzAvg_uvel_mean[tk,:], rlzAvg_uvel_rmsf[tk,:], zeros_arr, rlzAvg_vvel_mean[tk,:], rlzAvg_vvel_rmsf[tk,:], zeros_arr, rlzAvg_wvel_mean[tk,:], rlzAvg_wvel_rmsf[tk,:], zeros_arr, rlzAvg_Rxx[tk,:], rlzAvg_Ryy[tk,:], rlzAvg_Rzz[tk,:], rlzAvg_Rxy[tk,:], rlzAvg_Rxz[tk,:], rlzAvg_Ryz[tk,:]]).T
     np.savetxt(fname, odt_data, 
                header="#         1_posUnif        2_uvel_mean        3_uvel_rmsf   4_uvel_rhsfRatio        5_vvel_mean        6_vvel_rmsf   7_vvel_rhsfRatio        8_wvel_mean        9_wvel_rmsf  10_wvel_rhsfRatio             11_Rxx             12_Ryy             13_Rzz             14_Rxy             15_Rxz             16_Ryz", 
@@ -202,7 +231,7 @@ for tk in range(ntk):
                fmt="%18.10E")
 
 # At tEnd, save converged baseline data for umean & urmsf
-fname = f"./ODT_reference/Re{Retau}/statistics_reference_udata.dat"
+fname = f"{odt_path}/post/channelFlow/ODT_reference/Re{Retau}/statistics_reference_udata.dat"
 odt_data = np.vstack([posUnif, conv_uvel_mean, conv_uvel_rmsf]).T
 np.savetxt(fname, odt_data, 
            header="#         1_posUnif        2_uvel_mean        3_uvel_rmsf",
@@ -210,7 +239,7 @@ np.savetxt(fname, odt_data,
            fmt='%18.10E')
 
 # At tEnd, save converged baseline data for all converged statistics quantities
-fname = f"./ODT_reference/Re{Retau}/statistics_reference.dat"
+fname = f"{odt_path}/post/channelFlow/ODT_reference/Re{Retau}/statistics_reference.dat"
 zeros_arr = np.zeros(nunif) # for columns  4_uvel_rhsfRatio, 7_vvel_rhsfRatio, 10_wvel_rhsfRatio
 odt_data  = np.vstack([posUnif, conv_uvel_mean, conv_uvel_rmsf, zeros_arr, conv_vvel_mean, conv_vvel_rmsf, zeros_arr, conv_wvel_mean, conv_wvel_rmsf, zeros_arr, conv_Rxx, conv_Ryy, conv_Rzz, conv_Rxy, conv_Rxz, conv_Ryz]).T
 np.savetxt(fname, odt_data, 
@@ -221,25 +250,33 @@ np.savetxt(fname, odt_data,
 # ------------------------------------------------------------------------------------------------------
 #                                           Plot non-RL errors vs. baseline
 # ------------------------------------------------------------------------------------------------------
+
+timeUnifAvg = timeUnif - tBeginAvg
+
 # Plot umean NRMSE along time for each rlz (and averaged along realizations) 
+# Note: neglect first time instant ([1:]) as it corresponds to the statistics initialization time, when statistics data is initialized as 0 everywhere (which leads to NRMSE=1)
 plt.figure()
 for irlz in range(numRefRlz):
-    plt.semilogy(timeUnif, NRMSE_uvel_mean[irlz,:], alpha=0.5, label=f"Rlz {irlz}")
-plt.semilogy(timeUnif, rlzAvg_NRMSE_uvel_mean[:], 'k', label=f"Rlz Avg")
-plt.xlabel("time [s]")
-plt.ylabel(r"NRMSE $<u>$")
+    plt.semilogy(timeUnifAvg[1:], NRMSE_uvel_mean[irlz,1:], alpha=0.5, label=f"Rlz {irlz}")
+plt.semilogy(timeUnifAvg[1:], rlzAvg_NRMSE_uvel_mean[1:], 'k', label=f"Rlz Avg")
+plt.xlabel(r"$t^{+}$")
+plt.ylabel(r"NRMSE $\overline{u}^{+}$")
+plt.ylim([0.001, 0.1])
 plt.legend()
-plt.savefig(f"./ODT_reference/Re{Retau}/NRMSE_u_mean.jpg", dpi=600)
+plt.tight_layout()
+plt.savefig(f"{odt_path}/post/channelFlow/ODT_reference/Re{Retau}/NRMSE_u_mean.jpg", dpi=600)
 
 # Plot urmsf NRMSE along time for each rlz (and averaged along realizations) 
 plt.figure()
 for irlz in range(numRefRlz):
-    plt.semilogy(timeUnif, NRMSE_uvel_rmsf[irlz,:], alpha=0.5, label=f"Rlz {irlz}")
-plt.semilogy(timeUnif, rlzAvg_NRMSE_uvel_rmsf[:], 'k', label=f"Rlz Avg")
-plt.xlabel("time [s]")
-plt.ylabel(r"NRMSE $u'$")
+    plt.semilogy(timeUnifAvg[1:], NRMSE_uvel_rmsf[irlz,1:], alpha=0.5, label=f"Rlz {irlz}")
+plt.semilogy(timeUnifAvg[1:], rlzAvg_NRMSE_uvel_rmsf[1:], 'k', label=f"Rlz Avg")
+plt.xlabel(r"$t^{+}$")
+plt.ylabel(r"NRMSE $u^{+}_{\textrm{rms}}$")
+plt.ylim([0.005, 0.5])
 plt.legend()
-plt.savefig(f"./ODT_reference/Re{Retau}/NRMSE_u_rmsf.jpg", dpi=600)
+plt.tight_layout()
+plt.savefig(f"{odt_path}/post/channelFlow/ODT_reference/Re{Retau}/NRMSE_u_rmsf.jpg", dpi=600)
 
 
 

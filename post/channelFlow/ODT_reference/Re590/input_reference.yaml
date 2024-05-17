@@ -2,11 +2,12 @@ params:
   seed: -1
   tEnd: 1000.0
   domainLength: 2.0
-  ngrd0: 200
+  ngrd0: 1181
   rho0: 1.0
   kvisc0: 0.001695
   dPdx: -1.0
   pres: 101325.0
+  controller_K_p: 0.5
   chemMechFile: not_used.yaml
   probType: CHANNEL
   tBeginAvg: 100.0
@@ -19,13 +20,13 @@ params:
   Lsolver: EXPLICIT
   Lstatconv: false
   nunif: 1181
-  dtActionRL: 0.2
+  dtActionRL: 0.01
   bcType: WALL
   cCoord: 1
-  Lrestart: false
+  Lrestart: true 
   gDens: 30
-  dxmin: 2.11875e-05
-  dxmax: 0.0008475
+  dxmin: 0.0008
+  dxmax: 0.006
   Pmax: 0.4
   Pav: 0.02
   dtfac: 2.0
