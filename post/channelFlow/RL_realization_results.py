@@ -23,7 +23,8 @@ try :
     tBeginAvg         = float(sys.argv[i]); i+=1
     tEndAvg_nonConv   = float(sys.argv[i]); i+=1
     tEndAvg_conv      = float(sys.argv[i]); i+=1
-    dtAvg             = float(sys.argv[i]); i+=1
+    dtAvg_nonRL       = float(sys.argv[i]); i+=1
+    dtAvg_RL          = float(sys.argv[i]); i+=1
     print(f"Script parameters: \n" \
           f"- Re_tau: {Retau} \n" \
           f"- Case name RL: {caseN_RL} \n" \
@@ -33,10 +34,11 @@ try :
           f"- Time Begin Averaging (both RL and non-RL): {tBeginAvg} \n" \
           f"- Time End Averaging non-converged (both RL and non-RL): {tEndAvg_nonConv} \n" \
           f"- Time End Averaging converged (non-RL, baseline): {tEndAvg_conv} \n"
-          f"- dt averaging: {dtAvg} \n" \
+          f"- dt averaging: {dtAvg_nonRL} \n" \
+          f"- dt averaging: {dtAvg_RL} \n" \
     )
 except :
-    raise ValueError("Missing call arguments, should be: <1_Re_tau> <2_case_name_nonRL> <3_realization_number_nonRL> <4_case_name_RL> <5_realization_number_min_RL> <6_realization_number_max_RL> <7_realization_number_step_RL> <8_time_end_averaging_non_converged> <9_time_end_averaging_converged> <10_<delta_time_stats>>")
+    raise ValueError("Missing call arguments, should be: <1_Re_tau> <2_case_name_nonRL> <3_realization_number_nonRL> <4_case_name_RL> <5_realization_number_min_RL> <6_realization_number_max_RL> <7_realization_number_step_RL> <8_time_end_averaging_non_converged> <9_time_end_averaging_converged> <10_delta_time_stats_nonRL> <11_delta_time_stats_RL>")
 
 # --- Get ODT input parameters ---
 
@@ -112,6 +114,8 @@ for irlz in range(nrlz):
         tEndAvg_ = dTimeEnd
     else:
         tEndAvg_ = tEndAvg_nonConv
+    if irlz == nrlz - 1: # last realization
+        tEndAvg_nonConv_RL = tEndAvg_
     inputParams_RL_nonConv["tEndAvg"]  = tEndAvg_
     inputParams_RL_nonConv["rlzStr"]   = rlzStr_Arr[irlz]
     inputParams_RL_nonConv["dTimeEnd"] = dTimeEnd
@@ -158,14 +162,14 @@ for irlz in range(nrlz):
 # Attention: um_RL_nonConv_tk & rmsf_RL_nonConv_tk shape: [int(nunif/2), ntk_nonConv, nrlz]
 
 if tBeginAvg >= dTimeStart:
-    averaging_times_nonConv = np.arange(tBeginAvg, tEndAvg_nonConv+1e-4, dtAvg).round(4)
+    averaging_times_nonConv_RL = np.arange(tBeginAvg, tEndAvg_nonConv+1e-4, dtAvg_RL).round(4)
 else:
-    averaging_times_nonConv = np.arange(dTimeStart, tEndAvg_nonConv+1e-4, dtAvg).round(4)
-averaging_times_nonConv_plots = averaging_times_nonConv - tBeginAvg
-ntk_nonConv = len(averaging_times_nonConv)
+    averaging_times_nonConv_RL = np.arange(dTimeStart, tEndAvg_nonConv+1e-4, dtAvg_RL).round(4)
+averaging_times_nonConv_RL_plots = averaging_times_nonConv_RL - tBeginAvg
+ntk_nonConv_RL = len(averaging_times_nonConv_RL)
 
-um_RL_nonConv_allChannel_tk    = np.zeros([nunif, ntk_nonConv, nrlz])   # all channel > to calculate errors
-urmsf_RL_nonConv_allChannel_tk = np.zeros([nunif, ntk_nonConv, nrlz])   # all channel > to calculate errors
+um_RL_nonConv_allChannel_tk    = np.zeros([nunif, ntk_nonConv_RL, nrlz])   # all channel > to calculate errors
+urmsf_RL_nonConv_allChannel_tk = np.zeros([nunif, ntk_nonConv_RL, nrlz])   # all channel > to calculate errors
 
 for irlz in range(nrlz):
 
@@ -181,9 +185,9 @@ for irlz in range(nrlz):
     inputParams_RL_nonConv["rlzStr"]   = rlzStr_Arr[irlz]
     inputParams_RL_nonConv["dTimeEnd"] = dTimeEnd
     if tBeginAvg >= dTimeStart:
-        averaging_times_nonConv_irlz = np.arange(tBeginAvg, tEndAvg_+1e-4, dtAvg).round(4)
+        averaging_times_nonConv_irlz = np.arange(tBeginAvg, tEndAvg_+1e-4, dtAvg_RL).round(4)
     else:
-        averaging_times_nonConv_irlz = np.arange(dTimeStart, tEndAvg_+1e-4, dtAvg).round(4)
+        averaging_times_nonConv_irlz = np.arange(dTimeStart, tEndAvg_+1e-4, dtAvg_RL).round(4)
     ntk_irlz = len(averaging_times_nonConv_irlz)
     print("\n--- Temporal convergence for RL: Realization #" + inputParams_RL_nonConv["rlzStr"] + " ---")
     print("--- Time: " + str(inputParams_RL_nonConv["tEndAvg"]) + " ---")
@@ -302,9 +306,9 @@ tEndAvg_baseline = tEndAvg_conv
 #------------ Get non-RL runtime-calculated 'um' at chosen averaging times for multiple realizations ---------------
 
 if tBeginAvg >= dTimeStart:
-    averaging_times_conv = np.arange(tBeginAvg, tEndAvg_conv+1e-4, dtAvg).round(4)
+    averaging_times_conv = np.arange(tBeginAvg, tEndAvg_conv+1e-4, dtAvg_nonRL).round(4)
 else:
-    averaging_times_conv = np.arange(dTimeStart, tEndAvg_conv+1e-4, dtAvg).round(4)
+    averaging_times_conv = np.arange(dTimeStart, tEndAvg_conv+1e-4, dtAvg_nonRL).round(4)
 averaging_times_conv_plots = averaging_times_conv - tBeginAvg
 ntk_conv            = len(averaging_times_conv)
 idx_tEndAvg_nonConv = np.where(averaging_times_conv == tEndAvg_nonConv)[0][0]
@@ -357,11 +361,11 @@ urmsf_NRMSE_denum = np.linalg.norm(urmsf_nonRL_conv_allChannel, 2)
 
 ### RL non-converged:
 # at tk time instants:
-ntk_nonConv = len(averaging_times_nonConv)
-um_NRMSE_RL_nonConv_tk    = np.zeros((ntk_nonConv, nrlz))
-urmsf_NRMSE_RL_nonConv_tk = np.zeros((ntk_nonConv, nrlz))
+ntk_nonConv_RL = len(averaging_times_nonConv_RL)
+um_NRMSE_RL_nonConv_tk    = np.zeros((ntk_nonConv_RL, nrlz))
+urmsf_NRMSE_RL_nonConv_tk = np.zeros((ntk_nonConv_RL, nrlz))
 for irlz in range(nrlz):
-    for itk in range(ntk_nonConv):
+    for itk in range(ntk_nonConv_RL):
         um_NRMSE_RL_nonConv_tk[itk, irlz]    = np.linalg.norm(um_RL_nonConv_allChannel_tk[:,itk,irlz]    - um_nonRL_conv_allChannel, 2)    / um_NRMSE_denum
         urmsf_NRMSE_RL_nonConv_tk[itk, irlz] = np.linalg.norm(urmsf_RL_nonConv_allChannel_tk[:,itk,irlz] - urmsf_nonRL_conv_allChannel, 2) / urmsf_NRMSE_denum
 # at tEndAvg_nonConv instant:
@@ -390,19 +394,21 @@ print("\n-----------------------------------------------------------------------
 ydelta = ydelta_RL_nonConv
 yplus  = yplus_RL_nonConv
 
+tEndAvg_nonConv_nonRL_plots = tEndAvg_nonConv - tBeginAvg
+tEndAvg_nonConv_RL_plots    = tEndAvg_nonConv_RL - tBeginAvg
+
 # ---- build plots
-tEndAvg_nonConv_plots = tEndAvg_nonConv - tBeginAvg
 tEndAvg_conv_plots    = tEndAvg_conv - tBeginAvg
 visualizer = ChannelVisualizer(postMultipleRlzDir)
 visualizer.RL_u_mean_convergence(yplus[1:], rlzN_Arr, 
                                  um_RL_nonConv[1:], urmsf_RL_nonConv[1:], um_nonRL_nonConv[1:], urmsf_nonRL_nonConv[1:], um_baseline[1:], urmsf_baseline[1:], 
                                  um_NRMSE_RL_nonConv_tEndAvg, urmsf_NRMSE_RL_nonConv_tEndAvg, um_NRMSE_nonRL_nonConv_tEndAvg, urmsf_NRMSE_nonRL_nonConv_tEndAvg,
-                                 tEndAvg_nonConv_plots, tEndAvg_conv_plots)
-visualizer.RL_err_convergence(rlzN_Arr, um_NRMSE_RL_nonConv_tEndAvg, um_NRMSE_nonRL_nonConv_tEndAvg, tEndAvg_nonConv_plots, "NRMSE(um+)")
-visualizer.RL_err_convergence_along_time(rlzN_Arr, um_NRMSE_RL_nonConv_tk,    um_NRMSE_nonRL_conv_tk[:,:-1],    averaging_times_nonConv_plots, averaging_times_conv_plots[:-1], {"title": "NRMSE_umean", "ylabel": r"NRMSE $\overline{u}^{+}$"})
-visualizer.RL_err_convergence_along_time(rlzN_Arr, urmsf_NRMSE_RL_nonConv_tk, urmsf_NRMSE_nonRL_conv_tk[:,:-1], averaging_times_nonConv_plots, averaging_times_conv_plots[:-1], {"title": "NRMSE_urmsf", "ylabel": r"NRMSE $u^{+}_{\textrm{rms}}$"})
+                                 tEndAvg_nonConv_RL_plots, tEndAvg_nonConv_nonRL_plots, tEndAvg_conv_plots)
+visualizer.RL_err_convergence(rlzN_Arr, um_NRMSE_RL_nonConv_tEndAvg, um_NRMSE_nonRL_nonConv_tEndAvg, tEndAvg_nonConv_nonRL_plots, "NRMSE(um+)")
+visualizer.RL_err_convergence_along_time(rlzN_Arr, um_NRMSE_RL_nonConv_tk,    um_NRMSE_nonRL_conv_tk[:,:-1],    averaging_times_nonConv_RL_plots, averaging_times_conv_plots[:-1], {"title": "NRMSE_umean", "ylabel": r"$\textrm{NRMSE}(\overline{u}^{+})$"})
+visualizer.RL_err_convergence_along_time(rlzN_Arr, urmsf_NRMSE_RL_nonConv_tk, urmsf_NRMSE_nonRL_conv_tk[:,:-1], averaging_times_nonConv_RL_plots, averaging_times_conv_plots[:-1], {"title": "NRMSE_urmsf", "ylabel": r"$\textrm{NRMSE}(u^{+}_{\textrm{rms}})$"})
 visualizer.RL_Rij_convergence(ydelta[1:-1], rlzN_Arr, 
                               Rkk_RL_nonConv[1:-1],    lambda1_RL_nonConv[1:-1],    lambda2_RL_nonConv[1:-1],    lambda3_RL_nonConv[1:-1],    xmap1_RL_nonConv[1:-1],    xmap2_RL_nonConv[1:-1],
                               Rkk_nonRL_nonConv[1:-1], lambda1_nonRL_nonConv[1:-1], lambda2_nonRL_nonConv[1:-1], lambda3_nonRL_nonConv[1:-1], xmap1_nonRL_nonConv[1:-1], xmap2_nonRL_nonConv[1:-1],
                               Rkk_baseline[1:-1],      lambda1_baseline[1:-1],      lambda2_baseline[1:-1],      lambda3_baseline[1:-1],      xmap1_baseline[1:-1],      xmap2_baseline[1:-1],
-                              tEndAvg_nonConv_plots, tEndAvg_baseline)
+                              tEndAvg_nonConv_nonRL_plots, tEndAvg_baseline)

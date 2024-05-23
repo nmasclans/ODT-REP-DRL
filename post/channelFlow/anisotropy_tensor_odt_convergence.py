@@ -97,7 +97,7 @@ averaging_times_plots = averaging_times - tBeginAvg
 # ----------------------- ODT-Reference statistics ----------------------- 
 # -------------------------------------------------------------------------
 
-# (ODT-Reference) calculated-at-runtime statistics 
+### (ODT-Reference) CONVERGED calculated-at-runtime statistics 
 (ydelta_ref, yplus_ref, 
  um_ref, urmsf_ref,_, _,_,_, _,_,_,
  ufufm_ref, vfvfm_ref, wfwfm_ref, ufvfm_ref, ufwfm_ref, vfwfm_ref,
@@ -106,30 +106,6 @@ averaging_times_plots = averaging_times - tBeginAvg
 (Rkk_ref, lambda1_ref, lambda2_ref, lambda3_ref, xmap1_ref, xmap2_ref) \
     = compute_reynolds_stress_dof(ufufm_ref, vfvfm_ref, wfwfm_ref, ufvfm_ref, ufwfm_ref, vfwfm_ref)
 eigenvalues_ref = np.array([lambda1_ref, lambda2_ref, lambda3_ref]).transpose()
-
-# -------------------------------------------------------------------------
-# ----------------------- Post-processed statistics ----------------------- 
-# -------------------------------------------------------------------------
-
-### print("------ Calculate Rij dof from post-processed statistics ------")
-### for avg_time in averaging_times:
-### 
-###     #------------ Compute statistics until avg_time is reached ---------------
-###     
-###     if verbose:
-###         print(f"Averaging Time = {avg_time:.2f}")
-###     (ydelta, _, _, urmsf, vrmsf, wrmsf, Rxx, Ryy, Rzz, Rxy, Rxz, Ryz) \
-###         = compute_odt_statistics_at_chosen_time(inputParams, avg_time)
-### 
-###     #------------ Degrees-of-Freedom Reynolds stress tensor ---------------
-###     (Rkk, lambda1, lambda2, lambda3, xmap1, xmap2) = compute_reynolds_stress_dof(Rxx, Ryy, Rzz, Rxy, Rxz, Ryz)
-###     eigenvalues = np.array([lambda1, lambda2, lambda3]).transpose()       # shape [num_points, 3]    
-### 
-###     # ---------------------- Build frame at averaging time ---------------------- 
-###     
-###     frames_eig_post = visualizer.build_anisotropy_tensor_eigenvalues_frame(frames_eig_post, ydelta, eigenvalues, avg_time)
-###     frames_bar_post = visualizer.build_anisotropy_tensor_barycentric_map_frame(frames_bar_post, xmap1, xmap2, ydelta, avg_time)
-
 
 # -------------------------------------------------------------------------
 # --------------------------- Runtime statistics --------------------------

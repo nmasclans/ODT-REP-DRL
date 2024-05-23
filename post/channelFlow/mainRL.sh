@@ -19,8 +19,8 @@
 #    - 11_actions_avg_freq 
 
 # Check if the correct number of arguments is provided
-if [ "$#" -ne 11 ]; then
-    echo "Usage: $0 <1_Re_tau> <2_case_name_RL> <3_realization_number_min_RL> <4_realization_number_max_RL> <5_realization_number_step_RL> <6_time_begin_averaging_non_converged> <7_time_end_averaging_non_converged> <8_time_end_averaging_converged> <9_dt_statistics> <10_nohup_filename> <11_actions_avg_freq>"
+if [ "$#" -ne 12 ]; then
+    echo "Usage: $0 <1_Re_tau> <2_case_name_RL> <3_realization_number_min_RL> <4_realization_number_max_RL> <5_realization_number_step_RL> <6_time_begin_averaging_non_converged> <7_time_end_averaging_non_converged> <8_time_end_averaging_converged> <9_dt_statistics_nonRL> <10_dt_statistics_RL> <11_nohup_filename> <12_actions_avg_freq>"
     exit 1
 else
     echo -e "\n\n\n****************************************************************"
@@ -34,9 +34,10 @@ else
     echo "- Time begin averaging: $6"
     echo "- Time end averaging non-converged: $7"
     echo "- Time end averaging converged: $8"
-    echo "- dt statistics: $9"
-    echo "- Nohup filename for RL training run: ${10}"
-    echo "- Actions averaging frequency, number of simulation steps for averaged actions kde: ${11}"
+    echo "- dt statistics non-RL: $9"
+    echo "- dt statistics RL: ${10}"
+    echo "- Nohup filename for RL training run: ${11}"
+    echo "- Actions averaging frequency, number of simulation steps for averaged actions kde: ${12}"
 fi
 
 ### # For each realization, if needed:
@@ -52,7 +53,7 @@ fi
 echo -e "\n\n\n----------------------------------------------------------------"
 echo -e "------------------ RL_realization_results.py -------------------"
 echo -e "----------------------------------------------------------------\n\n\n"
-python3 RL_realization_results.py "$1" "$2" "$3" "$4" "$5" "$6" "$7" "$8" "$9"
+python3 RL_realization_results.py "$1" "$2" "$3" "$4" "$5" "$6" "$7" "$8" "$9" "${10}"
 
 ### echo -e "\n\n\n----------------------------------------------------------------"
 ### echo -e "------------------ RL_run_actions_rewards.py -------------------"
@@ -62,4 +63,4 @@ python3 RL_realization_results.py "$1" "$2" "$3" "$4" "$5" "$6" "$7" "$8" "$9"
 echo -e "\n\n\n----------------------------------------------------------------"
 echo -e "------------- RL_run_actions_rewards_from_nohup.py -------------"
 echo -e "----------------------------------------------------------------\n\n\n"
-python3 RL_run_actions_rewards_from_nohup.py "$2" "${10}" "${11}"
+python3 RL_run_actions_rewards_from_nohup.py "$2" "${11}" "${12}"

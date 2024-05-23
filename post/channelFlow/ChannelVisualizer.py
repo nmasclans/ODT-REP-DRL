@@ -19,10 +19,25 @@ from scipy import stats
 plt.rc( 'text',       usetex = True )
 plt.rc( 'font',       size = 18 )
 plt.rc( 'axes',       labelsize = 18)
-plt.rc( 'legend',     fontsize = 14, frameon = False)
+plt.rc( 'legend',     fontsize = 12, frameon = False)
 plt.rc( 'text.latex', preamble = r'\usepackage{amsmath} \usepackage{amssymb} \usepackage{color}')
 plt.rc( 'savefig',    format = "svg", dpi = 600)
 
+um_target = 0.0075
+
+# Define the Tableau 10 colors
+tab_colors = [
+    colors.TABLEAU_COLORS['tab:blue'],
+    colors.TABLEAU_COLORS['tab:green'],
+    colors.TABLEAU_COLORS['tab:orange'],
+    colors.TABLEAU_COLORS['tab:red'],
+    colors.TABLEAU_COLORS['tab:purple'],
+    colors.TABLEAU_COLORS['tab:brown'],
+    colors.TABLEAU_COLORS['tab:pink'],
+    colors.TABLEAU_COLORS['tab:gray'],
+    colors.TABLEAU_COLORS['tab:olive'],
+    colors.TABLEAU_COLORS['tab:cyan']
+]
 
 class ChannelVisualizer():
 
@@ -349,7 +364,7 @@ class ChannelVisualizer():
         else:
             ax.semilogy(averaging_times, NRMSE_um)
         ax.set_xlabel(r'$t^{+}$')
-        ax.set_ylabel(r'NRMSE $\overline{u}^{+}$)')
+        ax.set_ylabel(r'$\textrm{NRMSE}(\overline{u}^{+})$')
         plt.tight_layout()
         plt.savefig(filename)
 
@@ -377,7 +392,7 @@ class ChannelVisualizer():
         # Legend
         # Specify the legend of only for first subplot, idem for other
         if len(averaging_times) <= 10:
-            labels_averaging_times = [r"$t^{+} = $" + f"{t}" for t in averaging_times]
+            labels_averaging_times = [rf"$t^+ = {t}$" for t in averaging_times]
             labels_str = labels_averaging_times + [reference_data_name,]
             ax[0].legend(labels_str, loc='upper center', ncol = 3, bbox_to_anchor=(0.5,1.6), fontsize=12)
             fig.subplots_adjust(top=0.85)  # Leave space for the legend above the first subplot
@@ -411,7 +426,7 @@ class ChannelVisualizer():
 
         # Legend
         # Specify the legend of only for first subplot, idem for other
-        labels_averaging_times = [r"$t^{+} = $" + f"{t}" for t in averaging_times]
+        labels_averaging_times = [rf"$t^+ = {t}$" for t in averaging_times]
         labels_str = labels_averaging_times + [reference_data_name,]
         if Rxx_odt.shape[1] <= 15:
             ax[0].legend(labels_str, loc='upper center', ncol = 3, bbox_to_anchor=(0.5,1.6), fontsize=12)
@@ -445,7 +460,7 @@ class ChannelVisualizer():
 
         # Legend
         # Specify the legend of only for first subplot, idem for other
-        labels_averaging_times = [r"$t^{+} = $" + f"{t}" for t in averaging_times]
+        labels_averaging_times = [rf"$t^+ = {t}$" for t in averaging_times]
         labels_str = labels_averaging_times + [reference_data_name,]
         ax[0].legend(labels_str, loc='upper center', ncol = 3, bbox_to_anchor=(0.5,1.6), fontsize=12)
         fig.subplots_adjust(top=0.85)  # Leave space for the legend above the first subplot
@@ -564,25 +579,34 @@ class ChannelVisualizer():
 
 # --------------------- u-velocity vs reference as gif evolution ------------------------
 
-    def build_um_fig(self, yplus_odt, yplus_ref, um_odt, um_ref, avg_time, ylim=None):
+    def build_um_fig(self, yplus_odt, yplus_ref, um_odt, um_ref, avg_time, ylim=None, um_odt_nonConv_nonRL=None):
         
         fig, ax = plt.subplots()
-        plt.semilogx(yplus_odt, um_odt, '-k',  label=r"Converging $\overline{u}^{+}$")
-        plt.semilogx(yplus_ref, um_ref, '--k', label=r"Reference  $\overline{u}^{+}$")
+        # General:
+        if um_odt_nonConv_nonRL is None:
+            plt.semilogx(yplus_ref, um_ref,               '-',  color="black",      lw=2, label=r"Reference $t^+=900$")
+            plt.semilogx(yplus_odt, um_odt,               '-.', color="tab:green",  lw=2, label=r"RL")
+        # For channel180_RL363 - Rlz 1:
+        else:
+            plt.semilogx(yplus_ref, um_ref,               '-',  color="black",      lw=2, label=r"Reference $t^+=900$")
+            plt.semilogx(yplus_odt, um_odt_nonConv_nonRL, '--', color="tab:orange", lw=2, label=r"Reference $t^+=30$")
+            plt.semilogx(yplus_odt, um_odt,               '-.', color="tab:green",  lw=2, label=r"RL RLz 1")
+
         if ylim is not None:
             plt.ylim(ylim)
         plt.xlabel(r"$y^{+}$")
         plt.ylabel(r"$\overline{u}^{+}$")
-        plt.title(r"$t^{+} = $" + f"{avg_time:.1f}")
-        plt.legend(loc='lower right', ncol = 2, fontsize=12)
+        plt.title(rf"$t^+ = {avg_time:.2f}$")
+        plt.yticks([0.0, 5.0, 10.0, 15.0, 20.0])
+        plt.legend(loc='lower right')
         plt.tight_layout()
         #fig = plt.gcf()
         return fig
     
 
-    def build_um_frame(self, frames, yplus_odt, yplus_ref, um_odt, um_ref, avg_time, ylim=None):
+    def build_um_frame(self, frames, yplus_odt, yplus_ref, um_odt, um_ref, avg_time, ylim=None, um_odt_nonConv_nonRL=None):
         
-        fig = self.build_um_fig(yplus_odt, yplus_ref, um_odt, um_ref, avg_time, ylim)
+        fig = self.build_um_fig(yplus_odt, yplus_ref, um_odt, um_ref, avg_time, ylim, um_odt_nonConv_nonRL)
         fig.canvas.draw()
         img = Image.frombytes("RGB", fig.canvas.get_width_height(), fig.canvas.tostring_rgb())
         frames.append(img)
@@ -600,7 +624,7 @@ class ChannelVisualizer():
         plt.xlabel(r"$y^{+}$")
         plt.ylabel(r"$u^{+}_{\textrm{rmsf}}$")
         plt.grid(axis="y")
-        plt.title(r"$t^{+} = $" + f"{avg_time:.1f}")
+        plt.title(rf"$t^+ = {avg_time:.2f}$")
         plt.legend(loc='lower right', ncol = 2, fontsize=12)
         plt.tight_layout()
         #fig = plt.gcf()
@@ -646,7 +670,7 @@ class ChannelVisualizer():
         plt.text( 0.4850, 0.9000, r'$\textbf{x}_{3_{c}}$' )
         cbar = plt.colorbar()
         cbar.set_label( r'$y/\delta$' )
-        plt.title(r"$t^{+}$" + f" = {avg_time:.1f}")
+        plt.title(rf"$t^+ = {avg_time:.2f}$")
         
         # save figure
         filename = os.path.join(self.postRlzDir, f"{title}")
@@ -682,7 +706,7 @@ class ChannelVisualizer():
         plt.text( 0.4850, 0.9000, r'$\textbf{x}_{3_{c}}$' )
         cbar = plt.colorbar()
         cbar.set_label( r'$y/\delta$' )
-        plt.title(r"$t^{+}$" + f" = {avg_time:.1f}")
+        plt.title(rf"$t^+ = {avg_time:.2f}$")
         ###plt.clim( 0.0, 20.0 )
 
         # ------ save figure ------
@@ -712,7 +736,7 @@ class ChannelVisualizer():
         plt.xlabel(r"$y/\delta$")
         plt.ylabel(r"Reynolds Stress Trace $R_{kk}$")
         plt.grid(axis="y")
-        plt.title(r"$t^{+}$" + f" = {avg_time:.1f}")
+        plt.title(rf"$t^+ = {avg_time:.2f}$")
         plt.legend(loc='upper right', ncol = 2, fontsize=12)
         plt.tight_layout()
         #fig = plt.gcf()
@@ -751,7 +775,7 @@ class ChannelVisualizer():
         plt.xlabel(r"$y/\delta$")
         plt.ylabel(r"barycentric coordinates $x_i$")
         plt.grid(axis="y")
-        plt.title(r"$t^{+}$" + f" = {avg_time:.1f}")
+        plt.title(rf"$t^+ = {avg_time:.2f}$")
         plt.legend(loc='upper right', ncol = 2, fontsize=12)
         plt.tight_layout()
         #fig = plt.gcf()
@@ -792,7 +816,7 @@ class ChannelVisualizer():
         plt.xlabel(r"$y/\delta$")
         plt.ylabel(r"anisotropy tensor eigenvalues $\lambda_i$")
         plt.grid(axis="y")
-        plt.title(r"$t^{+}$" + f" = {avg_time:.1f}")
+        plt.title(rf"$t^+ = {avg_time:.2f}$")
         plt.legend(loc='upper right', ncol = 2, fontsize=12)
         plt.tight_layout()
         #fig = plt.gcf()
@@ -900,27 +924,29 @@ class ChannelVisualizer():
     def RL_u_mean_convergence(self, yplus, rlzArr, 
                               um_RL_nonConv, urmsf_RL_nonConv, um_nonRL_nonConv, urmsf_nonRL_nonConv, um_baseline, urmsf_baseline, 
                               um_NRMSE_RL, urmsf_NRMSE_RL, um_NRMSE_nonRL, urmsf_NRMSE_nonRL,
-                              time_nonConv, time_baseline):
-
+                              time_nonConv_RL, time_nonConv_nonRL, time_baseline):
         # --------- plot um data ---------
         
         filename = os.path.join(self.postRlzDir, f"RL_u_mean_convergence")
         print(f"\nMAKING PLOT of um profile at tEndAvg for multiple realizations in {filename}")
 
-        fig, ax = plt.subplots(1,3,figsize=(15,5))
+        fig, ax = plt.subplots(1,2, figsize=(10,5))
 
         # > RL non-converged (at time_nonConv):
         nrlz = um_RL_nonConv.shape[1]
         for irlz in range(nrlz):
-            ax[0].semilogx(yplus, um_RL_nonConv[:,irlz], label=f"RL Rlz {rlzArr[irlz]}: t={time_nonConv}")
+            if irlz == nrlz - 1: # last rlz, may have truncated
+                ax[0].semilogx(yplus, um_RL_nonConv[:,irlz], label=rf"RL Rlz {rlzArr[irlz]} at $t^+_{{\textrm{{avg}}}}={time_nonConv_RL:.0f}$")
+            else:
+                ax[0].semilogx(yplus, um_RL_nonConv[:,irlz], label=rf"RL Rlz {rlzArr[irlz]} at $t^+_{{\textrm{{avg}}}}={time_nonConv_nonRL:.0f}$")
         # > non-RL non-converged (at time_nonConv):
-        ax[0].semilogx(yplus, um_nonRL_nonConv, '--k', label=f"Non-RL:  t={time_nonConv}")
+        ax[0].semilogx(yplus, um_nonRL_nonConv, '--k', label=rf"Non-RL  at $t^+_{{\textrm{{avg}}}}={time_nonConv_nonRL:.0f}$")
         # > non-RL baseline (at time_baseline)
-        ax[0].semilogx(yplus, um_baseline, '-k', label=f"Reference: t={time_baseline}")
+        ax[0].semilogx(yplus, um_baseline, '-k', label=rf"Reference at $t^+_{{\textrm{{avg}}}}={time_baseline:.0f}$")
         ax[0].set_xlabel(r'$y^{+}$')
         ax[0].set_ylabel(r'$\overline{u}^{+}$')
         if nrlz < 10:
-            ax[0].legend(frameon=True, fontsize=10)
+            ax[0].legend(loc='upper left', fontsize=12)
 
         # Error variable vs. realization *per grid point*
         num_points = len(um_baseline)
@@ -930,20 +956,20 @@ class ChannelVisualizer():
         absErr_nonRL = np.abs(um_nonRL_nonConv - um_baseline)
         # > RL non-converged (at time_nonConv):
         for irlz in range(nrlz):
-            ax[1].loglog(yplus, absErr_RL[:,irlz], label=f"RL Rlz {rlzArr[irlz]}: t={time_nonConv}")
+            ax[1].loglog(yplus, absErr_RL[:,irlz], label=rf"RL Rlz {rlzArr[irlz]} at $t^+_{{\textrm{{avg}}}}={time_nonConv_RL:.0f}$")
         # > non-RL non-converged (at time_nonConv):
-        ax[1].loglog(yplus, absErr_nonRL, '--k', label=f"Non-RL:  t={time_nonConv}")
+        ax[1].loglog(yplus, absErr_nonRL, '--k', label=rf"Non-RL at $t^+_{{\textrm{{avg}}}}={time_nonConv_nonRL:.0f}$")
         ax[1].set_xlabel(r'$y^{+}$')
-        ax[1].set_ylabel(r'Absolute Error $| \overline{u}^{+} - \overline{u_{ref}}^{+} |$')
+        ax[1].set_ylabel(r'$| \overline{u}^{+} - \overline{u}_{\textrm{ref}}^{+} |$')
         if nrlz < 10:
-            ax[1].legend(loc='lower left', frameon=True, fontsize=10)
+            ax[1].legend(loc='lower left', fontsize=12)
 
-        # NRMSE variable vs. realization
-        ax[2].semilogy(rlzArr, um_NRMSE_RL, '-o', label="RL")
-        ax[2].semilogy(rlzArr, um_NRMSE_nonRL * np.ones(nrlz), '--k', label=f"non-RL ({um_NRMSE_nonRL:.3e})")
-        ax[2].set_xlabel('Rlz')
-        ax[2].set_ylabel(r'NRMSE($\overline{u}^{+}$)')
-        ax[2].legend(loc='upper right')
+        ### # NRMSE variable vs. realization
+        ### ax[2].semilogy(rlzArr, um_NRMSE_RL, '-o', label="RL")
+        ### ax[2].semilogy(rlzArr, um_NRMSE_nonRL * np.ones(nrlz), '--k', label=f"non-RL ({um_NRMSE_nonRL:.3e})")
+        ### ax[2].set_xlabel('Rlz')
+        ### ax[2].set_ylabel(r'NRMSE($\overline{u}^{+}$)')
+        ### ax[2].legend(loc='upper right')
 
         plt.tight_layout()
         plt.savefig(filename)
@@ -954,20 +980,23 @@ class ChannelVisualizer():
         filename = os.path.join(self.postRlzDir, f"RL_u_rmsf_convergence")
         print(f"\nMAKING PLOT of urmsf profile at tEndAvg for multiple realizations in {filename}")
 
-        fig, ax = plt.subplots(1,3,figsize=(15,5))
+        fig, ax = plt.subplots(1,2, figsize=(10,5))
 
         # > RL non-converged (at time_nonConv):
         nrlz = um_RL_nonConv.shape[1]
         for irlz in range(nrlz):
-            ax[0].semilogx(yplus, urmsf_RL_nonConv[:,irlz], label=f"RL Rlz {rlzArr[irlz]}: t={time_nonConv}")
+            if irlz == nrlz - 1:  # last rlz, may be truncated
+                ax[0].semilogx(yplus, urmsf_RL_nonConv[:,irlz], label=rf"RL Rlz {rlzArr[irlz]} at $t^+_{{\textrm{{avg}}}}={time_nonConv_RL:.0f}$")
+            else:
+                ax[0].semilogx(yplus, urmsf_RL_nonConv[:,irlz], label=rf"RL Rlz {rlzArr[irlz]} at $t^+_{{\textrm{{avg}}}}={time_nonConv_nonRL:.0f}$")
         # > non-RL non-converged (at time_nonConv):
-        ax[0].semilogx(yplus, urmsf_nonRL_nonConv, '--k', label=f"Non-RL:  t={time_nonConv}")
+        ax[0].semilogx(yplus, urmsf_nonRL_nonConv, '--k', label=rf"Non-RL at $t^+_{{\textrm{{avg}}}}={time_nonConv_nonRL:.0f}$")
         # > non-RL baseline (at time_baseline)
-        ax[0].semilogx(yplus, urmsf_baseline, '-k', label=f"Reference: t={time_baseline}")
+        ax[0].semilogx(yplus, urmsf_baseline, '-k', label=rf"Reference at $t^+_{{\textrm{{avg}}}}={time_baseline:.0f}$")
         ax[0].set_xlabel(r'$y^{+}$')
         ax[0].set_ylabel(r'$u^{+}_{\textrm{rms}}$')
         if nrlz <= 15:
-            ax[0].legend(frameon=True, fontsize=10)
+            ax[0].legend(fontsize=12)
 
         # Error variable vs. realization *per grid point*
         num_points = len(urmsf_baseline)
@@ -977,20 +1006,23 @@ class ChannelVisualizer():
         absErr_nonRL = np.abs(urmsf_nonRL_nonConv - urmsf_baseline)
         # > RL non-converged (at time_nonConv):
         for irlz in range(nrlz):
-            ax[1].loglog(yplus, absErr_RL[:,irlz], label=f"RL Rlz {rlzArr[irlz]}: t={time_nonConv}")
+            if irlz == nrlz - 1: # last rlz, may be truncated
+                ax[1].loglog(yplus, absErr_RL[:,irlz], label=rf"RL Rlz {rlzArr[irlz]} at $t^+_{{\textrm{{avg}}}}={time_nonConv_RL:.0f}$")
+            else:
+                ax[1].loglog(yplus, absErr_RL[:,irlz], label=rf"RL Rlz {rlzArr[irlz]} at $t^+_{{\textrm{{avg}}}}={time_nonConv_nonRL:.0f}$")
         # > non-RL non-converged (at time_nonConv):
-        ax[1].loglog(yplus, absErr_nonRL, '--k', label=f"Non-RL:  t={time_nonConv}")
+        ax[1].loglog(yplus, absErr_nonRL, '--k', label=rf"Non-RL at $t^+_{{\textrm{{avg}}}}={time_nonConv_nonRL:.0f}$")
         ax[1].set_xlabel(r'$y^{+}$')
         ax[1].set_ylabel(r"Absolute Error $| u^{+}_{\textrm{rms}} - u^{+}_{\textrm{rms, ref}} |$")
         if nrlz < 10:
-            ax[1].legend(loc='lower left', frameon=True, fontsize=10)
+            ax[1].legend(loc='lower left', fontsize=12)
 
-        # NRMSE variable vs. realization
-        ax[2].semilogy(rlzArr, urmsf_NRMSE_RL, '-o', label="RL")
-        ax[2].semilogy(rlzArr, urmsf_NRMSE_nonRL * np.ones(nrlz), '--k', label=f"non-RL ({urmsf_NRMSE_nonRL:.3e})")
-        ax[2].set_xlabel('Rlz')
-        ax[2].set_ylabel(r"NRMSE $u^{+}_{\textrm{rms}}$")
-        ax[2].legend(loc='upper right')
+        ### # NRMSE variable vs. realization
+        ### ax[2].semilogy(rlzArr, urmsf_NRMSE_RL, '-o', label="RL")
+        ### ax[2].semilogy(rlzArr, urmsf_NRMSE_nonRL * np.ones(nrlz), '--k', label=f"non-RL ({urmsf_NRMSE_nonRL:.3e})")
+        ### ax[2].set_xlabel('Rlz')
+        ### ax[2].set_ylabel(r"NRMSE $u^{+}_{\textrm{rms}}$")
+        ### ax[2].legend(loc='upper right')
 
         plt.tight_layout()
         plt.savefig(filename)
@@ -1007,13 +1039,14 @@ class ChannelVisualizer():
         # variable vs. y-coordinate, for each realization
         # > RL non-converged (at time_nonConv):
         nrlz   = len(rlzArr)
-        colors = plt.cm.viridis_r(np.linspace(0, 1, nrlz))
+        # colors = plt.cm.viridis_r(np.linspace(0, 1, nrlz))
+        colors = tab_colors
         for irlz in range(nrlz):
-            ax[0].plot(ydelta, var_RL_nonConv[:,irlz], color=colors[irlz], label=f"RL Rlz {rlzArr[irlz]}: t={time_nonConv}")
+            ax[0].plot(ydelta, var_RL_nonConv[:,irlz], color=colors[irlz], label=rf"RL Rlz {rlzArr[irlz]} at $t^+_{{\textrm{{avg}}}}={time_nonConv:.0f}$")
         # > non-RL non-converged (at time_nonConv):
-        ax[0].plot(ydelta, var_nonRL_nonConv, '--k', label=f"Non-RL:  t={time_nonConv}")
+        ax[0].plot(ydelta, var_nonRL_nonConv, '--k', label=rf"Non-RL at $t^+_{{\textrm{{avg}}}}={time_nonConv:.0f}$")
         # > non-RL baseline (at time_baseline)
-        ax[0].plot(ydelta, var_baseline, '-k', label=f"Reference: t={time_baseline}")
+        ax[0].plot(ydelta, var_baseline, '-k', label=rf"Reference at $t^+_{{\textrm{{avg}}}}={time_baseline:.0f}$")
         ax[0].set_xlabel(r"$y/\delta$")
         ax[0].set_ylabel(ylabel)
         if nrlz < 10:
@@ -1157,29 +1190,41 @@ class ChannelVisualizer():
         for id_ref in range(nRef):
             # plot errors 
             if id_ref == 0:
-                plt.semilogy(averaging_times_ref[idxRef], err_ref[id_ref,idxRef], color="gray", alpha = 0.5, label=f"Reference Realizations")
+                plt.semilogy(averaging_times_ref[idxRef], err_ref[id_ref,idxRef], color="gray", alpha = 0.3, label=f"Reference Realizations")
             else:
-                plt.semilogy(averaging_times_ref[idxRef], err_ref[id_ref,idxRef], color="gray", alpha = 0.5)
+                plt.semilogy(averaging_times_ref[idxRef], err_ref[id_ref,idxRef], color="gray", alpha = 0.3)
         rlzAvg_err_ref = np.mean(err_ref, axis=0)
         plt.semilogy(averaging_times_ref[idxRef], rlzAvg_err_ref[idxRef], color = "black", linewidth = 2, label=f"Reference Rlz-Average")
-        print("\nList of (rlz,", info['title'], ")")
-        print(list(zip(averaging_times_ref[idxRef], rlzAvg_err_ref[idxRef])), "\n")
+        # log error values 
+        ### print("\nRlz-Avg Reference: List of (averaging_time,", info['title'], ")")
+        ### for time, err in zip(averaging_times_ref[idxRef], rlzAvg_err_ref[idxRef]):
+        ###     print(f"({time:.2f}, {err:.4f})", end=', ')
+
         # RL non-converged:
         nrlz   = len(rlzArr)
-        colors = plt.cm.viridis_r(np.linspace(0, 1, nrlz))
+        # colors = plt.cm.viridis_r(np.linspace(0, 1, nrlz))
+        colors = tab_colors
         for irlz in range(nrlz):
             # eliminate the err_RL[i] = 1, which corresponds to time instances with no statistics data (u-mean not updated after initialized as zeros, thus relative error = 1) (also happens for t=tBeginAvg, where u-mean=0 everywhere)
             updatedErrorIdx_irlz     = np.where(err_RL[:,irlz]!=1.0)[0]
             err_RL_irlz              = err_RL[updatedErrorIdx_irlz, irlz]
             averagings_times_RL_irlz = averaging_times_RL[updatedErrorIdx_irlz]
-            print(f"\nrlz = {irlz}: \n", list(zip(averagings_times_RL_irlz, err_RL_irlz)))
-            # plot errors
             plt.semilogy(averagings_times_RL_irlz, err_RL_irlz, linewidth = 2, color=colors[irlz], label=f"RL Rlz {rlzArr[irlz]}")
+            # log error values
+            ### print(f"\nRL Rlz = {irlz}:")
+            ### for time, err in zip(averagings_times_RL_irlz, err_RL_irlz):
+            ###     print(f"({time:.3f}, {err:.3f})", end=', ')
+        
+        # add um target, if necessary
+        if info['title'] == 'NRMSE_umean':
+            ntk = len(averaging_times_ref[idxRef])
+            plt.semilogy(averaging_times_ref[idxRef], um_target*np.ones(ntk), '--', color="tab:red", label=rf"Target $\textrm{{NRMSE}}(\overline{{u}}^+)={um_target:.1e}$")
+        
         # configure plot
         plt.xlabel(r'$t^{+}$')
         plt.ylabel(info['ylabel'])
-        if nrlz < 20:
-            plt.legend(frameon=True, fontsize=10)
+        if nrlz < 15:
+            plt.legend()
         plt.tight_layout()
         plt.savefig(filename)
         plt.close()
@@ -1188,13 +1233,13 @@ class ChannelVisualizer():
     def build_RL_rewards_convergence(self, rlzArr, timeArr, rewards_total, rewards_err_umean, rewards_rhsfRatio):
         # Plot RL rewards along time, for each realization
         self.RL_variable_convergence_along_time("RL_rewards_total_convergence", "Reward", rlzArr, timeArr, rewards_total)
-        self.RL_variable_convergence_along_time("RL_rewards_term_relL2Err_umean_convergence", r"\overline{u}^{+} relative L2 Error", rlzArr, timeArr, rewards_err_umean)
+        self.RL_variable_convergence_along_time("RL_rewards_term_relL2Err_umean_convergence", r"$\textrm{NRMSE}(\overline{u}^{+})$", rlzArr, timeArr, rewards_err_umean)
         self.RL_variable_convergence_along_time("RL_rewards_term_rhsfRatio_convergence", "abs(RHS-f Ratio - 1)", rlzArr, timeArr, rewards_rhsfRatio)
 
     def build_RL_rewards_convergence_v2(self, rlzArr, timeArr, rewards_total, rewards_err_umean, rewards_err_rmsf, rewards_rhsfRatio):
         # Plot RL rewards along time, for each realization
         self.RL_variable_convergence_along_time("RL_rewards_total_convergence", "Reward", rlzArr, timeArr, rewards_total)
-        self.RL_variable_convergence_along_time("RL_rewards_term_relL2Err_umean_convergence", r"\overline{u}^{+}  relative L2 Error", rlzArr, timeArr, rewards_err_umean)
+        self.RL_variable_convergence_along_time("RL_rewards_term_relL2Err_umean_convergence", r"$\textrm{NRMSE}(\overline{u}^{+})$", rlzArr, timeArr, rewards_err_umean)
         self.RL_variable_convergence_along_time("RL_rewards_term_relL2Err_urmsf_convergence", "u' relative L2 Error", rlzArr, timeArr, rewards_err_rmsf)
         self.RL_variable_convergence_along_time("RL_rewards_term_rhsfRatio_convergence", "abs(RHS-f Ratio - 1)", rlzArr, timeArr, rewards_rhsfRatio)
 
@@ -1264,10 +1309,10 @@ class ChannelVisualizer():
         ax[0].set_ylabel("Total Reward")
         
         ax[1].semilogy(RL_rewards_term_relL2Err_umean)
-        ax[1].set_ylabel(r"NRMSE $\overline{u}^{+}$")
+        ax[1].set_ylabel(r"$\textrm{NRMSE}(\overline{u}^{+})$")
 
         ax[2].semilogy(RL_rewards_term_relL2Err_urmsf)
-        ax[2].set_ylabel(r"NRMSE $u^{+}_{\textrm{rms}}$")
+        ax[2].set_ylabel(r"$\textrm{NRMSE}(u^{+}_{\textrm{rms}})$")
 
         ax[3].semilogy(rewards_term_rhsfRatio)
         ax[3].set_ylabel("abs(RHS-f Ratio - 1)")
@@ -1278,8 +1323,8 @@ class ChannelVisualizer():
             rew_relL2Err_umean_weight = float(config.get("runner", "rew_relL2Err_umean_weight"))
             rew_relL2Err_urmsf_weight = float(config.get("runner", "rew_relL2Err_urmsf_weight"))
             rew_rhsfRatio_weight = float(config.get("runner", "rew_rhsfRatio_weight"))
-            ax[4].semilogy(rew_relL2Err_umean_weight  * RL_rewards_term_relL2Err_umean, color='tab:orange', label=r"weighted NRMSE $\overline{u}^{+}$")
-            ax[4].semilogy(rew_relL2Err_urmsf_weight  * RL_rewards_term_relL2Err_urmsf, color='tab:blue',   label=r"weighted NRMSE $u^{+}_{\textrm{rms}}$")
+            ax[4].semilogy(rew_relL2Err_umean_weight  * RL_rewards_term_relL2Err_umean, color='tab:orange', label=r"weighted $\textrm{NRMSE}(\overline{u}^{+})$")
+            ax[4].semilogy(rew_relL2Err_urmsf_weight  * RL_rewards_term_relL2Err_urmsf, color='tab:blue',   label=r"weighted $\textrm{NRMSE}(u^{+}_{\textrm{rms}})$")
             ax[4].semilogy(rew_rhsfRatio_weight * rewards_term_rhsfRatio,   color='tab:green',  label="weighted RHS-F Ratio Penalty Term")
             ax[4].legend(loc='lower right', frameon=True, fontsize=10)
 

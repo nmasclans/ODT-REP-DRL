@@ -45,8 +45,8 @@
 
 
 echo "$#"
-if [ "$#" -ne 12 ]; then
-    echo "Usage: $0 <1_Re_tau> <2_case_name_RL> <3_realization_number_min_RL> <4_realization_number_max_RL> <5_realization_number_step_RL> <6_time_begin_averaging> <7_time_end_averaging_non_converged> <8_time_end_averaging_converged> <9_delta_time_stats> <10_delta_time_stats_anisotropy_gifs> <11_nohup_filename> <12_actions_avg_freq>"
+if [ "$#" -ne 13 ]; then
+    echo "Usage: $0 <1_Re_tau> <2_case_name_RL> <3_realization_number_min_RL> <4_realization_number_max_RL> <5_realization_number_step_RL> <6_time_begin_averaging> <7_time_end_averaging_non_converged> <8_time_end_averaging_converged> <9_delta_time_stats_nonRL> <10_delta_time_stats_RL> <11_delta_time_stats_anisotropy_gifs> <12_nohup_filename> <13_actions_avg_freq>"
     exit 1
 else
     echo -e "\n\n\n****************************************************************"
@@ -60,10 +60,11 @@ else
     echo "- Time begin averaging: $6"
     echo "- Time end averaging non-converged: $7"
     echo "- Time end averaging converged: $8"
-    echo "- dt statistics: $9"
-    echo "- dt statistics anisotropy gifs: ${10}"
-    echo "- Nohup filename for RL training run: ${11}"
-    echo "- Actions averaging frequency, number of simulation steps for averaged actions kde: ${12}"
+    echo "- dt statistics non-RL: $9"
+    echo "- dt statistics RL: ${10}"
+    echo "- dt statistics anisotropy gifs: ${11}"
+    echo "- Nohup filename for RL training run: ${12}"
+    echo "- Actions averaging frequency, number of simulation steps for averaged actions kde: ${13}"
 fi
 
 # For each realization, if needed:
@@ -85,15 +86,15 @@ for ((rlzNum = $3; rlzNum <= $4; rlzNum+=$5)); do
 done
 
 # Run main.sh for each realization
-for ((rlzNum = $3; rlzNum <= $4; rlzNum+=$5)); do
-    echo -e "\n\n\n****************************************************************"
-    echo -e "****************** main.sh for realization #$rlzNum ******************"
-    echo -e "****************************************************************"
-    ./main.sh "$2" "$rlzNum" "$1" "$9" "${10}" "$6" "$7"
-done
+### for ((rlzNum = $3; rlzNum <= $4; rlzNum+=$5)); do
+###     echo -e "\n\n\n****************************************************************"
+###     echo -e "****************** main.sh for realization #$rlzNum ******************"
+###     echo -e "****************************************************************"
+###     ./main.sh "$2" "$rlzNum" "$1" "$9" "${11}" "$6" "$7"
+### done
 
-### # Run mainRL.sh for multiple realizations
-### echo -e "\n\n\n****************************************************************"
-### echo -e "************************** mainRL.sh ***************************"
-### echo -e "****************************************************************"
-### ./mainRL.sh "$1" "$2" "$3" "$4" "$5" "$6" "$7" "$8" "$9" "${11}" "${12}"
+# Run mainRL.sh for multiple realizations
+echo -e "\n\n\n****************************************************************"
+echo -e "************************** mainRL.sh ***************************"
+echo -e "****************************************************************"
+./mainRL.sh "$1" "$2" "$3" "$4" "$5" "$6" "$7" "$8" "$9" "${10}" "${12}" "${13}"
