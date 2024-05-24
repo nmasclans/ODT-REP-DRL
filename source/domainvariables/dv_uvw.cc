@@ -67,11 +67,17 @@ dv_uvw::dv_uvw(domain  *line,
     utauTarget      = domn->pram->utauTarget;
     utauNumerical   = 0.0;
     /// Estimated uniform body force to drive the flow
-    controller_output = - domn->pram->dPdx / domn->pram->rho0;  /// Initialize controller output
-    // controller_output = 0.0;
-    controller_error  = 0.0;			        	            /// Initialize controller error
-    controller_K_p    = domn->pram->controller_K_p;             /// Controller proportional gain (1.0e-2 by default)
-    halfChannel       = 0.5 * domn->pram->domainLength;
+    cout_counter = 0;
+    controller_output         = - domn->pram->dPdx / domn->pram->rho0;   /// Initialize controller output
+    controller_error          = 0.0;			        	             /// Initialize controller error
+    controller_previous_error = 0.0;    
+    controller_dt             = 0.0;
+    integral_error            = 0.0;                                     /// Get integral error (reiniciated at each restart)
+    derivative_error          = 0.0;
+    controller_K_p            = domn->pram->controller_K_p;              /// Controller proportional gain
+    controller_K_i            = domn->pram->controller_K_i;              /// Controller integral gain
+    controller_K_d            = domn->pram->controller_K_d;              /// Controller derivative gain
+    halfChannel               = 0.5 * domn->pram->domainLength;
     getOdtPath(odtPath);
     fname = odtPath + "/data/feedback_loop_param.out";
     ostrm = new ofstream(fname.c_str());
@@ -82,10 +88,11 @@ dv_uvw::dv_uvw(domain  *line,
 ////////////////////////////////////////////////////////////////////////////////
 /*! lv source term part of the rhs function. 
  *  Method implementation for source term of the right-hand side (Rhs) 
+ *  @param time \input current time.
  *  @param ipt \input optional point to compute source at.
  */
 
-void dv_uvw::getRhsSrc(const int ipt){
+void dv_uvw::getRhsSrc(const double &time, const int ipt){
 
     /* if L_transported = False then no calculation of source terms in Rhs is done
      * L_transported = False means that the variable represented by the instance of 'dv_uvw' is not being transported, 
@@ -137,17 +144,33 @@ void dv_uvw::getRhsSrc(const int ipt){
         /// u_bulk_numeric /= length_sum;
     
         // Update controller variables
-        controller_error   = utauTarget - utauNumerical;
-        // controller_error   = u_bulk_target - u_bulk_numeric;
-        controller_output += controller_K_p * controller_error;
-        /// static int cout_counter = 0;
-        /// if (cout_counter % 100 == 0) {
-        ///     *ostrm << "u_bulk_numeric = " << u_bulk_numeric << ", ";
-        ///     *ostrm << "u_tau = " << utauNumerical << ", ";
-        ///     *ostrm << "controller error = " << controller_error << ", ";
-        ///     *ostrm << "controller output = " << controller_output << endl;
-        /// }
-        /// cout_counter += 1;
+        controller_dt             = time - domn->pram->trst;
+        controller_previous_error = controller_error;
+        // > proportional term
+        controller_error = utauTarget - utauNumerical;
+        if ( controller_dt > 0.0 ) {
+        // > integral term
+            integral_error += controller_error * controller_dt;
+        // > derivative term
+            derivative_error = (controller_error - controller_previous_error) / controller_dt;
+        } else {
+            integral_error   = 0.0;
+            derivative_error = 0.0;
+        }
+        // controller output
+        controller_output   = - domn->pram->dPdx / domn->pram->rho0 \
+                              + controller_K_p * controller_error   \
+                              + controller_K_i * integral_error     \
+                              + controller_K_d * derivative_error;
+        if (cout_counter % 100 == 0) {
+            *ostrm << "u_tau = "             << utauNumerical     << ", ";
+            *ostrm << "controller output = " << controller_output << ", ";
+            *ostrm << "controller_dt = "     << controller_dt     << ", ";
+            *ostrm << "controller error = "  << controller_error  << ", ";
+            *ostrm << "integral error = "    << integral_error    << ", ";
+            *ostrm << "derivative error = "  << derivative_error  << ", ";
+        }
+        cout_counter += 1;
         
         // update source term with controlled feedback loop
         for(int i=0; i<domn->ngrd; i++) {

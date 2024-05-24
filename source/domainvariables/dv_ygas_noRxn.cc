@@ -13,7 +13,7 @@
  *  @param ipt \input optional point to compute source at.
  */
 
-void dv_ygas_noRxn::getRhsSrc(const int ipt){
+void dv_ygas_noRxn::getRhsSrc(const double &time, const int ipt){
 
     if(!L_transported)
         return;

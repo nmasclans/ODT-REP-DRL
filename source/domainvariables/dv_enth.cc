@@ -53,7 +53,7 @@ dv_enth::dv_enth(domain    *line,
  *  todo: add in pressure term: unsteady, and nonuniform.
  */
 
-void dv_enth::getRhsSrc(const int ipt){
+void dv_enth::getRhsSrc(const double &time, const int ipt){
 
     if(!L_transported)
         return;

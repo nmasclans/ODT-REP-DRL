@@ -31,16 +31,23 @@ class dv_uvw : public dv {
 
     public:
 
-        virtual void getRhsSrc(const int ipt=-1);
+        virtual void getRhsSrc(const double &time, const int ipt=-1);
         virtual void getRhsMix(const vector<double> &gf, const vector<double> &dxc);
         virtual void getRhsStatConv(const vector<double> &gf, const vector<double> &dxc, const double &time);
         virtual void updateTimeAveragedQuantities(const double &delta_t, const double &averaging_time, const double &time);
         
     private:
 
+        int    cout_counter;
         double controller_output;
         double controller_error;
+        double controller_dt;
+        double controller_previous_error;
+        double derivative_error;
+        double integral_error;
         double controller_K_p;
+        double controller_K_i;
+        double controller_K_d;
         double halfChannel;
         double utauNumerical;
         double utauTarget;

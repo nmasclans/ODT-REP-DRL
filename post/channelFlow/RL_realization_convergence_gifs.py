@@ -190,7 +190,7 @@ dTimeVec     = np.arange(dTimeStart, dTimeEnd+eps, dTimeStep)
 # --- Time instants, filenames
 # tEnd for non-RL non-Conv, must be equivalent to the time computed along all RL realizations
 assert dt_gif_nonRL == 1.0, "tEnd_nonRL is calculated assuming dt_gif_nonRL == 1"
-tEnd_nonRL  = math.trunc(np.sum(tEnd_RL)) - tBeginAvg * (nrlz-1)
+tEnd_nonRL  = math.trunc(np.sum(np.round(tEnd_RL,4))) - tBeginAvg * (nrlz-1)
 time_nonRL  = np.arange(tBeginAvg, tEnd_nonRL + eps, dt_gif_nonRL)
 ntk         = len(time_nonRL)
 dTimeVecIdx = []; dTimeVecStr = []
@@ -201,7 +201,7 @@ for itk in range(ntk):
     dTimeVecStr.append(str(tIdx).zfill(5))
 if len(dTimeVecIdx) != ntk:
     raise ValueError(f"Not all averaging_times where found! \n{ntk}\n{dTimeVecIdx}")
-flist = [f"{odt_path}/post/channelFlow/ODT_reference/Re{Retau}/data_00003/stat_dmp_{s}.dat" for s in dTimeVecStr]
+flist = [f"{odt_path}/post/channelFlow/ODT_reference/Re{Retau}/data_rlz_avg/stat_dmp_{s}.dat" for s in dTimeVecStr]
 print(f"\n--- Temporal convergence for non-RL ---")
 print(f"--- End Time: {tEnd_nonRL} ---")
 

@@ -50,7 +50,7 @@ dv_ygas::dv_ygas(domain  *line,
  * Gas temperature needs to be set to use problem specific RR
  */
 
-void dv_ygas::getRhsSrc(const int ipt) {
+void dv_ygas::getRhsSrc(const double &time, const int ipt) {
 
     if(!L_transported)
         return;

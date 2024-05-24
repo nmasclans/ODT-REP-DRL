@@ -101,7 +101,7 @@ class dv {
                                  const int            nsplt,
                                  const vector<double> &cellFaces);
 
-        virtual void   getRhsSrc(const int ipt=-1){if(!L_transported) return;}
+        virtual void   getRhsSrc(const double &time, const int ipt=-1){if(!L_transported) return;}
         virtual void   getRhsMix(const vector<double> &gf,
                                  const vector<double> &dxc){if(!L_transported) return;}
         virtual void   getRhsStatConv(const vector<double> &gf, const vector<double> &dxc, const double &time);

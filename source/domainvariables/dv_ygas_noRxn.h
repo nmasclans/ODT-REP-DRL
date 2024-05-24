@@ -31,7 +31,7 @@ class dv_ygas_noRxn : public dv_ygas {
 
     //////////////////// MEMBER FUNCTIONS /////////////////
 
-        virtual void getRhsSrc(const int ipt=-1);
+        virtual void getRhsSrc(const double &time, const int ipt=-1);
 
     private:
 

@@ -62,7 +62,7 @@ void dv_mixf::setVar(const int ipt){
  *  todo: add in pressure term: unsteady, and nonuniform.
  */
 
-void dv_mixf::getRhsSrc(const int ipt){
+void dv_mixf::getRhsSrc(const double &time, const int ipt){
 
     if(!L_transported)
         return;

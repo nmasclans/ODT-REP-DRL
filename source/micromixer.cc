@@ -174,7 +174,7 @@ void micromixer::advanceOdtSingleStep_Explicit(){
         */
         if(domn->v.at(k)->L_transported) {
             domn->v.at(k)->getRhsMix(gf, dxc);
-            domn->v.at(k)->getRhsSrc();
+            domn->v.at(k)->getRhsSrc(time);
             domn->v.at(k)->getRhsStatConv(gf, dxc, time);   // update RhsStatConv, using previously updated domn->Rij->RijDelta
         }
     }
@@ -308,7 +308,7 @@ void micromixer::advanceOdtSingleStep_StrangSplit() {
 
     for(int k=0; k<domn->v.size(); k++)
         if(domn->v.at(k)->L_transported)
-            domn->v.at(k)->getRhsSrc();
+            domn->v.at(k)->getRhsSrc(time);
 
     for(int i=0; i<domn->ngrd; i++)
         cvode->integrateCell(i, dt);

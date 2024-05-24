@@ -44,7 +44,7 @@ dv_sca::dv_sca(domain  *line,
  *  @param ipt \input optional point to compute source at.
  */
 
-void dv_sca::getRhsSrc(const int ipt){
+void dv_sca::getRhsSrc(const double &time, const int ipt){
 
     if(!L_transported)
         return;

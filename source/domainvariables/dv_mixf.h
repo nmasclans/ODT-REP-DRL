@@ -34,7 +34,8 @@ class dv_mixf : public dv {
     public:
 
         virtual void setVar(const int ipt=-1);
-        virtual void getRhsSrc(const int ipt=-1);
+        virtual void getRhsSrc(const double &time, 
+                               const int ipt=-1);
         virtual void getRhsMix(const vector<double> &gf,
                                const vector<double> &dxc);
 
