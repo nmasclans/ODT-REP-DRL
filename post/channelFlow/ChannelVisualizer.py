@@ -579,18 +579,11 @@ class ChannelVisualizer():
 
 # --------------------- u-velocity vs reference as gif evolution ------------------------
 
-    def build_um_fig(self, yplus_odt, yplus_ref, um_odt, um_ref, avg_time, ylim=None, um_odt_nonConv_nonRL=None):
+    def build_um_fig(self, yplus_odt, yplus_ref, um_odt, um_ref, avg_time, ylim=None):
         
         fig, ax = plt.subplots()
-        # General:
-        if um_odt_nonConv_nonRL is None:
-            plt.semilogx(yplus_ref, um_ref,               '-',  color="black",      lw=2, label=r"Reference $t^+=900$")
-            plt.semilogx(yplus_odt, um_odt,               '-.', color="tab:green",  lw=2, label=r"RL")
-        # For channel180_RL363 - Rlz 1:
-        else:
-            plt.semilogx(yplus_ref, um_ref,               '-',  color="black",      lw=2, label=r"Reference $t^+=900$")
-            plt.semilogx(yplus_odt, um_odt_nonConv_nonRL, '--', color="tab:orange", lw=2, label=r"Reference $t^+=30$")
-            plt.semilogx(yplus_odt, um_odt,               '-.', color="tab:green",  lw=2, label=r"RL RLz 1")
+        plt.semilogx(yplus_ref, um_ref,               '-',  color="black",      lw=2, label=r"Reference $t^+=900$")
+        plt.semilogx(yplus_odt, um_odt,               '-.', color="tab:green",  lw=2, label=r"RL")
 
         if ylim is not None:
             plt.ylim(ylim)
@@ -604,9 +597,9 @@ class ChannelVisualizer():
         return fig
     
 
-    def build_um_frame(self, frames, yplus_odt, yplus_ref, um_odt, um_ref, avg_time, ylim=None, um_odt_nonConv_nonRL=None):
+    def build_um_frame(self, frames, yplus_odt, yplus_ref, um_odt, um_ref, avg_time, ylim=None):
         
-        fig = self.build_um_fig(yplus_odt, yplus_ref, um_odt, um_ref, avg_time, ylim, um_odt_nonConv_nonRL)
+        fig = self.build_um_fig(yplus_odt, yplus_ref, um_odt, um_ref, avg_time, ylim)
         fig.canvas.draw()
         img = Image.frombytes("RGB", fig.canvas.get_width_height(), fig.canvas.tostring_rgb())
         frames.append(img)
@@ -634,6 +627,38 @@ class ChannelVisualizer():
     def build_urmsf_frame(self, frames, yplus_odt, yplus_ref, urmsf_odt, urmsf_ref, avg_time, ylim=None):
         
         fig = self.build_urmsf_fig(yplus_odt, yplus_ref, urmsf_odt, urmsf_ref, avg_time, ylim)
+        fig.canvas.draw()
+        img = Image.frombytes("RGB", fig.canvas.get_width_height(), fig.canvas.tostring_rgb())
+        frames.append(img)
+        plt.close()
+        return frames
+
+
+    def build_um_fig_RL_nonRL_ref(self, yplus_RL, yplus_nonRL, yplus_ref, um_RL, um_nonRL, um_ref, time_RL, time_nonRL, time_ref, ylim=None):
+        
+        fig, ax = plt.subplots()
+        plt.semilogx(yplus_ref,   um_ref,   '-',  color="black",      lw=2, label=rf"Reference $t^+={time_ref:.1f}$")
+        plt.semilogx(yplus_nonRL, um_nonRL, '-.', color="tab:orange", lw=2, label=rf"Non-RL    $t^+={time_nonRL:.1f}$")
+        plt.semilogx(yplus_RL,    um_RL,    '--', color="tab:green",  lw=2, label=rf"RL        $t^+={time_RL:.1f}$")
+
+        if ylim is not None:
+            plt.ylim(ylim)
+        plt.xlabel(r"$y^{+}$")
+        plt.ylabel(r"$\overline{u}^{+}$")
+        plt.yticks([0.0, 5.0, 10.0, 15.0, 20.0])
+        plt.legend(loc='upper left')
+        plt.tight_layout()
+        #fig = plt.gcf()
+        return fig
+    
+    
+    def build_um_frame_RL_nonRL_ref(self, frames, 
+                                    yplus_RL, yplus_nonRL, yplus_ref, 
+                                    um_RL, um_nonRL, um_ref,
+                                    time_RL, time_nonRL, time_ref,
+                                    ylim=None):    
+
+        fig = self.build_um_fig_RL_nonRL_ref(yplus_RL, yplus_nonRL, yplus_ref, um_RL, um_nonRL, um_ref, time_RL, time_nonRL, time_ref, ylim)
         fig.canvas.draw()
         img = Image.frombytes("RGB", fig.canvas.get_width_height(), fig.canvas.tostring_rgb())
         frames.append(img)

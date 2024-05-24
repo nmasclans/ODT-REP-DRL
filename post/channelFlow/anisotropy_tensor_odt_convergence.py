@@ -116,7 +116,7 @@ print("\n------ Calculate Rij dof from statistics calculated at runtime by ODT -
 (ydelta_rt, yplus_rt, um_rt, urmsf_rt,_, _,_,_, _,_,_, Rxx_rt, Ryy_rt, Rzz_rt, Rxy_rt, Rxz_rt, Ryz_rt) = get_odt_statistics_rt_at_chosen_averaging_times(inputParams, averaging_times)
 
 # --- Animation frames (gif) ---
-visualizer      = ChannelVisualizer(postRlzDir)
+visualizer    = ChannelVisualizer(postRlzDir)
 frames_um_rt  = []; frames_urmsf_rt = []
 frames_rkk_rt = []; frames_eig_rt = []; frames_xmap_coord_rt = []; frames_xmap_triang_rt = []
 um_rt_max     = int(np.max(um_rt)+1)

@@ -17,7 +17,7 @@
 # - 7_time_end_averaging_non_converged   (for mainRL.sh & main.sh)                           
 # - 8_time_end_averaging_converged       (for mainRL.sh)                       
 # - 9_delta_time_stats                   (for main.sh)
-# - 10_delta_time_stats_anisotropy_gifs  (for main.sh)
+# - 10_delta_time_stats_anisotropy_gifs / dt_statistics_RL_figs  (for mainRL.sh & main.sh)
 # - 11_nohup_filename                    (for mainRL.sh)
 # - 12_actions_avg_freq                  (for mainRL.sh)
 # 
@@ -32,14 +32,15 @@
 #    - 7_time_end_averaging_non_converged
 #    - 8_time_end_averaging_converged
 #    - 9_dt_statistics
-#    - 10_nohup_filename
-#    - 11_actions_avg_freq 
+#    - 10_dt_statistics_RL_gifs
+#    - 11_nohup_filename
+#    - 12_actions_avg_freq 
 # B. Arguments (for main.sh):
 #    - 1_case_name 
 #    - 2_realization_number 
 #    - 3_reynolds_number 
 #    - 4_delta_time_stats 
-#    - 5_delta_time_stats_anisotropy_gifs 
+#    - 5_delta_time_stats_anisotropy_gifs
 #    - 6_time_begin_averaging 
 #    - 7_time_end_averaging 
 
@@ -62,7 +63,7 @@ else
     echo "- Time end averaging converged: $8"
     echo "- dt statistics non-RL: $9"
     echo "- dt statistics RL: ${10}"
-    echo "- dt statistics anisotropy gifs: ${11}"
+    echo "- dt statistics anisotropy/RL gifs: ${11}"
     echo "- Nohup filename for RL training run: ${12}"
     echo "- Actions averaging frequency, number of simulation steps for averaged actions kde: ${13}"
 fi
@@ -97,4 +98,4 @@ done
 echo -e "\n\n\n****************************************************************"
 echo -e "************************** mainRL.sh ***************************"
 echo -e "****************************************************************"
-./mainRL.sh "$1" "$2" "$3" "$4" "$5" "$6" "$7" "$8" "$9" "${10}" "${12}" "${13}"
+./mainRL.sh "$1" "$2" "$3" "$4" "$5" "$6" "$7" "$8" "$9" "${10}" "${11}" "${12}" "${13}"
