@@ -158,10 +158,9 @@ void dv_uvw::getRhsSrc(const double &time, const int ipt){
             derivative_error = 0.0;
         }
         // controller output
-        controller_output   = - domn->pram->dPdx / domn->pram->rho0 \
-                              + controller_K_p * controller_error   \
-                              + controller_K_i * integral_error     \
-                              + controller_K_d * derivative_error;
+        controller_output  += controller_K_p * controller_error   \
+                            + controller_K_i * integral_error     \
+                            + controller_K_d * derivative_error;
         if (cout_counter % 100 == 0) {
             *ostrm << "u_tau = "             << utauNumerical     << ", ";
             *ostrm << "controller output = " << controller_output << ", ";
