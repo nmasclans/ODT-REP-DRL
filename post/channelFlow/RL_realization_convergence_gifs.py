@@ -30,6 +30,7 @@ try :
     tBeginAvg         = float(sys.argv[i]); i+=1
     dt_gif_RL         = float(sys.argv[i]); i+=1
     dt_gif_nonRL      = 1.0
+    rlzId_nonRL       = "data_00003"                # ALERT! to do it correctly, it should be "data_rlz_avg"
     print(f"Script parameters: \n" \
           f"- Re_tau: {Retau} \n" \
           f"- Case name RL: {caseN_RL} \n" \
@@ -201,7 +202,7 @@ for itk in range(ntk):
     dTimeVecStr.append(str(tIdx).zfill(5))
 if len(dTimeVecIdx) != ntk:
     raise ValueError(f"Not all averaging_times where found! \n{ntk}\n{dTimeVecIdx}")
-flist = [f"{odt_path}/post/channelFlow/ODT_reference/Re{Retau}/data_rlz_avg/stat_dmp_{s}.dat" for s in dTimeVecStr]
+flist = [f"{odt_path}/post/channelFlow/ODT_reference/Re{Retau}/{rlzId_nonRL}/stat_dmp_{s}.dat" for s in dTimeVecStr]
 print(f"\n--- Temporal convergence for non-RL ---")
 print(f"--- End Time: {tEnd_nonRL} ---")
 
@@ -284,9 +285,12 @@ um_max = np.max([np.max(um_half_RL), np.max(um_half_nonRL)])
 # Attention, if dt_gif_RL != dt_fig_nonRL, then ntk_RL != ntk_nonRL
 ntk_RL    = len(time_RL)
 ntk_nonRL = len(time_nonRL)
+color_RL  = []; color_aux = "tab:blue"
 if ntk_RL == ntk_nonRL:
     # meaning dt_fig_RL == dt_fig_nonRL
     ntk = ntk_RL
+    for itk in range(ntk):
+        color_RL.append(color_aux)
 elif ntk_RL > ntk_nonRL:
     dt_ratio = int(dt_gif_nonRL / dt_gif_RL) # e.g.  dt_ratio = 10 if dt_gif_nonRL = 1.0 and dt_gif_RL = 0.1
     assert dt_ratio > 1, "Assumed dt_gif_RL is a fraction of dt_gif_nonRL, i.e. ntk_RL > ntk_nonRL"
@@ -297,6 +301,11 @@ elif ntk_RL > ntk_nonRL:
         time_nonRL_ext[itk]      = time_nonRL[int(itk/dt_ratio)]
         um_nonRL_ext[:,itk]      = um_nonRL[:,int(itk/dt_ratio)]
         um_half_nonRL_ext[:,itk] = um_half_nonRL[:,int(itk/dt_ratio)]
+        # only works for 2 rlz:
+        if itk > 0 and time_RL[itk] < time_RL[itk-1]:
+            # 2nd rlz just started
+            color_aux = "tab:green"
+        color_RL.append(color_aux)
     time_nonRL = np.copy(time_nonRL_ext)
     um_nonRL = np.copy(um_nonRL_ext)
     um_half_nonRL = np.copy(um_half_nonRL_ext)
@@ -325,6 +334,7 @@ for itk in range(ntk):
         yplus_half_RL, yplus_half_nonRL, yplus_half_ref, 
         um_half_RL[:,itk], um_half_nonRL[:,itk], um_half_ref,
         avg_time_RL[itk], avg_time_nonRL[itk], avg_tEnd_ref, 
+        color_RL=color_RL[itk],
         ylim=[0.0, um_max]
     )
 

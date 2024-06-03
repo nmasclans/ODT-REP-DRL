@@ -634,12 +634,12 @@ class ChannelVisualizer():
         return frames
 
 
-    def build_um_fig_RL_nonRL_ref(self, yplus_RL, yplus_nonRL, yplus_ref, um_RL, um_nonRL, um_ref, time_RL, time_nonRL, time_ref, ylim=None):
+    def build_um_fig_RL_nonRL_ref(self, yplus_RL, yplus_nonRL, yplus_ref, um_RL, um_nonRL, um_ref, time_RL, time_nonRL, time_ref, color_RL="tab:green", ylim=None):
         
         fig, ax = plt.subplots()
         plt.semilogx(yplus_ref,   um_ref,   '-',  color="black",      lw=2, label=rf"Reference $t^+={time_ref:.1f}$")
         plt.semilogx(yplus_nonRL, um_nonRL, '-.', color="tab:orange", lw=2, label=rf"Non-RL    $t^+={time_nonRL:.1f}$")
-        plt.semilogx(yplus_RL,    um_RL,    '--', color="tab:green",  lw=2, label=rf"RL        $t^+={time_RL:.1f}$")
+        plt.semilogx(yplus_RL,    um_RL,    '--', color=color_RL,     lw=2, label=rf"RL        $t^+={time_RL:.1f}$")
 
         if ylim is not None:
             plt.ylim(ylim)
@@ -656,9 +656,10 @@ class ChannelVisualizer():
                                     yplus_RL, yplus_nonRL, yplus_ref, 
                                     um_RL, um_nonRL, um_ref,
                                     time_RL, time_nonRL, time_ref,
+                                    color_RL="tab:green",
                                     ylim=None):    
 
-        fig = self.build_um_fig_RL_nonRL_ref(yplus_RL, yplus_nonRL, yplus_ref, um_RL, um_nonRL, um_ref, time_RL, time_nonRL, time_ref, ylim)
+        fig = self.build_um_fig_RL_nonRL_ref(yplus_RL, yplus_nonRL, yplus_ref, um_RL, um_nonRL, um_ref, time_RL, time_nonRL, time_ref, color_RL, ylim)
         fig.canvas.draw()
         img = Image.frombytes("RGB", fig.canvas.get_width_height(), fig.canvas.tostring_rgb())
         frames.append(img)
