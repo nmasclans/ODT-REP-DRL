@@ -1065,8 +1065,10 @@ class ChannelVisualizer():
         # variable vs. y-coordinate, for each realization
         # > RL non-converged (at time_nonConv):
         nrlz   = len(rlzArr)
-        # colors = plt.cm.viridis_r(np.linspace(0, 1, nrlz))
-        colors = tab_colors
+        if nrlz <= 10:
+            colors = tab_colors
+        else:
+            colors = plt.cm.viridis_r(np.linspace(0, 1, nrlz))
         for irlz in range(nrlz):
             ax[0].plot(ydelta, var_RL_nonConv[:,irlz], color=colors[irlz], label=rf"RL Rlz {rlzArr[irlz]} at $t^+_{{\textrm{{avg}}}}={time_nonConv:.0f}$")
         # > non-RL non-converged (at time_nonConv):
@@ -1228,8 +1230,10 @@ class ChannelVisualizer():
 
         # RL non-converged:
         nrlz   = len(rlzArr)
-        # colors = plt.cm.viridis_r(np.linspace(0, 1, nrlz))
-        colors = tab_colors
+        if nrlz <= 10:
+            colors = tab_colors
+        else:      
+            colors = plt.cm.viridis_r(np.linspace(0, 1, nrlz))
         for irlz in range(nrlz):
             # eliminate the err_RL[i] = 1, which corresponds to time instances with no statistics data (u-mean not updated after initialized as zeros, thus relative error = 1) (also happens for t=tBeginAvg, where u-mean=0 everywhere)
             updatedErrorIdx_irlz     = np.where(err_RL[:,irlz]!=1.0)[0]

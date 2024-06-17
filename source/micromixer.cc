@@ -192,10 +192,11 @@ void micromixer::advanceOdtSingleStep_Explicit(){
                 for(int i=0; i < domn->ngrd; i++) {
                     rhsTerm   = domn->v.at(k)->rhsMix.at(i) + domn->v.at(k)->rhsSrc.at(i);
                     fTerm     = fEps * domn->v.at(k)->rhsStatConv.at(i);
-                    // domn->v.at(k)->rhsfRatio.at(i) = min( 
-                    //     abs(rhsTerm) / abs(rhsTerm - fTerm + 1e-8), 
-                    //     abs(rhsTerm) / abs(rhsTerm + fTerm + 1e-8));
-                    domn->v.at(k)->rhsfRatio.at(i) = 1.0;
+                    domn->v.at(k)->rhsfRatio.at(i) = min( 
+                        abs(rhsTerm) / abs(rhsTerm - fTerm + 1e-8), 
+                        abs(rhsTerm) / abs(rhsTerm + fTerm + 1e-8));
+                    // cout << "[micromixer::advanceOdtSingleStep_Explicit] rhsfRatio[" << i << "] = " << domn->v.at(k)->rhsfRatio.at(i) << endl;
+                    // domn->v.at(k)->rhsfRatio.at(i) = 1.0;
                     // cout << "var_name = " << domn->v.at(k)->var_name << ",      rhsfRatio = " << domn->v.at(k)->rhsfRatio.at(i) << ",      fTerm = " << fTerm << ",        rhsfRatio * fTerm = " << domn->v.at(k)->rhsfRatio.at(i) * fTerm << endl;
                     domn->v.at(k)->d.at(i) = domn->v.at(k)->d.at(i) + dt * ( rhsTerm - domn->v.at(k)->rhsfRatio.at(i) * fTerm ); 
                 }

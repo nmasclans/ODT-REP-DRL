@@ -419,11 +419,14 @@ void dv_uvw::updateTimeAveragedQuantities(const double &delta_t, const double &a
 #if _CONTROL_RATIO_RHS_FRL_
     // Update ratio ( abs(rhs) / abs(rhs + f_statconv) ), if adding RL-loading
     if(L_converge_stat & (time < tfRL)) {
+        // cout << "time = " << time << ", tfRL = " << tfRL << endl;
         // interpolate instantaneous quantity in adaptative grid to uniform fine grid
         interpVarAdaptToUnifGrid(rhsfRatio, rhsfRatioUnif);  // update rhsfRatioUnif
         for (int i=0; i<nunif; i++) {
             rhsfRatioAvg.at(i)  = updateTimeMeanQuantity(rhsfRatioUnif.at(i), rhsfRatioAvg.at(i), delta_t, time - domn->pram->trst); // "time - domn->pram->trst" instead of "averaging_time" to average for each dtActionRL
+            // cout << "[dv_uvw::updateTimeAveragedQuantities] i = " << i << "rhsfRatioUnif = " << rhsfRatioUnif.at(i) << ", rhsfRatioAvg = " << rhsfRatioAvg.at(i) << endl;  
         }
+        // cout << endl;
     }
 #endif
 }
