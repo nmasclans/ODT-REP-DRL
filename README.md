@@ -9,7 +9,7 @@ This fork is based on the original [ODT](https://github.com/BYUignite/ODT) repos
 The methodology and results are detailed in the following conference paper. If you use this code in your research, please consider citing:
 
 **For the REP-DRL framework and its application:**
-> N. Masclans, L. Jofre. "Data-driven acceleration of statistical convergence in turbulent flows." *9th European Congress on Computational Methods in Applied Sciences and Engineering (ECCOMAS)*, 2024, pp. 1-12.
+> N. Masclans, L. Jofre. "Data-driven acceleration of statistical convergence in turbulent flows." 9th European Congress on Computational Methods in Applied Sciences and Engineering (ECCOMAS), 2024, pp. 1-12.
 
 **For the underlying ODT model:**
 > V.B. Stephens, D.O. Lignell, “One-dimensional turbulence (ODT): computationally efficient modeling and simulation of turbulent flows,” SoftwareX, [13:100641 (2020)](https://www.sciencedirect.com/science/article/pii/S235271102030354X).
