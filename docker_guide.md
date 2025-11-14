@@ -1,5 +1,5 @@
 
-# Step-by-step Docker Managing
+# Step-by-step Docker Guide
 
 Step-by-step guide on Docker Image managing operations: viz., build, run, execute, additional installations, save image, export image.
 
