@@ -5,15 +5,15 @@ Step-by-step guide on Docker Image managing operations: viz., build, run, execut
 
 ## Build & Run docker image
 ```
-docker run --gpus all -it -v /home/jofre/Students/Nuria_Masclans/repositories/ODT/:/ODT/ --name ODT-RL nvidia/cuda:12.1.0-cudnn8-devel-ubuntu22.04
+docker run --gpus all -it -v </path/to/your/ODT-REP-DRL>/:/ODT-REP-DRL/ --name ODT-REP-DRL nvidia/cuda:12.1.0-cudnn8-devel-ubuntu22.04
 ```
 
 Alert! -> you should get a -devel- image for cuda compiling, do not install -base- or -runtime- versions. 
 
 ## Execute docker image
 ```
-docker start ODT-RL
-docker exec -it ODT-RL bash
+docker start ODT-REP-DRL
+docker exec -it ODT-REP-DRL bash
 ```
 
 ## Additional installations
@@ -88,17 +88,17 @@ In this case:
 ```
 $ docker ps -a
 CONTAINER ID   IMAGE                                                 COMMAND                  CREATED       STATUS         PORTS     NAMES
-c34c54a93062   nvidia/cuda:12.1.0-cudnn8-devel-ubuntu22.04           "/opt/nvidia/nvidia_…"   2 hours ago   Up 5 minutes             ODT-RL
+c34c54a93062   nvidia/cuda:12.1.0-cudnn8-devel-ubuntu22.04           "/opt/nvidia/nvidia_…"   2 hours ago   Up 5 minutes             ODT-REP-DRL
 
-$ docker commit c34c54a93062 nvidia/cuda:12.1.0-cudnn8-devel-ubuntu22.04-for-ODT-RL
+$ docker commit c34c54a93062 nvidia/cuda:12.1.0-cudnn8-devel-ubuntu22.04-for-ODT-REP-DRL
 ```
 
-Now, we have the original image (`nvidia/cuda:12.1.0-cudnn8-devel-ubuntu22.04`) and the just created image with all required packages installed (`nvidia/cuda:12.1.0-cudnn8-devel-ubuntu22.04-for-ODT-RL`):
+Now, we have the original image (`nvidia/cuda:12.1.0-cudnn8-devel-ubuntu22.04`) and the just created image with all required packages installed (`nvidia/cuda:12.1.0-cudnn8-devel-ubuntu22.04-for-ODT-REP-DRL`):
 ```
 $ docker images
-REPOSITORY                  TAG                                          IMAGE ID       CREATED         SIZE
-nvidia/cuda                 12.1.0-cudnn8-devel-ubuntu22.04-for-ODT-RL   6b5487fadc1a   6 seconds ago   11.5GB
-nvidia/cuda                 12.1.0-cudnn8-devel-ubuntu22.04              3d89d59a4dc1   4 weeks ago     9.49GB
+REPOSITORY                  TAG                                               IMAGE ID       CREATED         SIZE
+nvidia/cuda                 12.1.0-cudnn8-devel-ubuntu22.04-for-ODT-REP-DRL   6b5487fadc1a   6 seconds ago   11.5GB
+nvidia/cuda                 12.1.0-cudnn8-devel-ubuntu22.04                   3d89d59a4dc1   4 weeks ago     9.49GB
 ```
 
 ## Export Image 
@@ -106,7 +106,7 @@ nvidia/cuda                 12.1.0-cudnn8-devel-ubuntu22.04              3d89d59
 If direct access to the Docker registry isn't feasible (perhaps due to firewall restrictions or no direct internet access), you can save your image as a tar archive and transfer it manually.
 This is recomended on this project because the docker image `nvidia/cuda:12.1.0-cudnn8-devel-ubuntu22.04` is scheduled to be deleted. 
 
-It is exported both the original `nvidia/cuda:12.1.0-cudnn8-devel-ubuntu22.04` and the working image container with all necessary libraries installed `nvidia/cuda:12.1.0-cudnn8-devel-ubuntu22.04-for-ODT-RL`:
+It is exported both the original `nvidia/cuda:12.1.0-cudnn8-devel-ubuntu22.04` and the working image container with all necessary libraries installed `nvidia/cuda:12.1.0-cudnn8-devel-ubuntu22.04-for-ODT-REP-DRL`:
 
 On the source server:
 ```
@@ -115,7 +115,7 @@ docker save <image_tag> -o <file_name>
 in my case:
 ```
 docker save nvidia/cuda:12.1.0-cudnn8-devel-ubuntu22.04 -o nvidia-cuda-12.1.0-cudnn8-devel-ubuntu22.04.tar
-docker save nvidia/cuda:12.1.0-cudnn8-devel-ubuntu22.04-for-ODT-RL -o nvidia-cuda-12.1.0-cudnn8-devel-ubuntu22.04-for-ODT-RL.tar
+docker save nvidia/cuda:12.1.0-cudnn8-devel-ubuntu22.04-for-ODT-REP-DRL -o nvidia-cuda-12.1.0-cudnn8-devel-ubuntu22.04-for-ODT-REP-DRL.tar
 ```
 
 Then, transfer the generated jax_23.08_paxml_py3_for_PI_DeepONets.tar file to the target server using any preferred method (SCP, FTP, etc.).

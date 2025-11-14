@@ -1,5 +1,5 @@
 # ODT-REP-DRL Dockerfile
-# This Dockerfile sets up an environment for building and running the ODT code.
+# This Dockerfile sets up an environment for building and running the ODT-REP-DRL code.
 
 # Use the specified NVIDIA CUDA base image, which includes the CUDA toolkit and cuDNN.
 FROM nvidia/cuda:12.1.0-cudnn8-devel-ubuntu22.04
@@ -8,7 +8,7 @@ FROM nvidia/cuda:12.1.0-cudnn8-devel-ubuntu22.04
 ENV DEBIAN_FRONTEND=noninteractive
 ENV CXX=/usr/bin/g++
 
-# Install base dependencies required for ODT and its build process.
+# Install base dependencies required for ODT-REP-DRL and its build process.
 # - software-properties-common is needed for add-apt-repository.
 # - We clean up apt lists to keep the image size down.
 RUN apt-get update && \
@@ -39,5 +39,5 @@ RUN add-apt-repository ppa:cantera-team/cantera && \
     rm -rf /var/lib/apt/lists/*
 
 # Set the working directory for the project.
-WORKDIR /ODT
+WORKDIR /ODT-REP-DRL
 

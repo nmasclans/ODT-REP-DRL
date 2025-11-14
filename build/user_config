@@ -1,10 +1,11 @@
-# ODT User Configuration
+### ODT User Configuration
 
 set(CHEMISTRY "SIMPLEDLR" CACHE STRING "user mechanism source to add")
 set(PARALLEL "no" CACHE STRING "build with mpi")
 set(SILENT "yes" CACHE STRING "code output config")
 
-# --- Nuria (Begin) ---
+### Extended ODT-REP-DRL capabilities
+
 # Link cantera library
 set(CANTERA_INCLUDE_DIR "/usr/include/cantera/" CACHE PATH "Cantera includes location")
 set(CANTERA_LIB_DIR "/usr/lib" CACHE PATH "Cantera library location")
@@ -15,4 +16,3 @@ set(FMT_LIB_DIR "/usr/lib/x86_64-linux-gnu/" CACHE PATH "fmt library location")
 # Link MPI library
 # TODO: set proper path for eckert computer
 set(MPI_INCLUDE_DIR "???" CACHE PATH "MPI include location")
-# --- Nuria (End) ---

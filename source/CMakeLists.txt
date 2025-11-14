@@ -68,7 +68,8 @@ endif()
 
 target_link_libraries(odt.x "pthread")
 
-# --- Nuria (Begin): ---
+### Extended ODT-REP-DRL capabilities
+
 # 'make' crashes because missing links with 'yaml' library -> link odt.x with yaml library
 # YAML library
 find_package(yaml-cpp REQUIRED)
@@ -82,7 +83,6 @@ target_link_libraries(odt.x ${FMT_LIB})
 find_package(MPI REQUIRED)
 include_directories(${MPI_INCLUDE_PATH})
 target_link_libraries(odt.x ${MPI_LIBRARIES})
-# --- Nuria (End) ---
 
 #################### Local source files
 

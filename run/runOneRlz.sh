@@ -5,7 +5,7 @@
 # note it requires a single input argument: caseName
 # Help: if not running the ODT docker container (where $ODT_PATH is defined), you should
 #       define environment variable $ODT_PATH in the bash terminal as:
-#       $ ODT_PATH="/home/jofre/Nuria/repositories/ODT"
+#       $ ODT_PATH="</path/to/your/ODT-REP-DRL>"
 #       $ export ODT_PATH
 
 ###############################################################################
