@@ -1,11 +1,11 @@
 ## Data directory
 
-Computational data from ODT run is stored in this directory.
-Directory names correspond to the ODT `<caseName>`, specified in the run bash file.
-For each run case (i.e. `channel`), the case directory (i.e. `ODT/data/channel/`) has 4 subdirectories:
+Computational data from ODT-REP-DRL run is stored in this directory.
+Directory names correspond to the ODT-REP-DRL `<caseName>`, specified in the run bash file.
+For each run case (i.e. `channel`), the case directory (i.e. `ODT-REP-DRL/data/channel/`) has 4 subdirectories:
 * **data**: data .dat files for each `dumbTimes` specified in the input yaml file. Generated at the end of the case run.
-* **input**: input yalm, identical copy from input yaml file in `ODT/input` directory
-* **post**: generated plots and .dat files by running python post-scripts in `ODT/post` directory. Post-processed results focus on statistics analysis and DNS comparison.
+* **input**: input yalm, identical copy from input yaml file in `ODT-REP-DRL/input` directory
+* **post**: generated plots and .dat files by running python post-scripts in `ODT-REP-DRL/post` directory. Post-processed results focus on statistics analysis and DNS comparison.
 * **runtime**: data raw files, updated during case runs. 
 
 
